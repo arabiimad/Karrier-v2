@@ -102,7 +102,19 @@ const translations = {
         skip_to_content: "Aller au contenu principal",
         toggle_theme: "Changer de thème",
         back_to_top: "Retour en haut",
-        compare_caption: "Comparaison détaillée des plans LinkedIn Premium Karrier"
+        compare_caption: "Comparaison détaillée des plans LinkedIn Premium Karrier",
+        // Merci page
+        merci_title: "Merci pour votre commande !",
+        merci_subtitle: "Votre paiement a bien été reçu. Voici les prochaines étapes :",
+        merci_guarantee: "Remboursement intégral si échec sous 30 jours",
+        merci_step1_title: "Paiement reçu",
+        merci_step1_desc: "Votre paiement a été confirmé. Un reçu vous a été envoyé par email.",
+        merci_step2_title: "Activation en cours",
+        merci_step2_desc: "Notre équipe va activer votre LinkedIn Premium sous 24 à 48h.",
+        merci_step3_title: "Prêt !",
+        merci_step3_desc: "Vous recevrez un email de confirmation dès que votre compte est activé.",
+        merci_support_title: "Une question ? Contactez-nous :",
+        merci_back: "Retour à l'accueil"
     },
     en: {
         page_title: "Karrier — Take your career to the next level",
@@ -187,7 +199,18 @@ const translations = {
         skip_to_content: "Skip to main content",
         toggle_theme: "Toggle theme",
         back_to_top: "Back to top",
-        compare_caption: "Detailed comparison of Karrier LinkedIn Premium plans"
+        compare_caption: "Detailed comparison of Karrier LinkedIn Premium plans",
+        merci_title: "Thank you for your order!",
+        merci_subtitle: "Your payment has been received. Here are the next steps:",
+        merci_guarantee: "Full refund if activation fails within 30 days",
+        merci_step1_title: "Payment received",
+        merci_step1_desc: "Your payment has been confirmed. A receipt has been sent to your email.",
+        merci_step2_title: "Activation in progress",
+        merci_step2_desc: "Our team will activate your LinkedIn Premium within 24 to 48 hours.",
+        merci_step3_title: "Ready!",
+        merci_step3_desc: "You will receive a confirmation email as soon as your account is activated.",
+        merci_support_title: "Any questions? Contact us:",
+        merci_back: "Back to home"
     },
     es: {
         page_title: "Karrier — Lleva tu carrera al siguiente nivel",
@@ -272,7 +295,18 @@ const translations = {
         skip_to_content: "Ir al contenido principal",
         toggle_theme: "Cambiar tema",
         back_to_top: "Volver arriba",
-        compare_caption: "Comparación detallada de los planes LinkedIn Premium Karrier"
+        compare_caption: "Comparación detallada de los planes LinkedIn Premium Karrier",
+        merci_title: "!Gracias por tu compra!",
+        merci_subtitle: "Tu pago ha sido recibido. Estos son los próximos pasos:",
+        merci_guarantee: "Reembolso completo si falla la activación en 30 días",
+        merci_step1_title: "Pago recibido",
+        merci_step1_desc: "Tu pago ha sido confirmado. Un recibo ha sido enviado a tu email.",
+        merci_step2_title: "Activación en curso",
+        merci_step2_desc: "Nuestro equipo activará tu LinkedIn Premium en 24 a 48 horas.",
+        merci_step3_title: "!Listo!",
+        merci_step3_desc: "Recibirás un email de confirmación cuando tu cuenta esté activada.",
+        merci_support_title: "?Una pregunta? Contáctanos:",
+        merci_back: "Volver al inicio"
     },
     de: {
         page_title: "Karrier — Bringen Sie Ihre Karriere auf das nächste Level",
@@ -357,7 +391,18 @@ const translations = {
         skip_to_content: "Zum Hauptinhalt springen",
         toggle_theme: "Thema wechseln",
         back_to_top: "Nach oben",
-        compare_caption: "Detaillierter Vergleich der Karrier LinkedIn Premium-Pläne"
+        compare_caption: "Detaillierter Vergleich der Karrier LinkedIn Premium-Pläne",
+        merci_title: "Vielen Dank für Ihre Bestellung!",
+        merci_subtitle: "Ihre Zahlung wurde empfangen. Hier sind die nächsten Schritte:",
+        merci_guarantee: "Volle Rückerstattung bei Fehlschlag innerhalb von 30 Tagen",
+        merci_step1_title: "Zahlung erhalten",
+        merci_step1_desc: "Ihre Zahlung wurde bestätigt. Eine Quittung wurde an Ihre E-Mail gesendet.",
+        merci_step2_title: "Aktivierung läuft",
+        merci_step2_desc: "Unser Team wird Ihr LinkedIn Premium innerhalb von 24 bis 48 Stunden aktivieren.",
+        merci_step3_title: "Bereit!",
+        merci_step3_desc: "Sie erhalten eine Bestätigungs-E-Mail, sobald Ihr Konto aktiviert ist.",
+        merci_support_title: "Fragen? Kontaktieren Sie uns:",
+        merci_back: "Zurück zur Startseite"
     }
 };
 

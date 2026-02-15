@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merci ! — Karrier</title>
+    <meta name="description" content="Votre commande a bien été reçue. Activation sous 24 à 48h.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1565C0">
+
+    <!-- Inline theme to prevent FOUC -->
+    <script>
+    (function(){try{var t=localStorage.getItem('karrier_theme');if(t==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();
+    </script>
+    <style>html.light-pending body{background:#F5F8FC;color:#1E293B}html.light-pending .theme-icon-sun{opacity:1;transform:rotate(0) scale(1)}html.light-pending .theme-icon-moon{opacity:0;transform:rotate(90deg) scale(.5)}</style>
+
+    <noscript>
+        <style>
+            .animate-fade-up,.animate-fade-in{opacity:1!important;transform:none!important}
+            #particles{display:none!important}
+        </style>
+    </noscript>
+
+    <style>
+        /* Merci page specific styles */
+        .merci-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .merci-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 640px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .merci-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .merci-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+            stroke: white;
+        }
+
+        .merci-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-bright);
+            margin-bottom: 12px;
+        }
+
+        .merci-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Timeline */
+        .merci-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            text-align: left;
+            margin-bottom: 40px;
+        }
+
+        .timeline-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            position: relative;
+        }
+
+        .timeline-step:not(:last-child) {
+            border-bottom: none;
+        }
+
+        .timeline-dot {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-step.completed .timeline-dot {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+        }
+
+        .timeline-step.active .timeline-dot {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 0 20px var(--glow-primary);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .timeline-step.pending .timeline-dot {
+            background: var(--bg-card-hover);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 10px var(--glow-primary); }
+            50% { box-shadow: 0 0 25px var(--glow-primary); }
+        }
+
+        /* Connecting line between dots */
+        .timeline-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 52px;
+            width: 2px;
+            height: calc(100% - 36px);
+            background: var(--border);
+        }
+
+        .timeline-step.completed:not(:last-child)::after {
+            background: linear-gradient(to bottom, #10B981, var(--border));
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding-top: 6px;
+        }
+
+        .timeline-content h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .timeline-step.completed .timeline-content h4 {
+            color: #10B981;
+        }
+
+        .timeline-step.active .timeline-content h4 {
+            color: var(--primary-light);
+        }
+
+        /* Support box */
+        .merci-support {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .merci-support-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 12px;
+        }
+
+        .support-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .support-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .support-link:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .merci-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .merci-back:hover {
+            opacity: 0.8;
+        }
+
+        /* Confetti animation */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Guarantee badge */
+        .merci-guarantee {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #10B981;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 640px) {
+            .merci-card { padding: 32px 20px; }
+            .merci-title { font-size: 1.5rem; }
+            .merci-icon { width: 64px; height: 64px; }
+            .merci-icon svg { width: 32px; height: 32px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .timeline-step.active .timeline-dot { animation: none; }
+            .confetti { animation: none; display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background gradient orbs -->
+    <div class="bg-orbs">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="logo">
+                    <img src="karrier-logo.png" alt="Karrier" class="logo-img">
+                    <span class="logo-text">Karrier</span>
+                </a>
+                <div class="nav-actions">
+                    <!-- Language Switcher -->
+                    <div class="lang-switcher" id="langSwitcher">
+                        <button class="lang-btn" id="langToggle" aria-label="Change language" aria-expanded="false">
+                            <span id="langFlag" aria-hidden="true"></span>
+                            <span id="langCode">FR</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div class="lang-dropdown" id="langDropdown" role="listbox">
+                            <button class="lang-option active" data-lang="fr" role="option"><span aria-hidden="true">&#x1F1EB;&#x1F1F7;</span> Fran&ccedil;ais</button>
+                            <button class="lang-option" data-lang="en" role="option"><span aria-hidden="true">&#x1F1EC;&#x1F1E7;</span> English</button>
+                            <button class="lang-option" data-lang="es" role="option"><span aria-hidden="true">&#x1F1EA;&#x1F1F8;</span> Espa&ntilde;ol</button>
+                            <button class="lang-option" data-lang="de" role="option"><span aria-hidden="true">&#x1F1E9;&#x1F1EA;</span> Deutsch</button>
+                        </div>
+                    </div>
+                    <a href="index.html#pricing" class="header-cta" data-i18n="nav_cta">Voir les offres</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Confetti -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <!-- Main content -->
+    <section class="merci-section">
+        <div class="merci-card animate-fade-up">
+            <!-- Success icon -->
+            <div class="merci-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+
+            <h1 class="merci-title" data-i18n="merci_title">Merci pour votre commande !</h1>
+            <p class="merci-subtitle" data-i18n="merci_subtitle">Votre paiement a bien &eacute;t&eacute; re&ccedil;u. Voici les prochaines &eacute;tapes :</p>
+
+            <!-- Guarantee badge -->
+            <div class="merci-guarantee">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span data-i18n="merci_guarantee">Remboursement int&eacute;gral si &eacute;chec sous 30 jours</span>
+            </div>
+
+            <!-- Timeline -->
+            <div class="merci-timeline">
+                <div class="timeline-step completed">
+                    <div class="timeline-dot">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4 data-i18n="merci_step1_title">Paiement re&ccedil;u</h4>
+                        <p data-i18n="merci_step1_desc">Votre paiement a &eacute;t&eacute; confirm&eacute;. Un re&ccedil;u vous a &eacute;t&eacute; envoy&eacute; par email.</p>
+                    </div>
+                </div>
+                <div class="timeline-step active">
+                    <div class="timeline-dot">2</div>
+                    <div class="timeline-content">
+                        <h4 data-i18n="merci_step2_title">Activation en cours</h4>
+                        <p data-i18n="merci_step2_desc">Notre &eacute;quipe va activer votre LinkedIn Premium sous 24 &agrave; 48h.</p>
+                    </div>
+                </div>
+                <div class="timeline-step pending">
+                    <div class="timeline-dot">3</div>
+                    <div class="timeline-content">
+                        <h4 data-i18n="merci_step3_title">Pr&ecirc;t !</h4>
+                        <p data-i18n="merci_step3_desc">Vous recevrez un email de confirmation d&egrave;s que votre compte est activ&eacute;.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="merci-support">
+                <p class="merci-support-title" data-i18n="merci_support_title">Une question ? Contactez-nous :</p>
+                <div class="support-links">
+                    <a href="mailto:contact@karrier.pro" class="support-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        contact@karrier.pro
+                    </a>
+                </div>
+            </div>
+
+            <!-- Back to home -->
+            <a href="index.html" class="merci-back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <span data-i18n="merci_back">Retour &agrave; l'accueil</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand"><img src="karrier-logo.png" alt="Karrier" class="footer-logo-img"><span class="logo-text">Karrier</span></div>
+                <p class="footer-copyright">&copy; 2026 Karrier. <span data-i18n="footer_rights">Tous droits r&eacute;serv&eacute;s.</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-i18n-aria="toggle_theme">
+        <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+
+    <script src="i18n.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Confetti effect -->
+    <script>
+    (function() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const container = document.getElementById('confettiContainer');
+        const colors = ['#1565C0', '#1E88E5', '#00BCD4', '#10B981', '#F59E0B', '#EC4899'];
+        for (let i = 0; i < 50; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti';
+            el.style.left = Math.random() * 100 + '%';
+            el.style.background = colors[Math.floor(Math.random() * colors.length)];
+            el.style.animationDelay = Math.random() * 2 + 's';
+            el.style.animationDuration = (2 + Math.random() * 2) + 's';
+            el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            el.style.width = (6 + Math.random() * 8) + 'px';
+            el.style.height = (6 + Math.random() * 8) + 'px';
+            container.appendChild(el);
+        }
+        setTimeout(() => { container.style.display = 'none'; }, 5000);
+    })();
+    </script>
+</body>
+</html>
