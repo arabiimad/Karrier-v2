@@ -88,6 +88,8 @@
             gap: 0;
             text-align: left;
             margin-bottom: 40px;
+            list-style: none;
+            padding-left: 0;
         }
 
         .timeline-step {
@@ -159,7 +161,7 @@
             padding-top: 6px;
         }
 
-        .timeline-content h4 {
+        .timeline-content h2 {
             font-size: 1rem;
             font-weight: 700;
             color: var(--text-bright);
@@ -172,11 +174,11 @@
             line-height: 1.5;
         }
 
-        .timeline-step.completed .timeline-content h4 {
+        .timeline-step.completed .timeline-content h2 {
             color: #10B981;
         }
 
-        .timeline-step.active .timeline-content h4 {
+        .timeline-step.active .timeline-content h2 {
             color: var(--primary-light);
         }
 
@@ -354,31 +356,31 @@
             </div>
 
             <!-- Timeline -->
-            <div class="merci-timeline">
-                <div class="timeline-step completed">
+            <ol class="merci-timeline">
+                <li class="timeline-step completed">
                     <div class="timeline-dot">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <div class="timeline-content">
-                        <h4 data-i18n="merci_step1_title">Paiement re&ccedil;u</h4>
+                        <h2 data-i18n="merci_step1_title">Paiement re&ccedil;u</h2>
                         <p data-i18n="merci_step1_desc">Votre paiement a &eacute;t&eacute; confirm&eacute;. Un re&ccedil;u vous a &eacute;t&eacute; envoy&eacute; par email.</p>
                     </div>
-                </div>
-                <div class="timeline-step active">
+                </li>
+                <li class="timeline-step active">
                     <div class="timeline-dot">2</div>
                     <div class="timeline-content">
-                        <h4 data-i18n="merci_step2_title">Activation en cours</h4>
+                        <h2 data-i18n="merci_step2_title">Activation en cours</h2>
                         <p data-i18n="merci_step2_desc">Notre &eacute;quipe va activer votre LinkedIn Premium sous 24 &agrave; 48h.</p>
                     </div>
-                </div>
-                <div class="timeline-step pending">
+                </li>
+                <li class="timeline-step pending">
                     <div class="timeline-dot">3</div>
                     <div class="timeline-content">
-                        <h4 data-i18n="merci_step3_title">Pr&ecirc;t !</h4>
+                        <h2 data-i18n="merci_step3_title">Pr&ecirc;t !</h2>
                         <p data-i18n="merci_step3_desc">Vous recevrez un email de confirmation d&egrave;s que votre compte est activ&eacute;.</p>
                     </div>
-                </div>
-            </div>
+                </li>
+            </ol>
 
             <!-- Support -->
             <div class="merci-support">
@@ -423,18 +425,14 @@
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const container = document.getElementById('confettiContainer');
         const colors = ['#1565C0', '#1E88E5', '#00BCD4', '#10B981', '#F59E0B', '#EC4899'];
+        const fragment = document.createDocumentFragment();
         for (let i = 0; i < 50; i++) {
             const el = document.createElement('div');
             el.className = 'confetti';
-            el.style.left = Math.random() * 100 + '%';
-            el.style.background = colors[Math.floor(Math.random() * colors.length)];
-            el.style.animationDelay = Math.random() * 2 + 's';
-            el.style.animationDuration = (2 + Math.random() * 2) + 's';
-            el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-            el.style.width = (6 + Math.random() * 8) + 'px';
-            el.style.height = (6 + Math.random() * 8) + 'px';
-            container.appendChild(el);
+            el.style.cssText = 'left:' + (Math.random() * 100) + '%;background:' + colors[Math.floor(Math.random() * colors.length)] + ';animation-delay:' + (Math.random() * 2) + 's;animation-duration:' + (2 + Math.random() * 2) + 's;border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';width:' + (6 + Math.random() * 8) + 'px;height:' + (6 + Math.random() * 8) + 'px';
+            fragment.appendChild(el);
         }
+        container.appendChild(fragment);
         setTimeout(() => { container.style.display = 'none'; }, 5000);
     })();
     </script>

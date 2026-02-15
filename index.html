@@ -120,17 +120,17 @@
     <header class="header">
         <div class="container header-inner">
             <a href="index.html" class="logo">
-                <img src="karrier-logo.png" alt="Karrier" class="logo-img">
+                <img src="karrier-logo.png" alt="Karrier" class="logo-img" width="40" height="40">
                 <span class="logo-text">Karrier</span>
             </a>
             <nav class="nav-links">
-                <a href="index.html" class="nav-link active" data-i18n="nav_pricing">Tarifs</a>
-                <a href="index.html#faq" class="nav-link" data-i18n="nav_faq">FAQ</a>
+                <a href="#pricing" class="nav-link active" data-i18n="nav_pricing">Tarifs</a>
+                <a href="#faq" class="nav-link" data-i18n="nav_faq">FAQ</a>
                 <a href="contact.html" class="nav-link" data-i18n="nav_contact">Contact</a>
             </nav>
             <div class="header-right">
                 <div class="lang-switcher" id="langSwitcher">
-                    <button class="lang-btn" id="langBtn" aria-label="Language">
+                    <button class="lang-btn" id="langBtn" aria-label="Choisir la langue" data-i18n-aria="lang_label">
                         <span class="lang-flag" id="langFlag">🇫🇷</span>
                         <span class="lang-code" id="langCode">FR</span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
@@ -148,12 +148,12 @@
     </header>
 
     <!-- Mobile menu -->
-    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
         <span></span><span></span><span></span>
     </button>
-    <div class="mobile-menu" id="mobileMenu">
-        <a href="index.html" class="mobile-link active" data-i18n="nav_pricing">Tarifs</a>
-        <a href="index.html#faq" class="mobile-link" data-i18n="nav_faq">FAQ</a>
+    <nav class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menu mobile">
+        <a href="#pricing" class="mobile-link active" data-i18n="nav_pricing">Tarifs</a>
+        <a href="#faq" class="mobile-link" data-i18n="nav_faq">FAQ</a>
         <a href="contact.html" class="mobile-link" data-i18n="nav_contact">Contact</a>
         <a href="#pricing" class="mobile-link" data-i18n="nav_cta">Voir les offres</a>
         <div class="mobile-lang">
@@ -162,7 +162,7 @@
             <button class="mobile-lang-btn" data-lang="es">🇪🇸</button>
             <button class="mobile-lang-btn" data-lang="de">🇩🇪</button>
         </div>
-    </div>
+    </nav>
 
     <!-- Hero -->
     <section class="hero">
@@ -193,7 +193,7 @@
     </section>
 
     <!-- Info banner -->
-    <div class="tab-info-banner" id="tabInfoBanner" role="tabpanel" id="panel-students" aria-labelledby="tab-students">
+    <div class="tab-info-banner" id="panel-students" role="tabpanel" aria-labelledby="tab-students">
         <div class="container">
             <div class="info-banner animate-fade-up" id="infoBanner">
                 <span class="info-banner-icon" aria-hidden="true">&#127891;</span>
@@ -426,11 +426,11 @@
                 <table class="compare-table">
                     <caption class="sr-only" data-i18n="compare_caption">Comparaison détaillée des plans LinkedIn Premium Karrier</caption>
                     <thead><tr>
-                        <th data-i18n="compare_feature">Fonctionnalité</th>
-                        <th>Career</th>
-                        <th class="highlight-col">Business</th>
-                        <th>Sales Nav.</th>
-                        <th>Recruiter Lite</th>
+                        <th scope="col" data-i18n="compare_feature">Fonctionnalité</th>
+                        <th scope="col">Career</th>
+                        <th scope="col" class="highlight-col">Business</th>
+                        <th scope="col">Sales Nav.</th>
+                        <th scope="col">Recruiter Lite</th>
                     </tr></thead>
                     <tbody>
                         <tr><td data-i18n="compare_official">Prix officiel /an (2026)</td><td>178,44€</td><td class="highlight-col">404,52€</td><td>1 079,88€</td><td>1 487,52€</td></tr>

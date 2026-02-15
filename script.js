@@ -9,6 +9,17 @@ function safeSet(key, value) {
 // ===== Reduced motion check =====
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// ===== Shared utilities =====
+const LOCALE_MAP = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE' };
+function getCurrentLocale() {
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
+    return LOCALE_MAP[lang] || 'fr-FR';
+}
+function getTrans(key) {
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
+    return (typeof translations !== 'undefined' && translations[lang]) ? translations[lang][key] || '' : '';
+}
+
 // ===== Theme Toggle =====
 (function() {
     // Handle FOUC: convert light-pending (set in <head>) to body.light
@@ -237,27 +248,29 @@ document.querySelectorAll('.animate-fade-in, .animate-fade-up, .animate-slide-le
 
 // ===== Header Scroll Effect + Progress Bar =====
 const scrollProgress = document.getElementById('scrollProgress');
+const headerEl = document.querySelector('.header');
+const backToTopEl = document.getElementById('backToTop');
+let scrollTicking = false;
 
 window.addEventListener('scroll', () => {
-    const header = document.querySelector('.header');
-    if (header) header.classList.toggle('scrolled', window.scrollY > 50);
-
-    const backToTop = document.getElementById('backToTop');
-    if (backToTop) backToTop.classList.toggle('visible', window.scrollY > 400);
-
-    // Scroll progress bar
-    if (scrollProgress) {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-        scrollProgress.style.width = progress + '%';
+    if (!scrollTicking) {
+        requestAnimationFrame(() => {
+            const y = window.scrollY;
+            if (headerEl) headerEl.classList.toggle('scrolled', y > 50);
+            if (backToTopEl) backToTopEl.classList.toggle('visible', y > 400);
+            if (scrollProgress) {
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                scrollProgress.style.width = (docHeight > 0 ? (y / docHeight) * 100 : 0) + '%';
+            }
+            scrollTicking = false;
+        });
+        scrollTicking = true;
     }
 });
 
 // ===== Back to Top =====
-const backToTop = document.getElementById('backToTop');
-if (backToTop) {
-    backToTop.addEventListener('click', () => {
+if (backToTopEl) {
+    backToTopEl.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
@@ -266,18 +279,29 @@ if (backToTop) {
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
 if (mobileMenuBtn && mobileMenu) {
+    function closeMobileMenu() {
+        mobileMenuBtn.classList.remove('open');
+        mobileMenu.classList.remove('open');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
     mobileMenuBtn.addEventListener('click', () => {
+        const isOpen = mobileMenu.classList.toggle('open');
         mobileMenuBtn.classList.toggle('open');
-        mobileMenu.classList.toggle('open');
-        document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+        mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+        document.body.style.overflow = isOpen ? 'hidden' : '';
     });
 
     mobileMenu.querySelectorAll('.mobile-link').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenuBtn.classList.remove('open');
-            mobileMenu.classList.remove('open');
-            document.body.style.overflow = '';
-        });
+        link.addEventListener('click', closeMobileMenu);
+    });
+
+    // Close menu on click outside
+    document.addEventListener('click', (e) => {
+        if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+            closeMobileMenu();
+        }
     });
 }
 
@@ -374,8 +398,7 @@ function switchTab(tab) {
         }
 
         if (monthlyEl) {
-            const localeMap = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE' };
-            const locale = localeMap[(typeof currentLang !== 'undefined') ? currentLang : 'fr'] || 'fr-FR';
+            const locale = getCurrentLocale();
             const monthly = (price / 12).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             monthlyEl.textContent = monthly;
         }
