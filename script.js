@@ -420,6 +420,16 @@ function switchTab(tab) {
             }
         }
 
+        // Update Gumroad CTA link based on tab
+        const ctaLink = card.querySelector('.cta-button');
+        if (ctaLink) {
+            const studentUrl = card.getAttribute('data-gumroad-student');
+            const proUrl = card.getAttribute('data-gumroad-pro');
+            if (studentUrl && proUrl) {
+                ctaLink.href = isStudent ? studentUrl : proUrl;
+            }
+        }
+
         // Bounce animation
         if (!card.classList.contains('hidden-card')) {
             card.style.transform = card.classList.contains('popular') ? 'scale(0.98)' : 'scale(0.97)';
