@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Karrier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <img src="karrier-logo.png" alt="Karrier" class="logo-img">
+                <span class="logo-text">Karrier</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Tarifs</a>
+                <a href="index.html#faq" class="nav-link">FAQ</a>
+                <a href="contact.html" class="nav-link active">Contact</a>
+            </nav>
+            <a href="index.html#pricing" class="header-cta">Voir les offres</a>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1 class="page-title animate-fade-up">Contactez-nous</h1>
+            <p class="page-subtitle animate-fade-up delay-1">Une question ? Un souci d'activation ? On vous répond sous 24h.</p>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <div class="container">
+            <div class="contact-grid">
+                <!-- Contact Form -->
+                <div class="contact-form-card animate-slide-left">
+                    <h2>Envoyez-nous un message</h2>
+                    <form id="contactForm" class="contact-form" novalidate>
+                        <div class="form-group">
+                            <label for="name">Nom complet</label>
+                            <input type="text" id="name" name="name" required placeholder="Jean Dupont" autocomplete="name">
+                            <span class="form-error" id="nameError">Veuillez entrer votre nom</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required placeholder="jean@exemple.com" autocomplete="email">
+                            <span class="form-error" id="emailError">Veuillez entrer un email valide</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Sujet</label>
+                            <select id="subject" name="subject" required>
+                                <option value="" disabled selected>Choisir un sujet...</option>
+                                <option value="activation">Problème d'activation</option>
+                                <option value="remboursement">Demande de remboursement</option>
+                                <option value="facture">Question de facturation</option>
+                                <option value="info">Demande d'information</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                            <span class="form-error" id="subjectError">Veuillez choisir un sujet</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" required placeholder="Décrivez votre demande..."></textarea>
+                            <span class="form-error" id="messageError">Veuillez entrer votre message</span>
+                        </div>
+                        <button type="submit" class="cta-button cta-primary" id="submitBtn">
+                            <span class="btn-text">Envoyer le message</span>
+                            <span class="btn-loader" style="display:none;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" class="spinner"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" dur="0.8s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></circle></svg>
+                                Envoi en cours...
+                            </span>
+                        </button>
+                    </form>
+                    <!-- Success message -->
+                    <div class="form-success" id="formSuccess" style="display:none;">
+                        <div class="success-icon">&#10003;</div>
+                        <h3>Message envoyé !</h3>
+                        <p>Merci pour votre message. Nous vous répondrons sous 24 heures.</p>
+                        <button class="cta-button cta-secondary" id="sendAnother">Envoyer un autre message</button>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="contact-info animate-slide-right">
+                    <div class="info-card">
+                        <div class="info-icon">&#9993;</div>
+                        <h3>Email</h3>
+                        <a href="mailto:contact@karrier.pro">contact@karrier.pro</a>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">&#9889;</div>
+                        <h3>Temps de réponse</h3>
+                        <p>Sous 24 heures ouvrées</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">&#128274;</div>
+                        <h3>Remboursement</h3>
+                        <p>Garanti 30 jours si l'activation échoue</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">&#128172;</div>
+                        <h3>FAQ</h3>
+                        <p>Consultez notre <a href="index.html#faq">Foire aux questions</a> pour des réponses rapides.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="karrier-logo.png" alt="Karrier" class="footer-logo-img">
+                    <span class="logo-text">Karrier</span>
+                </div>
+                <nav class="footer-links">
+                    <a href="mentions-legales.html">Mentions légales</a>
+                    <a href="cgv.html">CGV</a>
+                    <a href="confidentialite.html">Confidentialité</a>
+                    <a href="contact.html">Contact</a>
+                </nav>
+                <p class="footer-disclaimer">Karrier n'est pas affilié à LinkedIn Corporation. LinkedIn&trade; est une marque déposée de LinkedIn Corporation.</p>
+                <p class="footer-copyright">&copy; 2025 Karrier. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="Retour en haut">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>

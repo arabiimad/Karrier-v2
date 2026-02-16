@@ -436,5 +436,59 @@
         setTimeout(() => { container.style.display = 'none'; }, 5000);
     })();
     </script>
+
+    <!-- Live order status polling -->
+    <script>
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        if (!sessionId) return;
+
+        const steps = document.querySelectorAll('.timeline-step');
+        const statusMap = { pending: 0, activating: 1, done: 2 };
+
+        function updateTimeline(status) {
+            const activeIndex = statusMap[status];
+            if (activeIndex === undefined) return;
+
+            steps.forEach((step, i) => {
+                step.classList.remove('completed', 'active', 'pending');
+                if (i < activeIndex) {
+                    step.classList.add('completed');
+                    const dot = step.querySelector('.timeline-dot');
+                    if (dot && !dot.querySelector('svg')) {
+                        dot.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+                    }
+                } else if (i === activeIndex) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.add('pending');
+                    const dot = step.querySelector('.timeline-dot');
+                    if (dot) dot.textContent = String(i + 1);
+                }
+            });
+        }
+
+        let pollInterval;
+
+        async function pollStatus() {
+            try {
+                const res = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
+                if (!res.ok) return;
+                const data = await res.json();
+                updateTimeline(data.status);
+                if (data.status === 'done') {
+                    clearInterval(pollInterval);
+                }
+            } catch (e) {
+                // Silently ignore network errors
+            }
+        }
+
+        // Initial poll, then every 30s
+        pollStatus();
+        pollInterval = setInterval(pollStatus, 30000);
+    })();
+    </script>
 </body>
 </html>

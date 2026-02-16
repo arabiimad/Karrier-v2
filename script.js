@@ -420,16 +420,6 @@ function switchTab(tab) {
             }
         }
 
-        // Update Gumroad CTA link based on tab
-        const ctaLink = card.querySelector('.cta-button');
-        if (ctaLink) {
-            const studentUrl = card.getAttribute('data-gumroad-student');
-            const proUrl = card.getAttribute('data-gumroad-pro');
-            if (studentUrl && proUrl) {
-                ctaLink.href = isStudent ? studentUrl : proUrl;
-            }
-        }
-
         // Bounce animation
         if (!card.classList.contains('hidden-card')) {
             card.style.transform = card.classList.contains('popular') ? 'scale(0.98)' : 'scale(0.97)';
@@ -662,6 +652,49 @@ document.querySelectorAll('.faq-question').forEach(btn => {
         }
     });
 });
+
+// ===== Stripe Checkout =====
+async function initiateCheckout(plan, audience) {
+    // If no audience specified, use current tab
+    if (!audience) {
+        audience = currentTab === 'students' ? 'student' : 'professional';
+    }
+
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
+
+    // Show loading state on clicked button
+    const btn = event.currentTarget;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+        const response = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan, audience, language: lang })
+        });
+
+        const data = await response.json();
+
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error(data.error || 'Checkout failed');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        const errorMessages = {
+            fr: 'Une erreur est survenue. Veuillez réessayer.',
+            en: 'An error occurred. Please try again.',
+            es: 'Ha ocurrido un error. Inténtelo de nuevo.',
+            de: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.'
+        };
+        alert(errorMessages[lang] || errorMessages.fr);
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
 
 // ===== Ripple Effect on CTA Buttons =====
 document.querySelectorAll('.cta-button').forEach(btn => {

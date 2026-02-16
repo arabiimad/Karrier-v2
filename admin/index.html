@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karrier Admin</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="../karrier-logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <img src="../karrier-logo.png" alt="Karrier" class="login-logo">
+            <h1>Karrier Admin</h1>
+            <form id="loginForm">
+                <input type="password" id="loginPassword" placeholder="Mot de passe admin" required autocomplete="current-password">
+                <button type="submit" id="loginBtn">Connexion</button>
+                <p class="login-error" id="loginError"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard" style="display:none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="admin-header-inner">
+                <div class="admin-brand">
+                    <img src="../karrier-logo.png" alt="Karrier" class="admin-logo">
+                    <span>Karrier Admin</span>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <section class="stats-row" id="statsRow">
+            <div class="stat-card">
+                <div class="stat-label">Revenu total</div>
+                <div class="stat-value" id="statRevenue">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Commandes totales</div>
+                <div class="stat-value" id="statOrders">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">En attente</div>
+                <div class="stat-value stat-pending" id="statPending">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">En activation</div>
+                <div class="stat-value stat-activating" id="statActivating">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Terminées</div>
+                <div class="stat-value stat-done" id="statDone">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Aujourd'hui</div>
+                <div class="stat-value" id="statToday">—</div>
+            </div>
+        </section>
+
+        <!-- Filters -->
+        <section class="filters-row">
+            <select id="filterStatus">
+                <option value="">Tous les statuts</option>
+                <option value="pending">En attente</option>
+                <option value="activating">En activation</option>
+                <option value="done">Terminé</option>
+                <option value="refunded">Remboursé</option>
+            </select>
+            <button class="refresh-btn" id="refreshBtn">Actualiser</button>
+        </section>
+
+        <!-- Orders table -->
+        <section class="orders-section">
+            <div class="table-wrapper">
+                <table class="orders-table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Plan</th>
+                            <th>Audience</th>
+                            <th>Montant</th>
+                            <th>Email LinkedIn</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersBody">
+                        <tr><td colspan="7" class="empty-state">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- Order detail modal -->
+        <div class="modal-overlay" id="modalOverlay" style="display:none;">
+            <div class="modal-card" id="modalCard">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <h2>Détails de la commande</h2>
+                <div id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
