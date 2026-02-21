@@ -1,9 +1,17 @@
+require('./_env');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('./_rate-limit');
+const checkRate = rateLimit({ windowMs: 60000, max: 5 });
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const rate = checkRate(req);
+  if (!rate.allowed) {
+    return res.status(429).json({ error: 'Too many attempts. Try again later.', retryAfter: rate.retryAfter });
+  }
 
   try {
     const { password } = req.body;

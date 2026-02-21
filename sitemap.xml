@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://karrier.pro/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://karrier.pro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://karrier.pro/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://karrier.pro/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://karrier.pro/?lang=de"/>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://karrier.pro/contact.html</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://karrier.pro/mentions-legales.html</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://karrier.pro/cgv.html</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://karrier.pro/confidentialite.html</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>

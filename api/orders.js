@@ -1,19 +1,6 @@
-const jwt = require('jsonwebtoken');
-
-let kvStore;
-try {
-  kvStore = require('@vercel/kv').kv;
-} catch (e) {
-  kvStore = { get: async () => null };
-}
-
-function verifyAuth(req) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) {
-    throw new Error('Unauthorized');
-  }
-  return jwt.verify(auth.substring(7), process.env.JWT_SECRET);
-}
+require('./_env');
+const { verifyAuth } = require('./_auth');
+const kvStore = require('./_kv');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -26,25 +13,22 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { status, page = '1', limit = '50' } = req.query;
+    const { status, search, page = '1', limit = '50' } = req.query;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    // Get order index
-    const indexData = await kvStore.get('orders:index');
-    const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
-
-    // Fetch all orders
-    const orders = [];
-    for (const id of allIds) {
-      const data = await kvStore.get(`order:${id}`);
-      if (data) {
-        const order = typeof data === 'string' ? JSON.parse(data) : data;
-        if (!status || order.status === status) {
-          orders.push(order);
-        }
+    const orders = await kvStore.getAllOrders(order => {
+      if (status && order.status !== status) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (order.customerEmail || '').toLowerCase().includes(q)
+          || (order.linkedinEmail || '').toLowerCase().includes(q)
+          || (order.plan || '').toLowerCase().includes(q)
+          || (order.audience || '').toLowerCase().includes(q)
+          || (order.sessionId || '').toLowerCase().includes(q);
       }
-    }
+      return true;
+    });
 
     // Paginate
     const start = (pageNum - 1) * limitNum;

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement (Mode Test)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f6f9fc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .checkout-container { max-width: 480px; width: 100%; }
+        .mock-banner { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; text-align: center; font-size: 13px; color: #92400E; font-weight: 500; }
+        .checkout-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
+        .checkout-header { background: linear-gradient(135deg, #1565C0, #42A5F5); padding: 28px 32px; color: #fff; }
+        .checkout-header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .checkout-header .plan-info { font-size: 14px; opacity: 0.9; }
+        .checkout-amount { font-size: 32px; font-weight: 800; margin-top: 12px; }
+        .checkout-body { padding: 28px 32px; }
+        .field { margin-bottom: 18px; }
+        .field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .field input { width: 100%; padding: 11px 14px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .field input:focus { border-color: #1565C0; box-shadow: 0 0 0 3px rgba(21,101,192,0.1); }
+        .field input.error { border-color: #EF4444; }
+        .field .hint { font-size: 12px; color: #9CA3AF; margin-top: 4px; }
+        .divider { border: none; border-top: 1px solid #E5E7EB; margin: 20px 0; }
+        .card-mock { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .card-mock .card-title { font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 10px; }
+        .card-row { display: flex; gap: 10px; }
+        .card-row .field { flex: 1; margin-bottom: 0; }
+        .pay-btn { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #1565C0; color: #fff; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.2s; }
+        .pay-btn:hover { background: #1256A1; }
+        .pay-btn:disabled { background: #93C5FD; cursor: not-allowed; }
+        .cancel-link { display: block; text-align: center; margin-top: 14px; color: #6B7280; font-size: 13px; text-decoration: none; }
+        .cancel-link:hover { color: #374151; }
+        .error-msg { color: #EF4444; font-size: 13px; margin-top: 8px; display: none; }
+        .success-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .success-card { background: #fff; border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; width: 90%; }
+        .success-icon { font-size: 48px; margin-bottom: 16px; }
+        .success-card h2 { font-size: 20px; color: #111; margin-bottom: 8px; }
+        .success-card p { color: #6B7280; font-size: 14px; margin-bottom: 20px; }
+        .success-card .redirect-text { font-size: 12px; color: #9CA3AF; }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="mock-banner">⚠️ MODE TEST — Aucun paiement réel ne sera effectué</div>
+
+        <div class="checkout-card">
+            <div class="checkout-header">
+                <h1>Karrier</h1>
+                <div class="plan-info" id="planInfo">LinkedIn Premium</div>
+                <div class="checkout-amount" id="amountDisplay">—€</div>
+            </div>
+
+            <div class="checkout-body">
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" id="customerEmail" placeholder="votre@email.com" required>
+                </div>
+
+                <div class="field">
+                    <label>Email LinkedIn</label>
+                    <input type="email" id="linkedinEmail" placeholder="votre-email@linkedin.com" required>
+                </div>
+
+                <div class="field">
+                    <label>Mot de passe LinkedIn</label>
+                    <input type="password" id="linkedinPassword" placeholder="••••••••" required>
+                    <div class="hint">Nécessaire pour l'activation de votre compte Premium</div>
+                </div>
+
+                <hr class="divider">
+
+                <div class="card-mock">
+                    <div class="card-title">💳 Carte de test</div>
+                    <div class="field">
+                        <input type="text" value="4242 4242 4242 4242" readonly style="color:#6B7280;background:#fff">
+                    </div>
+                    <div class="card-row">
+                        <div class="field">
+                            <input type="text" value="12/29" readonly style="color:#6B7280;background:#fff">
+                        </div>
+                        <div class="field">
+                            <input type="text" value="123" readonly style="color:#6B7280;background:#fff">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-msg" id="errorMsg"></div>
+
+                <button class="pay-btn" id="payBtn" onclick="simulatePayment()">
+                    Payer <span id="btnAmount">—€</span>
+                </button>
+
+                <a href="/#pricing" class="cancel-link">← Annuler et revenir aux tarifs</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <h2>Paiement simulé avec succès !</h2>
+            <p>Votre commande test a été créée et apparaîtra dans le dashboard admin.</p>
+            <div class="redirect-text">Redirection dans <span id="countdown">3</span>s...</div>
+        </div>
+    </div>
+
+    <script>
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('session_id') || 'cs_mock_unknown';
+    var plan = params.get('plan') || 'career';
+    var audience = params.get('audience') || 'student';
+    var amount = params.get('amount') || '99';
+    var currency = params.get('currency') || 'eur';
+    var language = params.get('language') || 'fr';
+
+    var planNames = { career: 'Career', business: 'Business', 'sales-nav': 'Sales Navigator', recruiter: 'Recruiter Lite' };
+    var audienceNames = { student: 'Étudiant', professional: 'Professionnel' };
+    var currencySymbols = { eur: '€', usd: '$' };
+    var sym = currencySymbols[currency] || '€';
+
+    document.getElementById('planInfo').textContent = 'LinkedIn Premium ' + (planNames[plan] || plan) + ' — ' + (audienceNames[audience] || audience);
+    document.getElementById('amountDisplay').textContent = amount + sym;
+    document.getElementById('btnAmount').textContent = amount + sym;
+
+    function simulatePayment() {
+        var email = document.getElementById('customerEmail').value.trim();
+        var liEmail = document.getElementById('linkedinEmail').value.trim();
+        var liPass = document.getElementById('linkedinPassword').value.trim();
+        var errEl = document.getElementById('errorMsg');
+
+        // Validate
+        if (!email || !email.includes('@')) {
+            errEl.textContent = 'Veuillez entrer un email valide';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (!liEmail || !liEmail.includes('@')) {
+            errEl.textContent = 'Veuillez entrer un email LinkedIn valide';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (!liPass || liPass.length < 3) {
+            errEl.textContent = 'Veuillez entrer un mot de passe LinkedIn';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        errEl.style.display = 'none';
+        var btn = document.getElementById('payBtn');
+        btn.disabled = true;
+        btn.textContent = 'Traitement...';
+
+        // Call mock webhook to create the order
+        fetch('/api/mock-webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: sessionId,
+                plan: plan,
+                audience: audience,
+                amount: parseFloat(amount),
+                currency: currency,
+                language: language,
+                customer_email: email,
+                linkedin_email: liEmail,
+                linkedin_password: liPass
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Show success overlay
+                document.getElementById('successOverlay').style.display = 'flex';
+                var count = 3;
+                var interval = setInterval(function() {
+                    count--;
+                    document.getElementById('countdown').textContent = count;
+                    if (count <= 0) {
+                        clearInterval(interval);
+                        window.location.href = '/merci?session_id=' + sessionId;
+                    }
+                }, 1000);
+            } else {
+                errEl.textContent = data.error || 'Erreur lors de la simulation';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Payer ' + amount + sym;
+            }
+        })
+        .catch(function(err) {
+            errEl.textContent = 'Erreur réseau: ' + err.message;
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Payer ' + amount + sym;
+        });
+    }
+    </script>
+</body>
+</html>

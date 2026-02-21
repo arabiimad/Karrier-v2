@@ -4,137 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact — Karrier</title>
+    <meta name="description" content="Contactez l'équipe Karrier via WhatsApp pour toute question sur votre abonnement LinkedIn Premium ou Coursera Plus.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="karrier-logo.png" type="image/png">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1565C0">
+    <script>(function(){try{var t=localStorage.getItem('karrier_theme');if(t==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();</script>
+    <style>
+    html.light-pending body{background:#F5F8FC;color:#1E293B}
+    html.light-pending .header{background:rgba(245,248,252,.95)}
+    .contact-hero{padding:140px 0 40px;text-align:center}
+    .contact-hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;margin-bottom:16px;line-height:1.2}
+    .contact-hero .sub{font-size:1.05rem;opacity:.7;max-width:520px;margin:0 auto}
+    .back-link{display:inline-flex;align-items:center;gap:8px;color:#1565C0;text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:28px;opacity:.85;transition:opacity .2s}
+    .back-link:hover{opacity:1}
+    .contact-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:760px;margin:48px auto 40px}
+    .contact-card{background:var(--card-bg,rgba(255,255,255,.05));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:20px;padding:36px 28px;text-align:center;transition:transform .2s,box-shadow .2s}
+    .contact-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
+    .contact-card-icon{font-size:2.8rem;display:block;margin-bottom:16px}
+    .contact-card h2{font-size:1.2rem;font-weight:700;margin-bottom:8px}
+    .contact-card p{font-size:.93rem;opacity:.7;margin-bottom:24px;line-height:1.55}
+    .contact-card a.cta-button{width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box}
+    .wa-btn{background:linear-gradient(135deg,#25D366,#128C7E)!important;border-color:#25D366!important;color:#fff!important;border:none;padding:14px 24px;border-radius:12px;font-size:.97rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .wa-btn:hover{background:linear-gradient(135deg,#20C25C,#0E7A6E)!important;transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,211,102,.3)}
+    .email-btn{background:transparent;border:2px solid var(--border,rgba(255,255,255,.2));color:inherit;padding:14px 24px;border-radius:12px;font-size:.97rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .email-btn:hover{border-color:#1565C0;color:#1565C0;transform:translateY(-2px)}
+    .contact-hours{max-width:480px;margin:0 auto 48px;background:var(--card-bg,rgba(255,255,255,.05));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:28px;text-align:center}
+    .contact-hours h3{font-size:1rem;font-weight:700;margin-bottom:12px}
+    .contact-hours p{font-size:.9rem;opacity:.65;line-height:1.75}
+    .contact-trust{max-width:700px;margin:0 auto 64px}
+    @media(max-width:600px){.contact-cards{grid-template-columns:1fr}}
+    </style>
 </head>
 <body>
-    <canvas id="particles"></canvas>
 
-    <header class="header">
-        <div class="container header-inner">
-            <a href="index.html" class="logo">
-                <img src="karrier-logo.png" alt="Karrier" class="logo-img">
-                <span class="logo-text">Karrier</span>
-            </a>
-            <nav class="nav-links">
-                <a href="index.html" class="nav-link">Tarifs</a>
-                <a href="index.html#faq" class="nav-link">FAQ</a>
-                <a href="contact.html" class="nav-link active">Contact</a>
-            </nav>
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="bg-orbs"><div class="bg-orb"></div><div class="bg-orb"></div></div>
+
+<!-- Header -->
+<header class="header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <img src="karrier-logo.png" alt="Karrier" class="logo-img" width="40" height="40">
+            <span class="logo-text">Karrier</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html#pricing" class="nav-link">Tarifs</a>
+            <a href="index.html#faq" class="nav-link">FAQ</a>
+            <a href="contact.html" class="nav-link active">Contact</a>
+        </nav>
+        <div class="header-right">
             <a href="index.html#pricing" class="header-cta">Voir les offres</a>
         </div>
-    </header>
+    </div>
+</header>
 
-    <section class="page-hero">
-        <div class="container">
-            <h1 class="page-title animate-fade-up">Contactez-nous</h1>
-            <p class="page-subtitle animate-fade-up delay-1">Une question ? Un souci d'activation ? On vous répond sous 24h.</p>
-        </div>
-    </section>
+<!-- Hero -->
+<section class="contact-hero">
+    <div class="container">
+        <a href="index.html" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Retour à l'accueil
+        </a>
+        <h1>Contactez-<span class="gradient-text">nous</span></h1>
+        <p class="sub">Une question sur votre commande ou abonnement ? Notre équipe vous répond rapidement via WhatsApp.</p>
+    </div>
+</section>
 
-    <section class="contact-section">
-        <div class="container">
-            <div class="contact-grid">
-                <!-- Contact Form -->
-                <div class="contact-form-card animate-slide-left">
-                    <h2>Envoyez-nous un message</h2>
-                    <form id="contactForm" class="contact-form" novalidate>
-                        <div class="form-group">
-                            <label for="name">Nom complet</label>
-                            <input type="text" id="name" name="name" required placeholder="Jean Dupont" autocomplete="name">
-                            <span class="form-error" id="nameError">Veuillez entrer votre nom</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required placeholder="jean@exemple.com" autocomplete="email">
-                            <span class="form-error" id="emailError">Veuillez entrer un email valide</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Sujet</label>
-                            <select id="subject" name="subject" required>
-                                <option value="" disabled selected>Choisir un sujet...</option>
-                                <option value="activation">Problème d'activation</option>
-                                <option value="remboursement">Demande de remboursement</option>
-                                <option value="facture">Question de facturation</option>
-                                <option value="info">Demande d'information</option>
-                                <option value="autre">Autre</option>
-                            </select>
-                            <span class="form-error" id="subjectError">Veuillez choisir un sujet</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" rows="5" required placeholder="Décrivez votre demande..."></textarea>
-                            <span class="form-error" id="messageError">Veuillez entrer votre message</span>
-                        </div>
-                        <button type="submit" class="cta-button cta-primary" id="submitBtn">
-                            <span class="btn-text">Envoyer le message</span>
-                            <span class="btn-loader" style="display:none;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" class="spinner"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" dur="0.8s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></circle></svg>
-                                Envoi en cours...
-                            </span>
-                        </button>
-                    </form>
-                    <!-- Success message -->
-                    <div class="form-success" id="formSuccess" style="display:none;">
-                        <div class="success-icon">&#10003;</div>
-                        <h3>Message envoyé !</h3>
-                        <p>Merci pour votre message. Nous vous répondrons sous 24 heures.</p>
-                        <button class="cta-button cta-secondary" id="sendAnother">Envoyer un autre message</button>
-                    </div>
-                </div>
+<!-- Contact cards -->
+<section>
+    <div class="container">
+        <div class="contact-cards">
 
-                <!-- Contact Info -->
-                <div class="contact-info animate-slide-right">
-                    <div class="info-card">
-                        <div class="info-icon">&#9993;</div>
-                        <h3>Email</h3>
-                        <a href="mailto:contact@karrier.pro">contact@karrier.pro</a>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-icon">&#9889;</div>
-                        <h3>Temps de réponse</h3>
-                        <p>Sous 24 heures ouvrées</p>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-icon">&#128274;</div>
-                        <h3>Remboursement</h3>
-                        <p>Garanti 30 jours si l'activation échoue</p>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-icon">&#128172;</div>
-                        <h3>FAQ</h3>
-                        <p>Consultez notre <a href="index.html#faq">Foire aux questions</a> pour des réponses rapides.</p>
-                    </div>
-                </div>
+            <!-- WhatsApp card -->
+            <div class="contact-card">
+                <span class="contact-card-icon">💬</span>
+                <h2>WhatsApp</h2>
+                <p>La manière la plus rapide de nous joindre. Réponse en quelques minutes pendant nos heures d'ouverture.</p>
+                <a href="https://wa.me/212651064637?text=Bonjour%2C%20j'ai%20une%20question%20sur%20Karrier"
+                   target="_blank" rel="noopener" class="cta-button wa-btn">
+                    💬 Écrire sur WhatsApp
+                </a>
             </div>
-        </div>
-    </section>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-brand">
-                    <img src="karrier-logo.png" alt="Karrier" class="footer-logo-img">
-                    <span class="logo-text">Karrier</span>
-                </div>
-                <nav class="footer-links">
-                    <a href="mentions-legales.html">Mentions légales</a>
-                    <a href="cgv.html">CGV</a>
-                    <a href="confidentialite.html">Confidentialité</a>
-                    <a href="contact.html">Contact</a>
-                </nav>
-                <p class="footer-disclaimer">Karrier n'est pas affilié à LinkedIn Corporation. LinkedIn&trade; est une marque déposée de LinkedIn Corporation.</p>
-                <p class="footer-copyright">&copy; 2025 Karrier. Tous droits réservés.</p>
+            <!-- Email card -->
+            <div class="contact-card">
+                <span class="contact-card-icon">✉️</span>
+                <h2>Email</h2>
+                <p>Pour toute demande de support, facture ou remboursement. Réponse sous 24h ouvrées.</p>
+                <a href="mailto:contact@karrier.pro" class="cta-button email-btn">
+                    Envoyer un email
+                </a>
             </div>
+
         </div>
-    </footer>
 
-    <button class="back-to-top" id="backToTop" aria-label="Retour en haut">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-    </button>
+        <!-- Hours -->
+        <div class="contact-hours">
+            <h3>🕐 Horaires de support</h3>
+            <p>
+                Lundi – Vendredi : 9h00 – 20h00<br>
+                Samedi : 10h00 – 18h00<br>
+                Dimanche : Fermé<br>
+                <strong>Délai de réponse moyen : &lt; 2h</strong>
+            </p>
+        </div>
 
-    <script src="script.js"></script>
+        <!-- Trust bar -->
+        <div class="trust-grid contact-trust">
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">💬</div><span>Commande via WhatsApp</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">⚡</div><span>Réponse rapide</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">🔄</div><span>Annulation à tout moment</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">✅</div><span>Remboursé 30j si échec</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img src="karrier-logo.png" alt="Karrier" class="footer-logo-img">
+                <span class="logo-text">Karrier</span>
+            </div>
+            <nav class="footer-links">
+                <a href="mentions-legales.html">Mentions légales</a>
+                <a href="cgv.html">CGV</a>
+                <a href="confidentialite.html">Confidentialité</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+            <p class="footer-disclaimer">Karrier n'est pas affilié à LinkedIn Corporation. LinkedIn™ est une marque déposée. Prix officiels : tarifs LinkedIn France 2025/2026 (facturation annuelle).</p>
+            <p class="footer-copyright">© 2026 Karrier. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+
+<button class="back-to-top" id="backToTop" aria-label="Retour en haut">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+(function(){
+    var root = document.documentElement;
+    root.classList.remove('light-pending');
+    try { if(localStorage.getItem('karrier_theme')==='light') root.classList.add('light'); } catch(e) {}
+
+    var btn = document.getElementById('themeToggle');
+    if(btn) btn.addEventListener('click', function(){
+        root.classList.toggle('light');
+        try { localStorage.setItem('karrier_theme', root.classList.contains('light') ? 'light' : 'dark'); } catch(e) {}
+    });
+
+    var btt = document.getElementById('backToTop');
+    var sp = document.getElementById('scrollProgress');
+    window.addEventListener('scroll', function(){
+        if(btt) btt.classList.toggle('visible', window.scrollY > 300);
+        if(sp) {
+            var pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            sp.style.width = pct + '%';
+        }
+    });
+    if(btt) btt.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+
+    // Header scroll effect
+    var header = document.querySelector('.header');
+    window.addEventListener('scroll', function(){
+        if(header) header.classList.toggle('scrolled', window.scrollY > 20);
+    });
+})();
+</script>
 </body>
 </html>

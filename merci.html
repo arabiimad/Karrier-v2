@@ -306,30 +306,27 @@
 
     <!-- Header -->
     <header class="header" id="header">
-        <div class="container">
-            <nav class="nav">
-                <a href="index.html" class="logo">
-                    <img src="karrier-logo.png" alt="Karrier" class="logo-img">
-                    <span class="logo-text">Karrier</span>
-                </a>
-                <div class="nav-actions">
-                    <!-- Language Switcher -->
-                    <div class="lang-switcher" id="langSwitcher">
-                        <button class="lang-btn" id="langToggle" aria-label="Change language" aria-expanded="false">
-                            <span id="langFlag" aria-hidden="true"></span>
-                            <span id="langCode">FR</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-                        </button>
-                        <div class="lang-dropdown" id="langDropdown" role="listbox">
-                            <button class="lang-option active" data-lang="fr" role="option"><span aria-hidden="true">&#x1F1EB;&#x1F1F7;</span> Fran&ccedil;ais</button>
-                            <button class="lang-option" data-lang="en" role="option"><span aria-hidden="true">&#x1F1EC;&#x1F1E7;</span> English</button>
-                            <button class="lang-option" data-lang="es" role="option"><span aria-hidden="true">&#x1F1EA;&#x1F1F8;</span> Espa&ntilde;ol</button>
-                            <button class="lang-option" data-lang="de" role="option"><span aria-hidden="true">&#x1F1E9;&#x1F1EA;</span> Deutsch</button>
-                        </div>
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <img src="karrier-logo.png" alt="Karrier" class="logo-img" width="40" height="40">
+                <span class="logo-text">Karrier</span>
+            </a>
+            <div class="header-right">
+                <div class="lang-switcher" id="langSwitcher">
+                    <button class="lang-btn" id="langBtn" aria-label="Choisir la langue" data-i18n-aria="lang_label">
+                        <span class="lang-flag" id="langFlag">🇫🇷</span>
+                        <span class="lang-code" id="langCode">FR</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="lang-dropdown" id="langDropdown">
+                        <button class="lang-option active" data-lang="fr"><span>🇫🇷</span> Français</button>
+                        <button class="lang-option" data-lang="en"><span>🇬🇧</span> English</button>
+                        <button class="lang-option" data-lang="es"><span>🇪🇸</span> Español</button>
+                        <button class="lang-option" data-lang="de"><span>🇩🇪</span> Deutsch</button>
                     </div>
-                    <a href="index.html#pricing" class="header-cta" data-i18n="nav_cta">Voir les offres</a>
                 </div>
-            </nav>
+                <a href="index.html#pricing" class="header-cta" data-i18n="nav_cta">Voir les offres</a>
+            </div>
         </div>
     </header>
 
@@ -346,8 +343,8 @@
                 </svg>
             </div>
 
-            <h1 class="merci-title" data-i18n="merci_title">Merci pour votre commande !</h1>
-            <p class="merci-subtitle" data-i18n="merci_subtitle">Votre paiement a bien &eacute;t&eacute; re&ccedil;u. Voici les prochaines &eacute;tapes :</p>
+            <h1 class="merci-title">Merci pour votre commande ! 🎉</h1>
+            <p class="merci-subtitle">Votre commande a bien été reçue via WhatsApp. Voici les prochaines étapes :</p>
 
             <!-- Guarantee badge -->
             <div class="merci-guarantee">
@@ -362,30 +359,34 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <div class="timeline-content">
-                        <h2 data-i18n="merci_step1_title">Paiement re&ccedil;u</h2>
-                        <p data-i18n="merci_step1_desc">Votre paiement a &eacute;t&eacute; confirm&eacute;. Un re&ccedil;u vous a &eacute;t&eacute; envoy&eacute; par email.</p>
+                        <h2>Commande reçue</h2>
+                        <p>Votre demande a été transmise à notre équipe via WhatsApp.</p>
                     </div>
                 </li>
                 <li class="timeline-step active">
                     <div class="timeline-dot">2</div>
                     <div class="timeline-content">
-                        <h2 data-i18n="merci_step2_title">Activation en cours</h2>
-                        <p data-i18n="merci_step2_desc">Notre &eacute;quipe va activer votre LinkedIn Premium sous 24 &agrave; 48h.</p>
+                        <h2>Règlement &amp; activation</h2>
+                        <p>Notre équipe vous contacte pour le règlement et active votre accès sous 24–48h.</p>
                     </div>
                 </li>
                 <li class="timeline-step pending">
                     <div class="timeline-dot">3</div>
                     <div class="timeline-content">
-                        <h2 data-i18n="merci_step3_title">Pr&ecirc;t !</h2>
-                        <p data-i18n="merci_step3_desc">Vous recevrez un email de confirmation d&egrave;s que votre compte est activ&eacute;.</p>
+                        <h2>Accès activé !</h2>
+                        <p>Vous recevrez un email de confirmation dès que votre compte est activé.</p>
                     </div>
                 </li>
             </ol>
 
             <!-- Support -->
             <div class="merci-support">
-                <p class="merci-support-title" data-i18n="merci_support_title">Une question ? Contactez-nous :</p>
+                <p class="merci-support-title">Une question ? Contactez-nous :</p>
                 <div class="support-links">
+                    <a href="https://wa.me/212651064637?text=Bonjour%2C%20j'ai%20une%20question%20sur%20ma%20commande%20Karrier" target="_blank" rel="noopener" class="support-link" style="color:#25D366;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        WhatsApp : +212 651 064 637
+                    </a>
                     <a href="mailto:contact@karrier.pro" class="support-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         contact@karrier.pro
@@ -437,58 +438,5 @@
     })();
     </script>
 
-    <!-- Live order status polling -->
-    <script>
-    (function() {
-        const params = new URLSearchParams(window.location.search);
-        const sessionId = params.get('session_id');
-        if (!sessionId) return;
-
-        const steps = document.querySelectorAll('.timeline-step');
-        const statusMap = { pending: 0, activating: 1, done: 2 };
-
-        function updateTimeline(status) {
-            const activeIndex = statusMap[status];
-            if (activeIndex === undefined) return;
-
-            steps.forEach((step, i) => {
-                step.classList.remove('completed', 'active', 'pending');
-                if (i < activeIndex) {
-                    step.classList.add('completed');
-                    const dot = step.querySelector('.timeline-dot');
-                    if (dot && !dot.querySelector('svg')) {
-                        dot.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-                    }
-                } else if (i === activeIndex) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.add('pending');
-                    const dot = step.querySelector('.timeline-dot');
-                    if (dot) dot.textContent = String(i + 1);
-                }
-            });
-        }
-
-        let pollInterval;
-
-        async function pollStatus() {
-            try {
-                const res = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
-                if (!res.ok) return;
-                const data = await res.json();
-                updateTimeline(data.status);
-                if (data.status === 'done') {
-                    clearInterval(pollInterval);
-                }
-            } catch (e) {
-                // Silently ignore network errors
-            }
-        }
-
-        // Initial poll, then every 30s
-        pollStatus();
-        pollInterval = setInterval(pollStatus, 30000);
-    })();
-    </script>
 </body>
 </html>

@@ -2,3 +2,21 @@
 .env*.local
 node_modules
 nul
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Local dev KV store
+.dev-kv.json
+
+# Claude worktrees
+.claude/worktrees/

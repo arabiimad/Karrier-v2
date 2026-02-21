@@ -48,13 +48,20 @@ function getTrans(key) {
 // ===== Page Loader =====
 window.addEventListener('load', () => {
     const loader = document.getElementById('loader');
+    const waSticky = document.querySelector('.whatsapp-sticky');
     if (loader) {
-        // Use shorter delay if reduced motion or returning visitor
         const delay = prefersReducedMotion ? 200 : 1400;
         setTimeout(() => {
             loader.classList.add('hidden');
-            setTimeout(() => { loader.style.display = 'none'; }, prefersReducedMotion ? 50 : 800);
+            setTimeout(() => {
+                loader.style.display = 'none';
+                // Show sticky WA button only after loader is gone
+                if (waSticky) waSticky.classList.add('ready');
+            }, prefersReducedMotion ? 50 : 800);
         }, delay);
+    } else {
+        // No loader — show immediately
+        if (waSticky) waSticky.classList.add('ready');
     }
 });
 
@@ -337,111 +344,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// ===== Audience Tabs with Price Switching + Card Visibility =====
-let currentTab = 'students';
-
-function switchTab(tab) {
-    currentTab = tab;
-    const isStudent = tab === 'students';
-    const banner = document.getElementById('tabInfoBanner');
-    const bannerInner = banner ? banner.querySelector('.info-banner') : null;
-    const bannerText = document.getElementById('bannerText');
-    const bannerIcon = banner ? banner.querySelector('.info-banner-icon') : null;
-
-    // Update banner using i18n
-    if (bannerInner) {
-        if (isStudent) {
-            bannerInner.classList.remove('pro-mode');
-            if (bannerText) {
-                const key = 'banner_student';
-                const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-                const t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : null;
-                bannerText.innerHTML = (t && t[key]) ? t[key] : 'Tarif \u00e9tudiant appliqu\u00e9 sur les plans <strong>Career</strong> et <strong>Business</strong>. Les plans Sales Navigator et Recruiter Lite ne sont pas disponibles.';
-                bannerText.setAttribute('data-i18n', key);
-            }
-            if (bannerIcon) bannerIcon.textContent = '\u{1F393}';
-        } else {
-            bannerInner.classList.add('pro-mode');
-            if (bannerText) {
-                const key = 'banner_pro';
-                const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-                const t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : null;
-                bannerText.innerHTML = (t && t[key]) ? t[key] : 'Tarif salari\u00e9 \u2014 tous les plans sont disponibles, y compris <strong>Sales Navigator</strong> et <strong>Recruiter Lite</strong>.';
-                bannerText.setAttribute('data-i18n', key);
-            }
-            if (bannerIcon) bannerIcon.textContent = '\u{1F4BC}';
-        }
-    }
-
-    // Show/hide pro-only cards
-    document.querySelectorAll('.pro-only-card').forEach(card => {
-        if (isStudent) {
-            card.classList.add('hidden-card');
-        } else {
-            card.classList.remove('hidden-card');
-        }
-    });
-
-    // Update prices on each card
-    document.querySelectorAll('.pricing-card').forEach(card => {
-        const studentPrice = parseInt(card.getAttribute('data-student-price'));
-        const proPrice = parseInt(card.getAttribute('data-pro-price'));
-        const price = isStudent ? studentPrice : proPrice;
-        const priceEl = card.querySelector('.price-amount');
-        const monthlyEl = card.querySelector('.monthly-calc');
-        const discountEl = card.querySelector('.discount-badge');
-
-        if (priceEl) {
-            const currentValue = parseInt(priceEl.textContent);
-            priceEl.setAttribute('data-value', price);
-            animateValue(priceEl, currentValue, price, 600);
-        }
-
-        if (monthlyEl) {
-            const locale = getCurrentLocale();
-            const monthly = (price / 12).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            monthlyEl.textContent = monthly;
-        }
-
-        // Update savings tag for Career and Business
-        const savingsTag = card.querySelector('.savings-tag');
-        const officialPrice = parseInt(card.getAttribute('data-official-price'));
-        if (savingsTag && officialPrice) {
-            const savings = Math.round((1 - price / officialPrice) * 100);
-            savingsTag.textContent = '-' + savings + '%';
-        }
-
-        // Show/hide discount badge
-        if (discountEl) {
-            if (isStudent && studentPrice < proPrice) {
-                discountEl.classList.remove('hidden');
-            } else {
-                discountEl.classList.add('hidden');
-            }
-        }
-
-        // Bounce animation
-        if (!card.classList.contains('hidden-card')) {
-            card.style.transform = card.classList.contains('popular') ? 'scale(0.98)' : 'scale(0.97)';
-            setTimeout(() => { card.style.transform = ''; }, 200);
-        }
-    });
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('active');
-            b.setAttribute('aria-selected', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        switchTab(btn.getAttribute('data-tab'));
-    });
-});
-
-// Initialize default state
-switchTab('students');
+// Tabs désactivés — plus de distinction étudiant/pro
 
 // ===== Stats Counter Animation =====
 const statsObserver = new IntersectionObserver((entries) => {
@@ -653,48 +556,14 @@ document.querySelectorAll('.faq-question').forEach(btn => {
     });
 });
 
-// ===== Stripe Checkout =====
-async function initiateCheckout(plan, audience) {
-    // If no audience specified, use current tab
-    if (!audience) {
-        audience = currentTab === 'students' ? 'student' : 'professional';
-    }
-
-    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-
-    // Show loading state on clicked button
-    const btn = event.currentTarget;
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '...';
-
-    try {
-        const response = await fetch('/api/create-checkout-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan, audience, language: lang })
-        });
-
-        const data = await response.json();
-
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            throw new Error(data.error || 'Checkout failed');
-        }
-    } catch (error) {
-        console.error('Checkout error:', error);
-        const errorMessages = {
-            fr: 'Une erreur est survenue. Veuillez réessayer.',
-            en: 'An error occurred. Please try again.',
-            es: 'Ha ocurrido un error. Inténtelo de nuevo.',
-            de: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.'
-        };
-        alert(errorMessages[lang] || errorMessages.fr);
-        btn.disabled = false;
-        btn.textContent = originalText;
-    }
+// ===== WhatsApp Order =====
+function commanderWhatsApp(planLabel) {
+    const phone = '212651064637';
+    const msg = encodeURIComponent('Bonjour, je souhaite commander : ' + planLabel);
+    window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+    setTimeout(function() { window.location.href = '/merci.html'; }, 800);
 }
+
 
 // ===== Ripple Effect on CTA Buttons =====
 document.querySelectorAll('.cta-button').forEach(btn => {
@@ -710,4 +579,60 @@ document.querySelectorAll('.cta-button').forEach(btn => {
         setTimeout(() => ripple.remove(), 600);
     });
 });
+
+// ===== Cookie Banner RGPD =====
+(function() {
+    const banner = document.getElementById('cookieBanner');
+    if (!banner) return;
+
+    const consent = safeGet('karrier_cookie_consent');
+    if (consent) return; // Already decided
+
+    // Show after short delay
+    setTimeout(() => banner.classList.add('visible'), 1200);
+
+    document.getElementById('cookieAccept').addEventListener('click', () => {
+        safeSet('karrier_cookie_consent', 'accepted');
+        banner.classList.remove('visible');
+        setTimeout(() => banner.remove(), 400);
+    });
+
+    document.getElementById('cookieDecline').addEventListener('click', () => {
+        safeSet('karrier_cookie_consent', 'declined');
+        banner.classList.remove('visible');
+        setTimeout(() => banner.remove(), 400);
+    });
+})();
+
+// ===== Urgency Countdown =====
+(function() {
+    const el = document.getElementById('urgencyCountdown');
+    if (!el) return;
+
+    // Store deadline in sessionStorage so it persists on reload within same tab session
+    // but resets on new sessions (realistic urgency)
+    const KEY = 'karrier_urgency_end';
+    let end = parseInt(safeGet(KEY) || '0');
+    const now = Date.now();
+
+    if (!end || end < now) {
+        // Set deadline to end of current day (midnight)
+        const tomorrow = new Date();
+        tomorrow.setHours(23, 59, 59, 999);
+        end = tomorrow.getTime();
+        safeSet(KEY, String(end));
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+        const remaining = Math.max(0, end - Date.now());
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        if (remaining > 0) requestAnimationFrame(tick);
+    }
+    tick();
+})();
 

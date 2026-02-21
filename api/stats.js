@@ -1,19 +1,6 @@
-const jwt = require('jsonwebtoken');
-
-let kvStore;
-try {
-  kvStore = require('@vercel/kv').kv;
-} catch (e) {
-  kvStore = { get: async () => null };
-}
-
-function verifyAuth(req) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) {
-    throw new Error('Unauthorized');
-  }
-  return jwt.verify(auth.substring(7), process.env.JWT_SECRET);
-}
+require('./_env');
+const { verifyAuth } = require('./_auth');
+const kvStore = require('./_kv');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -26,25 +13,17 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const indexData = await kvStore.get('orders:index');
-    const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
+    const allOrders = await kvStore.getAllOrders();
+    const today = new Date().toISOString().split('T')[0];
 
     let totalRevenue = 0;
-    let totalOrders = 0;
     let pendingCount = 0;
     let activatingCount = 0;
     let doneCount = 0;
     let todayOrders = 0;
     let todayRevenue = 0;
 
-    const today = new Date().toISOString().split('T')[0];
-
-    for (const id of allIds) {
-      const data = await kvStore.get(`order:${id}`);
-      if (!data) continue;
-      const order = typeof data === 'string' ? JSON.parse(data) : data;
-
-      totalOrders++;
+    for (const order of allOrders) {
       totalRevenue += order.amount || 0;
 
       if (order.status === 'pending') pendingCount++;
@@ -56,6 +35,8 @@ module.exports = async (req, res) => {
         todayRevenue += order.amount || 0;
       }
     }
+
+    const totalOrders = allOrders.length;
 
     res.status(200).json({
       totalRevenue,

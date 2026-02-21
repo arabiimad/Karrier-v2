@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi de commande — Karrier</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: #0F172A; --card: #1E293B; --border: #334155; --text: #CBD5E1; --bright: #F1F5F9; --muted: #94A3B8; --primary: #1565C0; --primary-light: #42A5F5; --success: #10B981; --warning: #F59E0B; --info: #3B82F6; --danger: #EF4444; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .track-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 48px 40px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .track-logo { width: 56px; height: 56px; margin-bottom: 16px; }
+        .track-card h1 { font-size: 1.5rem; font-weight: 800; color: var(--bright); margin-bottom: 8px; }
+        .track-card .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
+        .track-loading { color: var(--muted); padding: 40px 0; }
+        .track-error { color: var(--danger); padding: 20px; background: rgba(239,68,68,0.1); border-radius: 12px; margin-top: 16px; }
+
+        .status-timeline { display: flex; flex-direction: column; gap: 0; text-align: left; margin: 24px 0; }
+        .timeline-step { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-bottom: 24px; }
+        .timeline-step:last-child { padding-bottom: 0; }
+        .timeline-dot { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.3s; }
+        .timeline-step.active .timeline-dot { border-color: var(--primary); background: var(--primary); }
+        .timeline-step.completed .timeline-dot { border-color: var(--success); background: var(--success); }
+        .timeline-line { position: absolute; left: 17px; top: 36px; width: 2px; height: calc(100% - 36px); background: var(--border); }
+        .timeline-step.completed .timeline-line { background: var(--success); }
+        .timeline-step:last-child .timeline-line { display: none; }
+        .timeline-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--bright); margin-bottom: 2px; }
+        .timeline-info p { font-size: 0.8rem; color: var(--muted); }
+        .timeline-step.active .timeline-info h3 { color: var(--primary-light); }
+
+        .order-details { background: var(--bg); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--muted); }
+        .detail-val { color: var(--bright); font-weight: 600; }
+
+        .back-link { display: inline-block; margin-top: 24px; color: var(--primary-light); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) { .track-card { padding: 32px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="track-card">
+        <img src="karrier-logo.png" alt="Karrier" class="track-logo">
+        <h1>Suivi de commande</h1>
+        <p class="subtitle">Suivez l'avancement de votre commande en temps réel</p>
+        <div id="trackContent">
+            <div class="track-loading">Chargement...</div>
+        </div>
+        <a href="/" class="back-link">← Retour au site</a>
+    </div>
+
+    <script>
+    (async function() {
+        var container = document.getElementById('trackContent');
+        var params = new URLSearchParams(window.location.search);
+        var sessionId = params.get('id') || params.get('session_id');
+
+        if (!sessionId) {
+            container.innerHTML = '<div class="track-error">Aucun identifiant de commande fourni.</div>';
+            return;
+        }
+
+        try {
+            var res = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
+            if (!res.ok) {
+                container.innerHTML = '<div class="track-error">Commande introuvable. Vérifiez votre lien.</div>';
+                return;
+            }
+            var order = await res.json();
+            renderTracking(order);
+        } catch (err) {
+            container.innerHTML = '<div class="track-error">Erreur de connexion. Réessayez plus tard.</div>';
+        }
+
+        function renderTracking(order) {
+            var steps = [
+                { key: 'pending', icon: '📦', title: 'Commande reçue', desc: 'Votre paiement a été confirmé' },
+                { key: 'activating', icon: '⚡', title: 'Activation en cours', desc: 'Votre compte LinkedIn est en cours d\'activation' },
+                { key: 'done', icon: '✅', title: 'Terminé', desc: 'Votre compte LinkedIn Premium est activé !' }
+            ];
+
+            if (order.status === 'refunded') {
+                steps = [
+                    { key: 'pending', icon: '📦', title: 'Commande reçue', desc: 'Paiement confirmé' },
+                    { key: 'refunded', icon: '💸', title: 'Remboursé', desc: 'Votre commande a été remboursée' }
+                ];
+            }
+
+            var statusOrder = { pending: 0, activating: 1, done: 2, refunded: 1 };
+            var currentIdx = statusOrder[order.status] || 0;
+
+            var html = '<div class="status-timeline">';
+            steps.forEach(function(step, i) {
+                var cls = '';
+                if (i < currentIdx) cls = 'completed';
+                else if (i === currentIdx) cls = 'active';
+                html += '<div class="timeline-step ' + cls + '">' +
+                    '<div class="timeline-dot">' + step.icon + '</div>' +
+                    '<div class="timeline-line"></div>' +
+                    '<div class="timeline-info"><h3>' + step.title + '</h3><p>' + step.desc + '</p></div>' +
+                '</div>';
+            });
+            html += '</div>';
+
+            html += '<div class="order-details">';
+            html += '<div class="detail-row"><span class="detail-label">Plan</span><span class="detail-val">' + (order.plan || '—') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Audience</span><span class="detail-val">' + (order.audience || '—') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Montant</span><span class="detail-val">' + (order.amount || 0) + ' ' + (order.currency || 'EUR').toUpperCase() + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">' + (order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR') : '—') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Dernière mise à jour</span><span class="detail-val">' + (order.updatedAt ? new Date(order.updatedAt).toLocaleString('fr-FR') : '—') + '</span></div>';
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1,14 +1,31 @@
 {
   "version": 2,
+  "framework": null,
+  "devCommand": "",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/mock-checkout", "destination": "/", "permanent": false },
+    { "source": "/admin/diag", "destination": "/admin", "permanent": false },
+    { "source": "/admin/test-login", "destination": "/admin", "permanent": false }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PATCH, OPTIONS" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://karrier.pro" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PATCH, DELETE, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
       ]
     }
   ]

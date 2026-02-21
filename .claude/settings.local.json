@@ -9,7 +9,14 @@
       "Bash(npm install:*)",
       "Bash(vercel login:*)",
       "Bash(npx vercel:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(node -e:*)",
+      "Bash(test:*)",
+      "Bash(\"C:/Users/admin/Karrier/contact.html\":*)",
+      "Bash(powershell.exe -NoProfile -Command \"Write-Output ''test''\")",
+      "Bash(powershell.exe -NoProfile -Command \"Set-Content -Path ''C:\\\\Users\\\\admin\\\\Karrier\\\\robots.txt'' -Encoding UTF8 -Value @''\nUser-agent: *\nAllow: /\n\nDisallow: /admin/\nDisallow: /api/\nDisallow: /merci.html\nDisallow: /mock-checkout.html\nDisallow: /suivi.html\n\nSitemap: https://karrier.pro/sitemap.xml\n''@\")",
+      "Bash(powershell.exe -NoProfile -Command:*)",
+      "Bash(wslpath:*)"
     ]
   }
 }

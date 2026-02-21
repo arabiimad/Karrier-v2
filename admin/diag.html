@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Diagnostic</title></head>
+<body style="font-family:monospace;padding:20px;background:#111;color:#0f0">
+<h1>Diagnostic Admin Login</h1>
+<button id="btn" style="padding:10px 20px;font-size:16px;cursor:pointer">Tester le login (admin123)</button>
+<pre id="log" style="margin-top:20px;white-space:pre-wrap;font-size:14px">Cliquez sur le bouton...</pre>
+<script>
+var log = document.getElementById('log');
+function addLog(msg) { log.textContent += '\n' + new Date().toLocaleTimeString() + ' > ' + msg; }
+
+document.getElementById('btn').addEventListener('click', function() {
+    addLog('Debut du test...');
+    addLog('URL: ' + window.location.href);
+    addLog('Origin: ' + window.location.origin);
+    
+    addLog('Envoi fetch POST /api/auth...');
+    fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: 'admin123' })
+    }).then(function(r) {
+        addLog('Response status: ' + r.status);
+        addLog('Response headers content-type: ' + r.headers.get('content-type'));
+        return r.text();
+    }).then(function(text) {
+        addLog('Response body: ' + text);
+        try {
+            var data = JSON.parse(text);
+            if (data.token) {
+                addLog('TOKEN RECU ! Length: ' + data.token.length);
+                addLog('Login fonctionne !');
+            } else {
+                addLog('Pas de token dans la reponse');
+            }
+        } catch(e) {
+            addLog('Erreur JSON parse: ' + e.message);
+        }
+    }).catch(function(err) {
+        addLog('ERREUR FETCH: ' + err.message);
+        addLog('Type: ' + err.name);
+    });
+});
+</script>
+</body>
+</html>

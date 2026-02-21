@@ -1,0 +1,10 @@
+﻿User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /merci.html
+Disallow: /mock-checkout.html
+Disallow: /suivi.html
+
+Sitemap: https://karrier.pro/sitemap.xml

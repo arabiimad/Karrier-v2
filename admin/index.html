@@ -7,21 +7,21 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="../karrier-logo.png" type="image/png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/karrier-logo.png" type="image/png">
+    <link rel="stylesheet" href="/admin/style.css">
 </head>
 <body>
 
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
-            <img src="../karrier-logo.png" alt="Karrier" class="login-logo">
+            <img src="/karrier-logo.png" alt="Karrier" class="login-logo">
             <h1>Karrier Admin</h1>
-            <form id="loginForm">
-                <input type="password" id="loginPassword" placeholder="Mot de passe admin" required autocomplete="current-password">
-                <button type="submit" id="loginBtn">Connexion</button>
+            <div id="loginForm">
+                <input type="password" id="loginPassword" placeholder="Mot de passe admin" autocomplete="current-password">
+                <button type="button" id="loginBtn" onclick="doLogin()">Connexion</button>
                 <p class="login-error" id="loginError"></p>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -31,76 +31,245 @@
         <header class="admin-header">
             <div class="admin-header-inner">
                 <div class="admin-brand">
-                    <img src="../karrier-logo.png" alt="Karrier" class="admin-logo">
+                    <img src="/karrier-logo.png" alt="Karrier" class="admin-logo">
                     <span>Karrier Admin</span>
                 </div>
-                <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+                <div class="header-actions">
+                    <span class="connection-dot" id="connectionDot" title="Connecté"></span>
+                    <span class="live-clock" id="liveClock"></span>
+                    <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+                </div>
             </div>
         </header>
 
         <!-- Stats -->
         <section class="stats-row" id="statsRow">
             <div class="stat-card">
+                <div class="stat-icon">💰</div>
                 <div class="stat-label">Revenu total</div>
                 <div class="stat-value" id="statRevenue">—</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Commandes totales</div>
+                <div class="stat-icon">📦</div>
+                <div class="stat-label">Commandes</div>
                 <div class="stat-value" id="statOrders">—</div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">⏳</div>
                 <div class="stat-label">En attente</div>
                 <div class="stat-value stat-pending" id="statPending">—</div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">⚡</div>
                 <div class="stat-label">En activation</div>
                 <div class="stat-value stat-activating" id="statActivating">—</div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">✅</div>
                 <div class="stat-label">Terminées</div>
                 <div class="stat-value stat-done" id="statDone">—</div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">📅</div>
                 <div class="stat-label">Aujourd'hui</div>
                 <div class="stat-value" id="statToday">—</div>
             </div>
         </section>
 
-        <!-- Filters -->
-        <section class="filters-row">
-            <select id="filterStatus">
-                <option value="">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="activating">En activation</option>
-                <option value="done">Terminé</option>
-                <option value="refunded">Remboursé</option>
-            </select>
-            <button class="refresh-btn" id="refreshBtn">Actualiser</button>
-        </section>
+        <!-- Tabs Navigation -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" data-tab="orders">📋 Commandes</button>
+            <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
+            <button class="tab-btn" data-tab="automation">🤖 Automatisations</button>
+            <button class="tab-btn" data-tab="settings">⚙️ Outils</button>
+        </nav>
 
-        <!-- Orders table -->
-        <section class="orders-section">
-            <div class="table-wrapper">
-                <table class="orders-table" id="ordersTable">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Plan</th>
-                            <th>Audience</th>
-                            <th>Montant</th>
-                            <th>Email LinkedIn</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersBody">
-                        <tr><td colspan="7" class="empty-state">Chargement...</td></tr>
-                    </tbody>
-                </table>
+        <!-- TAB: Orders -->
+        <div class="tab-content active" id="tab-orders">
+            <section class="filters-row">
+                <select id="filterStatus">
+                    <option value="">Tous les statuts</option>
+                    <option value="pending">En attente</option>
+                    <option value="activating">En activation</option>
+                    <option value="done">Terminé</option>
+                    <option value="refunded">Remboursé</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Rechercher email, plan..." class="search-input">
+                <button class="refresh-btn" id="refreshBtn"><span class="refresh-icon" id="refreshIcon">🔄</span> Actualiser</button>
+                <span class="orders-count" id="ordersCount"></span>
+            </section>
+
+            <section class="orders-section">
+                <div class="table-wrapper">
+                    <table class="orders-table" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Plan</th>
+                                <th>Audience</th>
+                                <th>Montant</th>
+                                <th>Email client</th>
+                                <th>Email LinkedIn</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersBody">
+                            <tr><td colspan="8" class="empty-state">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </section>
+        </div>
+
+        <!-- TAB: Analytics -->
+        <div class="tab-content" id="tab-analytics">
+            <div class="analytics-controls">
+                <select id="analyticsPeriod">
+                    <option value="7">7 derniers jours</option>
+                    <option value="30" selected>30 derniers jours</option>
+                    <option value="90">90 derniers jours</option>
+                    <option value="365">12 derniers mois</option>
+                </select>
+                <button class="refresh-btn" id="refreshAnalytics">📊 Charger</button>
             </div>
-            <!-- Pagination -->
-            <div class="pagination" id="pagination"></div>
-        </section>
+
+            <div class="analytics-grid">
+                <div class="analytics-card analytics-card-wide">
+                    <h3>📈 Revenu journalier</h3>
+                    <div class="chart-container" id="revenueChart"></div>
+                </div>
+                <div class="analytics-card">
+                    <h3>📦 Répartition par plan</h3>
+                    <div id="planBreakdown" class="breakdown-list"></div>
+                </div>
+                <div class="analytics-card">
+                    <h3>👥 Répartition par audience</h3>
+                    <div id="audienceBreakdown" class="breakdown-list"></div>
+                </div>
+                <div class="analytics-card">
+                    <h3>🌍 Répartition par langue</h3>
+                    <div id="languageBreakdown" class="breakdown-list"></div>
+                </div>
+                <div class="analytics-card">
+                    <h3>📊 Indicateurs clés</h3>
+                    <div id="kpiSection" class="kpi-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Automation -->
+        <div class="tab-content" id="tab-automation">
+            <div class="automation-grid">
+                <div class="auto-card">
+                    <div class="auto-icon">⚡</div>
+                    <h3>Traiter les commandes en attente</h3>
+                    <p>Passe automatiquement les commandes en attente depuis +24h en statut "En activation".</p>
+                    <button class="auto-btn" id="btnProcessPending">Exécuter</button>
+                    <div class="auto-result" id="resultProcessPending"></div>
+                </div>
+
+                <div class="auto-card">
+                    <div class="auto-icon">📧</div>
+                    <h3>Envoyer un rappel client</h3>
+                    <p>Envoie un email de mise à jour au client pour une commande spécifique.</p>
+                    <input type="text" id="reminderSessionId" placeholder="Session ID" class="auto-input">
+                    <button class="auto-btn" id="btnSendReminder">Envoyer</button>
+                    <div class="auto-result" id="resultSendReminder"></div>
+                </div>
+
+                <div class="auto-card">
+                    <div class="auto-icon">🔄</div>
+                    <h3>Mise à jour en masse</h3>
+                    <p>Change le statut de toutes les commandes d'un statut à un autre.</p>
+                    <div class="auto-row">
+                        <select id="bulkFrom" class="auto-select">
+                            <option value="pending">En attente</option>
+                            <option value="activating">En activation</option>
+                            <option value="done">Terminé</option>
+                        </select>
+                        <span class="auto-arrow">→</span>
+                        <select id="bulkTo" class="auto-select">
+                            <option value="activating">En activation</option>
+                            <option value="done">Terminé</option>
+                            <option value="refunded">Remboursé</option>
+                        </select>
+                    </div>
+                    <button class="auto-btn auto-btn-warning" id="btnBulkUpdate">Appliquer</button>
+                    <div class="auto-result" id="resultBulkUpdate"></div>
+                </div>
+
+                <div class="auto-card">
+                    <div class="auto-icon">💸</div>
+                    <h3>Rembourser une commande</h3>
+                    <p>Effectue un remboursement Stripe et notifie le client par email.</p>
+                    <input type="text" id="refundSessionId" placeholder="Session ID" class="auto-input">
+                    <select id="refundReason" class="auto-select">
+                        <option value="requested_by_customer">Demande client</option>
+                        <option value="duplicate">Doublon</option>
+                        <option value="fraudulent">Fraude</option>
+                    </select>
+                    <button class="auto-btn auto-btn-danger" id="btnRefund">Rembourser</button>
+                    <div class="auto-result" id="resultRefund"></div>
+                </div>
+
+                <div class="auto-card">
+                    <div class="auto-icon">🧹</div>
+                    <h3>Nettoyage ancien</h3>
+                    <p>Supprime les commandes terminées/remboursées de plus de X jours.</p>
+                    <input type="number" id="cleanupDays" value="90" min="30" class="auto-input" style="width:100px">
+                    <span>jours</span>
+                    <button class="auto-btn auto-btn-warning" id="btnCleanup">Nettoyer</button>
+                    <div class="auto-result" id="resultCleanup"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Settings / Tools -->
+        <div class="tab-content" id="tab-settings">
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>📥 Exporter les commandes</h3>
+                    <p>Téléchargez toutes les commandes en CSV ou JSON.</p>
+                    <div class="settings-row">
+                        <select id="exportFormat">
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                        </select>
+                        <select id="exportStatus">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="activating">En activation</option>
+                            <option value="done">Terminé</option>
+                            <option value="refunded">Remboursé</option>
+                        </select>
+                        <button class="auto-btn" id="btnExport">Télécharger</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>🔗 Liens rapides</h3>
+                    <div class="quick-links">
+                        <a href="https://dashboard.stripe.com" target="_blank" class="quick-link">💳 Stripe Dashboard</a>
+                        <a href="https://vercel.com/dashboard" target="_blank" class="quick-link">▲ Vercel Dashboard</a>
+                        <a href="https://karrier.pro" target="_blank" class="quick-link">🌐 Site Karrier</a>
+                        <a href="https://karrier.pro/contact" target="_blank" class="quick-link">📞 Page Contact</a>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📋 Configuration API</h3>
+                    <div class="config-info">
+                        <div class="config-row"><span>Stripe</span><span class="config-badge" id="cfgStripe">—</span></div>
+                        <div class="config-row"><span>Webhook</span><span class="config-badge" id="cfgWebhook">—</span></div>
+                        <div class="config-row"><span>Resend (Email)</span><span class="config-badge" id="cfgResend">—</span></div>
+                        <div class="config-row"><span>Telegram</span><span class="config-badge" id="cfgTelegram">—</span></div>
+                        <div class="config-row"><span>Vercel KV</span><span class="config-badge" id="cfgKV">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Order detail modal -->
         <div class="modal-overlay" id="modalOverlay" style="display:none;">
@@ -108,10 +277,55 @@
                 <button class="modal-close" id="modalClose">&times;</button>
                 <h2>Détails de la commande</h2>
                 <div id="modalContent"></div>
+                <div class="modal-actions" id="modalActions"></div>
             </div>
         </div>
+
     </div>
 
-    <script src="script.js"></script>
+    <!-- Toast notifications (outside dashboard so always accessible) -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+    // Inline login function - guaranteed to work
+    function doLogin() {
+        var pwd = document.getElementById('loginPassword').value;
+        if (!pwd) return;
+        var btn = document.getElementById('loginBtn');
+        var err = document.getElementById('loginError');
+        btn.disabled = true; btn.textContent = 'Connexion...';
+        err.textContent = '';
+        fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pwd })
+        }).then(function(r) {
+            return r.json().then(function(d) { return { ok: r.ok, status: r.status, data: d }; });
+        })
+        .then(function(r) {
+            if (r.ok && r.data.token) {
+                try { sessionStorage.setItem('karrier_admin_token', r.data.token); } catch(x){}
+                // Sync with script.js global
+                authToken = r.data.token;
+                if (typeof showDashboard === 'function') {
+                    showDashboard();
+                } else {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                }
+            } else if (r.status === 429) {
+                err.textContent = 'Trop de tentatives. Réessayez dans ' + (r.data.retryAfter || 60) + 's';
+            } else {
+                err.textContent = r.data.error || 'Mot de passe incorrect';
+            }
+        }).catch(function(e) { err.textContent = 'Erreur réseau: ' + e.message; })
+        .finally(function() { btn.disabled = false; btn.textContent = 'Connexion'; });
+    }
+    // Enter key support
+    document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
+    });
+    </script>
+    <script src="/admin/script.js"></script>
 </body>
 </html>

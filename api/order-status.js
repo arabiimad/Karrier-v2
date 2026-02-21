@@ -1,13 +1,16 @@
-let kvStore;
-try {
-  kvStore = require('@vercel/kv').kv;
-} catch (e) {
-  kvStore = { get: async () => null };
-}
+require('./_env');
+const rateLimit = require('./_rate-limit');
+const checkRate = rateLimit({ windowMs: 60000, max: 30 });
+const kvStore = require('./_kv');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const rate = checkRate(req);
+  if (!rate.allowed) {
+    return res.status(429).json({ error: 'Too many requests', retryAfter: rate.retryAfter });
+  }
 
   const { session_id } = req.query;
   if (!session_id) {

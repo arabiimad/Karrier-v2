@@ -785,40 +785,7 @@ a:hover { color: var(--accent-light); }
     margin: 0 auto;
 }
 
-/* ===== Audience Tabs ===== */
-.audience-tabs {
-    display: inline-flex;
-    gap: 4px;
-    padding: 4px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 50px;
-    backdrop-filter: blur(10px);
-}
-
-.tab-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 600;
-    font-family: inherit;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.tab-btn:hover { color: var(--text); }
-
-.tab-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    box-shadow: 0 4px 15px var(--glow-primary);
-}
+/* Audience tabs supprimés */
 
 /* ===== Stats Section ===== */
 .stats-section { padding: 20px 0 40px; }
@@ -858,9 +825,9 @@ a:hover { color: var(--accent-light); }
 
 .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    max-width: 800px;
+    max-width: 1180px;
     margin: 0 auto;
     align-items: start;
 }
@@ -876,20 +843,7 @@ a:hover { color: var(--accent-light); }
     overflow: hidden;
 }
 
-/* Pro-only card hide/show */
-.pricing-card.pro-only-card {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, max-height 0.5s ease;
-}
-
-.pricing-card.pro-only-card.hidden-card {
-    opacity: 0;
-    max-height: 0;
-    padding: 0 32px;
-    margin: 0;
-    border: none;
-    overflow: hidden;
-    pointer-events: none;
-}
+/* Pro-only cards (kept visible) */
 
 .pricing-card::before {
     content: '';
@@ -1158,9 +1112,9 @@ a:hover { color: var(--accent-light); }
     margin-top: 6px;
 }
 
-/* Discount Badge */
+/* Discount Badge (legacy) */
 .discount-badge {
-    display: inline-flex;
+    display: none;
     align-items: center;
     margin-top: 10px;
     padding: 4px 12px;
@@ -1579,30 +1533,25 @@ a:hover { color: var(--accent-light); }
 .annual-text { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
 .annual-monthly { font-size: 12px; color: var(--text-muted); opacity: 0.7; }
 
-/* ===== Info Banner ===== */
-.tab-info-banner { padding: 0 0 20px; }
+/* ===== WhatsApp / Info Banner ===== */
+.tab-info-banner { padding: 0 0 24px; }
 
 .info-banner {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    background: rgba(34, 197, 94, 0.08);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    gap: 16px;
+    padding: 16px 24px;
+    background: rgba(37, 211, 102, 0.1);
+    border: 1px solid rgba(37, 211, 102, 0.3);
     border-radius: var(--radius-sm);
-    max-width: 620px;
+    max-width: 860px;
     margin: 0 auto;
     text-align: left;
-    transition: all 0.4s ease;
 }
 
-.info-banner.pro-mode {
-    background: rgba(21, 101, 192, 0.08);
-    border-color: rgba(21, 101, 192, 0.2);
-}
-
-.info-banner-icon { font-size: 22px; flex-shrink: 0; }
-.info-banner p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+.info-banner-icon { font-size: 28px; flex-shrink: 0; }
+.info-banner p { font-size: 14px; color: var(--text); line-height: 1.6; margin: 0; }
+.info-banner p strong { color: #fff; }
 
 /* ===== FAQ ===== */
 .faq { padding: 80px 0; }
@@ -1909,6 +1858,38 @@ a:hover { color: var(--accent-light); }
 .back-to-top.visible { opacity: 1; transform: translateY(0); }
 .back-to-top:hover { color: var(--text-bright); border-color: var(--border-hover); transform: translateY(-3px); }
 
+/* ===== Sticky WhatsApp Button (mobile) ===== */
+.whatsapp-sticky {
+    display: none; /* hidden on desktop */
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9000;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--font);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 50px;
+    box-shadow: 0 6px 24px rgba(37, 211, 102, 0.45);
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+.whatsapp-sticky:hover {
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 10px 32px rgba(37, 211, 102, 0.55);
+}
+@media (max-width: 768px) {
+    .whatsapp-sticky { display: flex; }
+    /* Give extra bottom padding so the sticky btn doesn't cover content */
+    body { padding-bottom: 80px; }
+}
+
 /* ===== Footer ===== */
 .footer { padding: 40px 0; border-top: 1px solid var(--border); }
 
@@ -2147,13 +2128,11 @@ body.light .theme-icon-moon {
     .lang-switcher { margin-right: 56px; }
     .mobile-menu-btn { display: flex; }
     .header-inner { flex-wrap: wrap; gap: 10px; }
-    .pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
+    .pricing-grid { grid-template-columns: repeat(2, 1fr); max-width: 720px; }
     .pricing-card.popular { transform: scale(1); order: -1; }
     .pricing-card.popular:hover { transform: translateY(-8px); }
     .steps-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
     .testimonials-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-    .audience-tabs { flex-direction: column; border-radius: var(--radius); }
-    .tab-btn { justify-content: center; }
     .trust-grid { gap: 20px; }
     .cta-card { padding: 40px 24px; }
     .hero { padding: 130px 0 40px; }
@@ -2165,6 +2144,10 @@ body.light .theme-icon-moon {
     .why-items { flex-direction: column; align-items: center; gap: 14px; }
     .stats-grid { gap: 24px; }
     .stat-number { font-size: 1.8rem; }
+}
+
+@media (max-width: 600px) {
+    .pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
 }
 
 @media (max-width: 480px) {
@@ -2241,6 +2224,115 @@ body.light .theme-icon-moon {
     body.light .pricing-card { background: rgba(255, 255, 255, 0.95); }
     body.light .back-to-top, body.light .theme-toggle { background: rgba(255, 255, 255, 0.95); }
 }
+
+/* ===== Cookie Banner RGPD ===== */
+#cookieBanner {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 99999;
+    background: rgba(10, 15, 30, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-family: var(--font);
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+#cookieBanner.visible { transform: translateY(0); }
+#cookieBanner p {
+    flex: 1;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    min-width: 220px;
+}
+#cookieBanner p a {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+.cookie-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.cookie-accept {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: var(--font);
+}
+.cookie-accept:hover { background: var(--primary-light); }
+.cookie-decline {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    font-family: var(--font);
+}
+.cookie-decline:hover { border-color: var(--border-hover); color: var(--text); }
+
+body.light #cookieBanner {
+    background: rgba(245, 248, 252, 0.97);
+    border-top-color: rgba(0,0,0,0.1);
+}
+
+/* ===== Payment methods badge ===== */
+.payment-methods {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0.85;
+}
+.payment-methods span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===== WhatsApp online badge ===== */
+.wa-online-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #25D366;
+    background: rgba(37,211,102,0.1);
+    border: 1px solid rgba(37,211,102,0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    margin-bottom: 8px;
+}
+.wa-online-dot {
+    width: 7px; height: 7px;
+    background: #25D366;
+    border-radius: 50%;
+    animation: waPulse 2s infinite;
+}
+@keyframes waPulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.5; transform:scale(0.8); }
+}
+
+/* ===== Sticky WhatsApp : masqué pendant loader ===== */
+.whatsapp-sticky { opacity: 0; pointer-events: none; transition: opacity 0.4s 0.5s; }
+.whatsapp-sticky.ready { opacity: 1; pointer-events: auto; }
 
 /* ===== Text-fill-color fallback ===== */
 .stat-number {
