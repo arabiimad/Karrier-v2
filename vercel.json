@@ -4,7 +4,19 @@
   "devCommand": "",
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [
+    {
+      "path": "/api/automation?action=renewal_reminders",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.kareer.pro" }],
+      "destination": "https://kareer.pro/$1",
+      "permanent": true
+    },
     { "source": "/mock-checkout", "destination": "/", "permanent": false },
     { "source": "/admin/diag", "destination": "/admin", "permanent": false },
     { "source": "/admin/test-login", "destination": "/admin", "permanent": false }
@@ -13,7 +25,7 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "https://karrier.pro" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://kareer.pro" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PATCH, DELETE, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]

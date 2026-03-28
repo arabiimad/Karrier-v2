@@ -123,10 +123,10 @@ async function handlePaymentFailed(paymentIntent) {
   try {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://karrier.pro';
+    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: email,
       subject: 'Problème avec votre paiement — Karrier',
       html: `
@@ -142,7 +142,7 @@ async function handlePaymentFailed(paymentIntent) {
             </div>
           </div>
           <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Si le problème persiste, contactez-nous à <a href="mailto:contact@karrier.pro" style="color:#1565C0">contact@karrier.pro</a>
+            Si le problème persiste, contactez-nous à <a href="mailto:contact@kareer.pro" style="color:#1565C0">contact@kareer.pro</a>
           </div>
         </div>
       `
@@ -171,7 +171,7 @@ async function sendWelcomeEmail(order) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://karrier.pro';
+    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
 
     const t = lang === 'fr' ? {
       subject: 'Bienvenue chez Karrier ! Votre commande est confirmée',
@@ -196,7 +196,7 @@ async function sendWelcomeEmail(order) {
     };
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject: t.subject,
       html: `
@@ -290,7 +290,7 @@ async function sendEmailNotification(order) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com',
       subject: `Nouvelle commande — ${order.plan} — ${order.amount}€`,
       html: `
@@ -303,7 +303,7 @@ async function sendEmailNotification(order) {
           <tr><td style="padding:8px;border:1px solid #ddd"><strong>Mot de passe</strong></td><td style="padding:8px;border:1px solid #ddd">****</td></tr>
         </table>
         <br>
-        <a href="https://karrier.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px">Ouvrir le Dashboard</a>
+        <a href="https://kareer.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px">Ouvrir le Dashboard</a>
       `
     });
   } catch (error) {
@@ -323,7 +323,7 @@ async function sendTelegramNotification(order) {
       `📧 *Email:* ${order.customerEmail}`,
       `🔑 *LinkedIn:* ${order.linkedinEmail}`,
       ``,
-      `👉 [Dashboard](https://karrier.pro/admin)`
+      `👉 [Dashboard](https://kareer.pro/admin)`
     ].join('\n');
 
     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {

@@ -1,16 +1,42 @@
-// Shared KV store — uses Vercel KV in production, in-memory fallback for dev
+// Shared KV store — uses Redis (REDIS_URL), Vercel KV, or file fallback
 let kvStore;
 
-if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+// Option 1: Direct Redis via ioredis (REDIS_URL)
+if (!kvStore && process.env.REDIS_URL) {
+  try {
+    const Redis = require('ioredis');
+    const redis = new Redis(process.env.REDIS_URL, {
+      tls: process.env.REDIS_URL.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+    });
+    redis.connect().catch(() => {});
+    kvStore = {
+      get: async (key) => { const val = await redis.get(key); return val; },
+      set: async (key, value) => { await redis.set(key, typeof value === 'string' ? value : JSON.stringify(value)); },
+      del: async (key) => { await redis.del(key); },
+      keys: async (pattern) => { return await redis.keys(pattern); },
+      scan: async () => [0, []]
+    };
+    console.log('[KV] Using Redis (ioredis)');
+  } catch (e) {
+    console.warn('[KV] ioredis failed:', e.message);
+    kvStore = null;
+  }
+}
+
+// Option 2: Vercel KV (Upstash REST API)
+if (!kvStore && process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
   try {
     kvStore = require('@vercel/kv').kv;
+    console.log('[KV] Using Vercel KV (Upstash)');
   } catch (e) {
     kvStore = null;
   }
 }
 
+// Option 3: File-based fallback for local dev
 if (!kvStore) {
-  // File-based store for local development (persists between vercel dev processes)
   const fs = require('fs');
   const path = require('path');
   const DB_PATH = path.resolve(__dirname, '..', '.dev-kv.json');

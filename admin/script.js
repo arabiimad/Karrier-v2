@@ -572,5 +572,5 @@ async function loadConfigCheck() {
         authToken = saved;
         showDashboard();
     }
-    console.log('[Karrier Admin] Script loaded OK');
+    console.log('[Kareer Admin] Script loaded OK');
 })();

@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact — Karrier</title>
-    <meta name="description" content="Contactez l'équipe Karrier via WhatsApp pour toute question sur votre abonnement LinkedIn Premium ou Coursera Plus.">
+    <title>Contact — Kareer</title>
+    <meta name="description" content="Contactez l'équipe Kareer via WhatsApp pour toute question sur votre abonnement LinkedIn Premium.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="karrier-logo.png" type="image/png">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1565C0">
-    <script>(function(){try{var t=localStorage.getItem('karrier_theme');if(t==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();</script>
+    <script>(function(){try{var t=localStorage.getItem('kareer_theme');if(t==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();</script>
     <style>
     html.light-pending body{background:#F5F8FC;color:#1E293B}
     html.light-pending .header{background:rgba(245,248,252,.95)}
@@ -47,29 +47,59 @@
 <header class="header">
     <div class="container header-inner">
         <a href="index.html" class="logo">
-            <img src="karrier-logo.png" alt="Karrier" class="logo-img" width="40" height="40">
-            <span class="logo-text">Karrier</span>
+            <img src="karrier-logo.png" alt="Kareer" class="logo-img" width="40" height="40">
+            <span class="logo-text">Kareer</span>
         </a>
         <nav class="nav-links">
-            <a href="index.html#pricing" class="nav-link">Tarifs</a>
-            <a href="index.html#faq" class="nav-link">FAQ</a>
-            <a href="contact.html" class="nav-link active">Contact</a>
+            <a href="index.html#pricing" class="nav-link" data-i18n="nav_pricing">Tarifs</a>
+            <a href="index.html#faq" class="nav-link" data-i18n="nav_faq">FAQ</a>
+            <a href="contact.html" class="nav-link active" data-i18n="nav_contact">Contact</a>
         </nav>
         <div class="header-right">
-            <a href="index.html#pricing" class="header-cta">Voir les offres</a>
+            <div class="lang-switcher" id="langSwitcher">
+                <button class="lang-btn" id="langBtn" aria-label="Choisir la langue" data-i18n-aria="lang_label">
+                    <span class="lang-flag" id="langFlag">🇫🇷</span>
+                    <span class="lang-code" id="langCode">FR</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-option active" data-lang="fr"><span>🇫🇷</span> Français</button>
+                    <button class="lang-option" data-lang="en"><span>🇬🇧</span> English</button>
+                    <button class="lang-option" data-lang="es"><span>🇪🇸</span> Español</button>
+                    <button class="lang-option" data-lang="de"><span>🇩🇪</span> Deutsch</button>
+                </div>
+            </div>
+            <a href="index.html#pricing" class="header-cta" data-i18n="nav_cta">Voir les offres</a>
         </div>
     </div>
 </header>
+
+<!-- Mobile menu -->
+<button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+    <span></span><span></span><span></span>
+</button>
+<nav class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menu mobile">
+    <a href="index.html#pricing" class="mobile-link" data-i18n="nav_pricing">Tarifs</a>
+    <a href="index.html#faq" class="mobile-link" data-i18n="nav_faq">FAQ</a>
+    <a href="contact.html" class="mobile-link active" data-i18n="nav_contact">Contact</a>
+    <a href="index.html#pricing" class="mobile-link" data-i18n="nav_cta">Voir les offres</a>
+    <div class="mobile-lang">
+        <button class="mobile-lang-btn" data-lang="fr">🇫🇷</button>
+        <button class="mobile-lang-btn" data-lang="en">🇬🇧</button>
+        <button class="mobile-lang-btn" data-lang="es">🇪🇸</button>
+        <button class="mobile-lang-btn" data-lang="de">🇩🇪</button>
+    </div>
+</nav>
 
 <!-- Hero -->
 <section class="contact-hero">
     <div class="container">
         <a href="index.html" class="back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-            Retour à l'accueil
+            <span data-i18n="contact_back">Retour à l'accueil</span>
         </a>
-        <h1>Contactez-<span class="gradient-text">nous</span></h1>
-        <p class="sub">Une question sur votre commande ou abonnement ? Notre équipe vous répond rapidement via WhatsApp.</p>
+        <h1><span data-i18n="contact_title_1">Contactez-</span><span class="gradient-text" data-i18n="contact_title_2">nous</span></h1>
+        <p class="sub" data-i18n="contact_subtitle">Une question sur votre commande ou abonnement ? Notre équipe vous répond rapidement via WhatsApp.</p>
     </div>
 </section>
 
@@ -81,10 +111,10 @@
             <!-- WhatsApp card -->
             <div class="contact-card">
                 <span class="contact-card-icon">💬</span>
-                <h2>WhatsApp</h2>
-                <p>La manière la plus rapide de nous joindre. Réponse en quelques minutes pendant nos heures d'ouverture.</p>
-                <a href="https://wa.me/212651064637?text=Bonjour%2C%20j'ai%20une%20question%20sur%20Karrier"
-                   target="_blank" rel="noopener" class="cta-button wa-btn">
+                <h2 data-i18n="contact_wa_title">WhatsApp</h2>
+                <p data-i18n="contact_wa_desc">La manière la plus rapide de nous joindre. Réponse en quelques minutes pendant nos heures d'ouverture.</p>
+                <a href="https://wa.me/212651064637?text=Bonjour%2C%20j'ai%20une%20question%20sur%20Kareer"
+                   target="_blank" rel="noopener" class="cta-button wa-btn" data-i18n="contact_wa_btn">
                     💬 Écrire sur WhatsApp
                 </a>
             </div>
@@ -92,9 +122,9 @@
             <!-- Email card -->
             <div class="contact-card">
                 <span class="contact-card-icon">✉️</span>
-                <h2>Email</h2>
-                <p>Pour toute demande de support, facture ou remboursement. Réponse sous 24h ouvrées.</p>
-                <a href="mailto:contact@karrier.pro" class="cta-button email-btn">
+                <h2 data-i18n="contact_email_title">Email</h2>
+                <p data-i18n="contact_email_desc">Pour toute demande de support, facture ou remboursement. Réponse sous 24h ouvrées.</p>
+                <a href="mailto:contact@kareer.pro" class="cta-button email-btn" data-i18n="contact_email_btn">
                     Envoyer un email
                 </a>
             </div>
@@ -103,8 +133,8 @@
 
         <!-- Hours -->
         <div class="contact-hours">
-            <h3>🕐 Horaires de support</h3>
-            <p>
+            <h3 data-i18n="contact_hours_title">🕐 Horaires de support</h3>
+            <p data-i18n="contact_hours_body">
                 Lundi – Vendredi : 9h00 – 20h00<br>
                 Samedi : 10h00 – 18h00<br>
                 Dimanche : Fermé<br>
@@ -114,10 +144,10 @@
 
         <!-- Trust bar -->
         <div class="trust-grid contact-trust">
-            <div class="trust-item"><div class="trust-icon" aria-hidden="true">💬</div><span>Commande via WhatsApp</span></div>
-            <div class="trust-item"><div class="trust-icon" aria-hidden="true">⚡</div><span>Réponse rapide</span></div>
-            <div class="trust-item"><div class="trust-icon" aria-hidden="true">🔄</div><span>Annulation à tout moment</span></div>
-            <div class="trust-item"><div class="trust-icon" aria-hidden="true">✅</div><span>Remboursé 30j si échec</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">💬</div><span data-i18n="contact_trust_wa">Commande via WhatsApp</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">⚡</div><span data-i18n="contact_trust_fast">Réponse rapide</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">🔄</div><span data-i18n="contact_trust_cancel">Annulation à tout moment</span></div>
+            <div class="trust-item"><div class="trust-icon" aria-hidden="true">✅</div><span data-i18n="contact_trust_refund">Remboursé 30j si échec</span></div>
         </div>
     </div>
 </section>
@@ -127,20 +157,21 @@
     <div class="container">
         <div class="footer-inner">
             <div class="footer-brand">
-                <img src="karrier-logo.png" alt="Karrier" class="footer-logo-img">
-                <span class="logo-text">Karrier</span>
+                <img src="karrier-logo.png" alt="Kareer" class="footer-logo-img">
+                <span class="logo-text">Kareer</span>
             </div>
             <nav class="footer-links">
-                <a href="mentions-legales.html">Mentions légales</a>
-                <a href="cgv.html">CGV</a>
-                <a href="confidentialite.html">Confidentialité</a>
-                <a href="contact.html">Contact</a>
+                <a href="mentions-legales.html" data-i18n="footer_legal">Mentions légales</a>
+                <a href="cgv.html" data-i18n="footer_terms">CGV</a>
+                <a href="confidentialite.html" data-i18n="footer_privacy">Confidentialité</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
             </nav>
-            <p class="footer-disclaimer">Karrier n'est pas affilié à LinkedIn Corporation. LinkedIn™ est une marque déposée. Prix officiels : tarifs LinkedIn France 2025/2026 (facturation annuelle).</p>
-            <p class="footer-copyright">© 2026 Karrier. Tous droits réservés.</p>
+            <p class="footer-disclaimer" data-i18n="footer_disclaimer">Kareer n'est pas affilié à LinkedIn Corporation. LinkedIn™ est une marque déposée. Prix officiels : tarifs LinkedIn France 2025/2026 (facturation annuelle).</p>
+            <p class="footer-copyright">© 2026 Kareer. <span data-i18n="footer_rights">Tous droits réservés.</span></p>
         </div>
     </div>
 </footer>
+
 
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
     <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -151,18 +182,21 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
 
+<script src="i18n.js"></script>
 <script>
 (function(){
     var root = document.documentElement;
     root.classList.remove('light-pending');
-    try { if(localStorage.getItem('karrier_theme')==='light') root.classList.add('light'); } catch(e) {}
+    try { if(localStorage.getItem('kareer_theme')==='light') document.body.classList.add('light'); } catch(e) {}
 
+    // Theme toggle
     var btn = document.getElementById('themeToggle');
     if(btn) btn.addEventListener('click', function(){
-        root.classList.toggle('light');
-        try { localStorage.setItem('karrier_theme', root.classList.contains('light') ? 'light' : 'dark'); } catch(e) {}
+        document.body.classList.toggle('light');
+        try { localStorage.setItem('kareer_theme', document.body.classList.contains('light') ? 'light' : 'dark'); } catch(e) {}
     });
 
+    // Back to top + scroll progress
     var btt = document.getElementById('backToTop');
     var sp = document.getElementById('scrollProgress');
     window.addEventListener('scroll', function(){
@@ -179,6 +213,34 @@
     window.addEventListener('scroll', function(){
         if(header) header.classList.toggle('scrolled', window.scrollY > 20);
     });
+
+    // Language switcher dropdown
+    var langSwitcher = document.getElementById('langSwitcher');
+    var langBtn = document.getElementById('langBtn');
+    if(langBtn && langSwitcher) {
+        langBtn.addEventListener('click', function(e){ e.stopPropagation(); langSwitcher.classList.toggle('open'); });
+        document.addEventListener('click', function(){ langSwitcher.classList.remove('open'); });
+    }
+    document.querySelectorAll('.lang-option').forEach(function(opt){
+        opt.addEventListener('click', function(){ if(typeof setLanguage==='function') setLanguage(opt.getAttribute('data-lang')); langSwitcher.classList.remove('open'); });
+    });
+    document.querySelectorAll('.mobile-lang-btn').forEach(function(b){
+        b.addEventListener('click', function(){ if(typeof setLanguage==='function') setLanguage(b.getAttribute('data-lang')); });
+    });
+
+    // Mobile menu
+    var menuBtn = document.getElementById('mobileMenuBtn');
+    var mobileMenu = document.getElementById('mobileMenu');
+    if(menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', function(){
+            menuBtn.classList.toggle('open');
+            mobileMenu.classList.toggle('open');
+            menuBtn.setAttribute('aria-expanded', mobileMenu.classList.contains('open'));
+        });
+        mobileMenu.querySelectorAll('.mobile-link').forEach(function(link){
+            link.addEventListener('click', function(){ menuBtn.classList.remove('open'); mobileMenu.classList.remove('open'); });
+        });
+    }
 })();
 </script>
 </body>

@@ -93,7 +93,7 @@ async function sendRefundEmail(order) {
       : `Your order for ${order.plan} (${order.audience}) has been refunded. The amount of ${order.amount}€ will be credited to your account within 5-10 business days.`;
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject,
       html: `

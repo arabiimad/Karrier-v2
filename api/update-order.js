@@ -68,7 +68,7 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://karrier.pro';
+    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
 
     const messages = {
       fr: {
@@ -89,7 +89,7 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
     if (!t) return;
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject: t.subject,
       html: `
