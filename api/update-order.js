@@ -1,6 +1,7 @@
 require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { formatPlan, getSiteUrl, buildEmailHtml } = require('./_email');
 
 const VALID_STATUSES = ['pending', 'activating', 'done', 'refunded'];
 
@@ -68,51 +69,154 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const siteUrl = getSiteUrl();
+    const planLabel = formatPlan(order.plan, order.audience, lang);
+    const isFr = lang === 'fr';
 
-    const messages = {
+    const configs = {
       fr: {
-        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu vos informations et votre compte LinkedIn Premium est en cours d\'activation. Vous recevrez une confirmation dès que ce sera terminé.' },
-        done: { subject: 'Votre compte LinkedIn Premium est activé !', title: 'C\'est fait !', body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant profiter de toutes les fonctionnalités Premium sur LinkedIn.' },
-        refunded: { subject: 'Votre remboursement a été effectué', title: 'Remboursement confirmé', body: 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans 5-10 jours ouvrés.' },
-        pending: { subject: 'Mise à jour de votre commande', title: 'Commande en attente', body: 'Votre commande est en attente de traitement. Nous reviendrons vers vous rapidement.' }
+        activating: {
+          subject: 'Activation de votre compte LinkedIn Premium en cours',
+          preheader: 'Notre équipe travaille sur votre compte. Délai estimé : sous 24h.',
+          title: 'Activation en cours !',
+          headerColor: '#1565C0',
+          body: 'Bonne nouvelle ! Notre équipe a commencé l\'activation de votre compte LinkedIn Premium. Vous recevrez une confirmation dès que ce sera terminé.',
+          badge: '⚡ En cours d\'activation',
+          badgeBg: '#eff6ff', badgeColor: '#1e40af'
+        },
+        done: {
+          subject: 'Votre accès LinkedIn Premium est prêt',
+          preheader: 'Votre compte LinkedIn Premium est maintenant actif. Connectez-vous !',
+          title: 'C\'est activé ! 🎉',
+          headerColor: '#059669',
+          body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant vous connecter à LinkedIn et profiter de toutes les fonctionnalités Premium.',
+          badge: '✅ Compte activé',
+          badgeBg: '#ecfdf5', badgeColor: '#065f46'
+        },
+        refunded: {
+          subject: 'Remboursement confirmé — Kareer',
+          preheader: 'Votre remboursement a été traité. Le crédit arrive sous 5-10 jours.',
+          title: 'Remboursement confirmé',
+          headerColor: '#6b7280',
+          body: 'Votre commande a été remboursée intégralement. Le montant sera crédité sur votre compte bancaire dans un délai de 5 à 10 jours ouvrés.',
+          badge: '💸 Remboursé',
+          badgeBg: '#f9fafb', badgeColor: '#374151'
+        },
+        pending: {
+          subject: 'Mise à jour de votre commande — Kareer',
+          preheader: 'Votre commande est en cours de traitement.',
+          title: 'Commande en attente',
+          headerColor: '#d97706',
+          body: 'Votre commande est en cours de traitement. Notre équipe revient vers vous très rapidement.',
+          badge: '⏳ En attente',
+          badgeBg: '#fffbeb', badgeColor: '#92400e'
+        }
       },
       en: {
-        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your information and your LinkedIn Premium account is being activated. You will receive a confirmation once it\'s done.' },
-        done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn.' },
-        refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
-        pending: { subject: 'Order update', title: 'Order pending', body: 'Your order is pending processing. We will get back to you shortly.' }
+        activating: {
+          subject: 'Your LinkedIn Premium account is being activated',
+          preheader: 'Our team is working on your account. Estimated time: within 24h.',
+          title: 'Activation in progress!',
+          headerColor: '#1565C0',
+          body: 'Good news! Our team has started activating your LinkedIn Premium account. You will receive a confirmation once it\'s done.',
+          badge: '⚡ Activating',
+          badgeBg: '#eff6ff', badgeColor: '#1e40af'
+        },
+        done: {
+          subject: 'Your LinkedIn Premium access is ready',
+          preheader: 'Your LinkedIn Premium account is now active. Log in!',
+          title: 'It\'s activated! 🎉',
+          headerColor: '#059669',
+          body: 'Your LinkedIn Premium account has been successfully activated. You can now log in to LinkedIn and enjoy all Premium features.',
+          badge: '✅ Account activated',
+          badgeBg: '#ecfdf5', badgeColor: '#065f46'
+        },
+        refunded: {
+          subject: 'Refund confirmed — Kareer',
+          preheader: 'Your refund has been processed. Credit arrives in 5-10 days.',
+          title: 'Refund confirmed',
+          headerColor: '#6b7280',
+          body: 'Your order has been fully refunded. The amount will be credited to your bank account within 5-10 business days.',
+          badge: '💸 Refunded',
+          badgeBg: '#f9fafb', badgeColor: '#374151'
+        },
+        pending: {
+          subject: 'Order update — Kareer',
+          preheader: 'Your order is being processed.',
+          title: 'Order pending',
+          headerColor: '#d97706',
+          body: 'Your order is being processed. Our team will get back to you very soon.',
+          badge: '⏳ Pending',
+          badgeBg: '#fffbeb', badgeColor: '#92400e'
+        }
       }
     };
 
-    const t = (messages[lang] || messages.fr)[toStatus];
+    const t = (configs[lang] || configs.fr)[toStatus];
     if (!t) return;
+
+    const trackLabel = isFr ? 'Suivre ma commande →' : 'Track my order →';
+    const amountLabel = isFr ? 'Montant' : 'Amount';
+    const planLbl = isFr ? 'Plan' : 'Plan';
+    const contactLine = isFr
+      ? 'Une question ? Répondez à cet email ou écrivez à contact@kareer.pro'
+      : 'Questions? Reply to this email or write to contact@kareer.pro';
+    const footer = isFr
+      ? 'Vous recevez cet email car vous avez passé une commande sur kareer.pro.'
+      : 'You received this email because you placed an order on kareer.pro.';
+
+    const plainText = [
+      t.title, '',
+      t.body, '',
+      `${planLbl}: ${planLabel}`,
+      `${amountLabel}: ${order.amount}€`, '',
+      `${trackLabel} ${siteUrl}/suivi?id=${order.sessionId}`, '',
+      contactLine
+    ].join('\n');
+
+    const content = `
+      <p style="margin:0 0 20px;color:#374151;font-size:16px;line-height:1.7">${t.body}</p>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${t.badgeBg};border-radius:8px;margin:0 0 24px">
+        <tr><td style="padding:14px 20px;text-align:center">
+          <span style="color:${t.badgeColor};font-size:15px;font-weight:700">${t.badge}</span>
+        </td></tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin:0 0 24px">
+        <tr style="background:#f9fafb">
+          <td style="padding:12px 16px;color:#6b7280;font-size:14px;font-weight:600;width:45%;border-bottom:1px solid #e5e7eb">${planLbl}</td>
+          <td style="padding:12px 16px;color:#111827;font-size:14px;font-weight:700;border-bottom:1px solid #e5e7eb">${planLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#6b7280;font-size:14px;font-weight:600">${amountLabel}</td>
+          <td style="padding:12px 16px;color:#111827;font-size:14px;font-weight:700">${order.amount}€</td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
+        <tr><td align="center">
+          <a href="${siteUrl}/suivi?id=${order.sessionId}" style="display:inline-block;background:${t.headerColor};color:#ffffff;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;text-decoration:none">${trackLabel}</a>
+        </td></tr>
+      </table>
+      <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.6">${contactLine}</p>
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
+      reply_to: 'contact@kareer.pro',
       to: order.customerEmail,
       subject: t.subject,
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
-          <div style="background:#1565C0;padding:32px;text-align:center">
-            <img src="${siteUrl}/karrier-logo.png" alt="Karrier" style="width:48px;height:48px;margin-bottom:12px">
-            <h1 style="color:#ffffff;margin:0;font-size:22px">${t.title}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.plan} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-            </table>
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${lang === 'fr' ? 'Suivre ma commande' : 'Track my order'}</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Karrier — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : 'at reduced price'}
-          </div>
-        </div>
-      `
+      text: plainText,
+      headers: {
+        'List-Unsubscribe': '<mailto:contact@kareer.pro?subject=unsubscribe>',
+        'X-Entity-Ref-ID': order.sessionId || ''
+      },
+      html: buildEmailHtml({
+        siteUrl,
+        headerColor: t.headerColor,
+        title: t.title,
+        preheader: t.preheader,
+        content,
+        footer
+      })
     });
   } catch (error) {
     console.error('Status email error:', error.message);

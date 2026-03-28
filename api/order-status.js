@@ -12,7 +12,28 @@ module.exports = async (req, res) => {
     return res.status(429).json({ error: 'Too many requests', retryAfter: rate.retryAfter });
   }
 
-  const { session_id } = req.query;
+  const { action, code, amount, session_id } = req.query;
+
+  // ===== Promo Validation =====
+  if (action === 'validate-promo') {
+    if (!code) return res.status(400).json({ valid: false, error: 'Code manquant' });
+    try {
+      const promoData = await kvStore.get(`promo:${code.trim().toUpperCase()}`);
+      if (!promoData) return res.status(200).json({ valid: false, error: 'Code promo invalide' });
+      const promo = typeof promoData === 'string' ? JSON.parse(promoData) : promoData;
+      if (!promo.active) return res.status(200).json({ valid: false, error: 'Code promo désactivé' });
+      if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return res.status(200).json({ valid: false, error: 'Code promo expiré' });
+      if (promo.maxUses > 0 && promo.usedCount >= promo.maxUses) return res.status(200).json({ valid: false, error: 'Code promo épuisé' });
+      const baseAmount = parseFloat(amount) || 0;
+      const finalAmount = Math.max(0, baseAmount - promo.discount);
+      return res.status(200).json({ valid: true, discount: promo.discount, code: promo.code, finalAmount, description: promo.description || '' });
+    } catch (error) {
+      console.error('Promo validation error:', error.message);
+      return res.status(500).json({ valid: false, error: 'Erreur interne' });
+    }
+  }
+
+  // ===== Order Status =====
   if (!session_id) {
     return res.status(400).json({ error: 'Missing session_id' });
   }
