@@ -81,6 +81,7 @@
             <button class="tab-btn active" data-tab="orders">📋 Commandes</button>
             <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
             <button class="tab-btn" data-tab="automation">🤖 Automatisations</button>
+            <button class="tab-btn" data-tab="promos">🏷️ Codes Promo</button>
             <button class="tab-btn" data-tab="settings">⚙️ Outils</button>
         </nav>
 
@@ -227,6 +228,44 @@
         </div>
 
         <!-- TAB: Settings / Tools -->
+        <!-- TAB: Promos -->
+        <div class="tab-content" id="tab-promos">
+            <div class="promo-admin-wrap">
+                <!-- Create promo form -->
+                <div class="settings-card" style="margin-bottom:24px">
+                    <h3>➕ Créer un code promo</h3>
+                    <div class="promo-form">
+                        <div class="promo-form-row">
+                            <input type="text" id="newPromoCode" placeholder="Ex: WELCOME20" class="auto-input" style="text-transform:uppercase;flex:1" maxlength="20">
+                            <select id="newPromoDiscount" class="auto-select">
+                                <option value="10">-10€</option>
+                                <option value="20" selected>-20€</option>
+                                <option value="30">-30€</option>
+                                <option value="50">-50€</option>
+                                <option value="100">-100€</option>
+                            </select>
+                            <input type="number" id="newPromoMaxUses" placeholder="Max utilisations (0=∞)" class="auto-input" style="width:180px" value="0" min="0">
+                        </div>
+                        <div class="promo-form-row" style="margin-top:8px">
+                            <input type="text" id="newPromoDesc" placeholder="Description (optionnel)" class="auto-input" style="flex:1">
+                            <input type="date" id="newPromoExpiry" class="auto-input" style="width:160px">
+                            <button class="auto-btn" id="btnCreatePromo">Créer le code</button>
+                        </div>
+                    </div>
+                    <div class="auto-result" id="resultCreatePromo"></div>
+                </div>
+
+                <!-- Promo codes list -->
+                <div class="settings-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h3 style="margin:0">🏷️ Codes actifs</h3>
+                        <button class="refresh-btn" id="btnRefreshPromos">🔄 Actualiser</button>
+                    </div>
+                    <div id="promosList">Chargement...</div>
+                </div>
+            </div>
+        </div>
+
         <div class="tab-content" id="tab-settings">
             <div class="settings-grid">
                 <div class="settings-card">

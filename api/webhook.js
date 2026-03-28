@@ -1,6 +1,7 @@
 require('./_env');
 const Stripe = require('stripe');
 const kvStore = require('./_kv');
+const { formatPlan, getSiteUrl, buildEmailHtml } = require('./_email');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -58,7 +59,7 @@ module.exports = async (req, res) => {
 };
 
 async function handleCheckoutCompleted(session) {
-  // A4: Idempotency — skip if order already exists
+  // Idempotency — skip if order already exists
   const existing = await kvStore.get(`order:${session.id}`);
   if (existing) {
     console.log(`[Webhook] Order ${session.id} already exists, skipping`);
@@ -80,6 +81,7 @@ async function handleCheckoutCompleted(session) {
     plan: session.metadata?.plan || '',
     audience: session.metadata?.audience || '',
     language: session.metadata?.language || 'fr',
+    promoCode: session.metadata?.promoCode || '',
     mode: session.mode || 'payment',
     amount: (session.amount_total || 0) / 100,
     currency: session.currency || 'eur',
@@ -91,7 +93,7 @@ async function handleCheckoutCompleted(session) {
   // Store order first (acts as idempotency lock)
   await kvStore.set(`order:${session.id}`, JSON.stringify(order));
 
-  // A5: Fix race condition — check for duplicates before adding to index
+  // Fix race condition — check for duplicates before adding to index
   const indexKey = 'orders:index';
   const existingIndex = await kvStore.get(indexKey);
   const orderIds = existingIndex ? (typeof existingIndex === 'string' ? JSON.parse(existingIndex) : existingIndex) : [];
@@ -109,6 +111,21 @@ async function handleCheckoutCompleted(session) {
     }));
   }
 
+  // Track promo usage if a promo code was applied
+  if (order.promoCode) {
+    try {
+      const pKey = `promo:${order.promoCode.toUpperCase()}`;
+      const pData = await kvStore.get(pKey);
+      if (pData) {
+        const promo = typeof pData === 'string' ? JSON.parse(pData) : pData;
+        promo.usedCount = (promo.usedCount || 0) + 1;
+        await kvStore.set(pKey, JSON.stringify(promo));
+      }
+    } catch (promoErr) {
+      console.error('Promo usage tracking error:', promoErr.message);
+    }
+  }
+
   await sendEmailNotification(order);
   await sendTelegramNotification(order);
   await sendWelcomeEmail(order);
@@ -123,29 +140,33 @@ async function handlePaymentFailed(paymentIntent) {
   try {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://karrier.pro';
+    const siteUrl = getSiteUrl();
+
+    const content = `
+      <p style="margin:0 0 16px;color:#374151;font-size:16px;line-height:1.7">Votre paiement n'a pas pu être traité. Cela peut être dû à un solde insuffisant ou une carte expirée.</p>
+      <p style="margin:0 0 24px;color:#374151;font-size:16px;line-height:1.7">Vous pouvez réessayer en cliquant ci-dessous :</p>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td align="center">
+          <a href="${siteUrl}/#pricing" style="display:inline-block;background:#1565C0;color:#ffffff;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;text-decoration:none">Réessayer le paiement</a>
+        </td></tr>
+      </table>
+    `;
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
+      reply_to: 'contact@kareer.pro',
       to: email,
-      subject: 'Problème avec votre paiement — Karrier',
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
-          <div style="background:#EF4444;padding:32px;text-align:center">
-            <h1 style="color:#fff;margin:0;font-size:22px">Paiement échoué</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">Votre paiement n'a pas pu être traité. Cela peut être dû à un solde insuffisant ou une carte expirée.</p>
-            <p style="color:#333;font-size:16px;line-height:1.6">Vous pouvez réessayer en cliquant ci-dessous :</p>
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/#pricing" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">Réessayer le paiement</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Si le problème persiste, contactez-nous à <a href="mailto:contact@karrier.pro" style="color:#1565C0">contact@karrier.pro</a>
-          </div>
-        </div>
-      `
+      subject: 'Problème avec votre paiement — Kareer',
+      text: 'Votre paiement n\'a pas pu être traité. Réessayez sur kareer.pro',
+      headers: { 'List-Unsubscribe': '<mailto:contact@kareer.pro?subject=unsubscribe>' },
+      html: buildEmailHtml({
+        siteUrl,
+        headerColor: '#DC2626',
+        title: 'Paiement échoué',
+        preheader: 'Votre paiement n\'a pas pu être traité. Réessayez en cliquant ici.',
+        content,
+        footer: 'Vous recevez cet email car un paiement a été tenté sur kareer.pro.'
+      })
     });
 
     if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
@@ -171,62 +192,106 @@ async function sendWelcomeEmail(order) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://karrier.pro';
+    const siteUrl = getSiteUrl();
+    const planLabel = formatPlan(order.plan, order.audience, lang);
+    const shortId = (order.sessionId || '').slice(-8).toUpperCase();
+    const isFr = lang === 'fr';
 
-    const t = lang === 'fr' ? {
-      subject: 'Bienvenue chez Karrier ! Votre commande est confirmée',
-      title: 'Merci pour votre commande !',
-      body: 'Nous avons bien reçu votre paiement. Notre équipe va procéder à l\'activation de votre compte LinkedIn Premium dans les prochaines heures.',
-      steps_title: 'Prochaines étapes',
-      step1: 'Nous vérifions vos informations LinkedIn',
-      step2: 'Activation de votre compte Premium (24-48h)',
-      step3: 'Vous recevrez un email de confirmation',
-      track: 'Suivre ma commande',
-      delay: 'Délai estimé : 24 à 48 heures'
+    const t = isFr ? {
+      subject: `Commande confirmée — Réf. ${shortId}`,
+      preheader: 'Votre paiement a été reçu. Activation LinkedIn Premium sous 24-48h.',
+      title: 'Commande confirmée !',
+      body: 'Votre paiement a bien été reçu. Notre équipe active votre compte LinkedIn Premium dans les prochaines heures.',
+      stepsTitle: 'Prochaines étapes',
+      step1: 'Vérification de vos informations LinkedIn',
+      step2: 'Activation de votre compte (24–48h)',
+      step3: 'Email de confirmation dès que c\'est prêt',
+      delay: '⏱ Délai estimé : 24 à 48 heures',
+      track: 'Suivre ma commande →',
+      planLbl: 'Plan',
+      amountLbl: 'Montant payé',
+      refLbl: 'Référence',
+      contact: 'Une question ? Répondez à cet email ou écrivez à contact@kareer.pro',
+      footer: 'Vous recevez cet email car vous avez passé une commande sur kareer.pro.'
     } : {
-      subject: 'Welcome to Karrier! Your order is confirmed',
-      title: 'Thank you for your order!',
-      body: 'We have received your payment. Our team will activate your LinkedIn Premium account within the next few hours.',
-      steps_title: 'Next steps',
-      step1: 'We verify your LinkedIn information',
-      step2: 'Premium account activation (24-48h)',
-      step3: 'You will receive a confirmation email',
-      track: 'Track my order',
-      delay: 'Estimated time: 24 to 48 hours'
+      subject: `Order confirmed — Ref. ${shortId}`,
+      preheader: 'Your payment has been received. LinkedIn Premium activation within 24-48h.',
+      title: 'Order confirmed!',
+      body: 'Your payment has been received. Our team will activate your LinkedIn Premium account within the next few hours.',
+      stepsTitle: 'Next steps',
+      step1: 'Verification of your LinkedIn information',
+      step2: 'Account activation (24–48h)',
+      step3: 'Confirmation email once it\'s ready',
+      delay: '⏱ Estimated time: 24 to 48 hours',
+      track: 'Track my order →',
+      planLbl: 'Plan',
+      amountLbl: 'Amount paid',
+      refLbl: 'Reference',
+      contact: 'Questions? Reply to this email or write to contact@kareer.pro',
+      footer: 'You received this email because you placed an order on kareer.pro.'
     };
 
+    const plainText = [
+      t.title, '',
+      t.body, '',
+      `${t.planLbl}: ${planLabel}`,
+      `${t.amountLbl}: ${order.amount}€`,
+      `${t.refLbl}: #${shortId}`, '',
+      `${t.track} ${siteUrl}/suivi?id=${order.sessionId}`, '',
+      t.contact
+    ].join('\n');
+
+    const content = `
+      <p style="margin:0 0 20px;color:#374151;font-size:16px;line-height:1.7">${t.body}</p>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin:0 0 24px">
+        <tr style="background:#f9fafb">
+          <td style="padding:12px 16px;color:#6b7280;font-size:14px;font-weight:600;width:45%;border-bottom:1px solid #e5e7eb">${t.planLbl}</td>
+          <td style="padding:12px 16px;color:#111827;font-size:14px;font-weight:700;border-bottom:1px solid #e5e7eb">${planLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#6b7280;font-size:14px;font-weight:600;border-bottom:1px solid #e5e7eb">${t.amountLbl}</td>
+          <td style="padding:12px 16px;color:#111827;font-size:14px;font-weight:700;border-bottom:1px solid #e5e7eb">${order.amount}€</td>
+        </tr>
+        <tr style="background:#f9fafb">
+          <td style="padding:12px 16px;color:#6b7280;font-size:14px;font-weight:600">${t.refLbl}</td>
+          <td style="padding:12px 16px;color:#111827;font-size:14px;font-weight:700">#${shortId}</td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eff6ff;border-radius:10px;margin:0 0 24px">
+        <tr><td style="padding:20px">
+          <p style="margin:0 0 12px;color:#1e40af;font-size:15px;font-weight:700">${t.stepsTitle}</p>
+          <p style="margin:0 0 8px;color:#1e3a8a;font-size:14px">① ${t.step1}</p>
+          <p style="margin:0 0 8px;color:#1e3a8a;font-size:14px">② ${t.step2}</p>
+          <p style="margin:0 0 12px;color:#1e3a8a;font-size:14px">③ ${t.step3}</p>
+          <p style="margin:0;color:#3b82f6;font-size:13px;font-weight:500">${t.delay}</p>
+        </td></tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
+        <tr><td align="center">
+          <a href="${siteUrl}/suivi?id=${order.sessionId}" style="display:inline-block;background:#1565C0;color:#ffffff;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;text-decoration:none">${t.track}</a>
+        </td></tr>
+      </table>
+      <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.6">${t.contact}</p>
+    `;
+
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
+      reply_to: 'contact@kareer.pro',
       to: order.customerEmail,
       subject: t.subject,
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
-            <img src="${siteUrl}/karrier-logo.png" alt="Karrier" style="width:48px;height:48px;margin-bottom:16px">
-            <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.plan} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-            </table>
-            <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
-              <h3 style="color:#1565C0;margin:0 0 12px;font-size:15px">${t.steps_title}</h3>
-              <p style="margin:6px 0;color:#333;font-size:14px">1️⃣ ${t.step1}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">2️⃣ ${t.step2}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">3️⃣ ${t.step3}</p>
-              <p style="margin:12px 0 0;color:#666;font-size:13px;font-style:italic">⏱️ ${t.delay}</p>
-            </div>
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${t.track}</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Karrier — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : 'at reduced price'}
-          </div>
-        </div>
-      `
+      text: plainText,
+      headers: {
+        'List-Unsubscribe': '<mailto:contact@kareer.pro?subject=unsubscribe>',
+        'X-Entity-Ref-ID': order.sessionId || ''
+      },
+      html: buildEmailHtml({
+        siteUrl,
+        headerColor: '#1565C0',
+        title: t.title,
+        preheader: t.preheader,
+        content,
+        footer: t.footer
+      })
     });
   } catch (error) {
     console.error('Welcome email error:', error.message);
@@ -280,7 +345,7 @@ async function handleChargeRefunded(charge) {
     await kvStore.set(`order:${order.sessionId}`, JSON.stringify(order));
     break;
   }
-};
+}
 
 async function sendEmailNotification(order) {
   if (!process.env.RESEND_API_KEY) return;
@@ -288,26 +353,30 @@ async function sendEmailNotification(order) {
   try {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const siteUrl = getSiteUrl();
+    const planLabel = formatPlan(order.plan, order.audience, 'fr');
 
     await resend.emails.send({
-      from: 'Karrier <notifications@karrier.pro>',
+      from: 'Kareer <notifications@kareer.pro>',
       to: process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com',
-      subject: `Nouvelle commande — ${order.plan} — ${order.amount}€`,
+      subject: `🆕 Commande — ${planLabel} — ${order.amount}€`,
       html: `
-        <h2>Nouvelle commande Karrier</h2>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Plan</strong></td><td style="padding:8px;border:1px solid #ddd">${order.plan} (${order.audience})</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Montant</strong></td><td style="padding:8px;border:1px solid #ddd">${order.amount}€</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email client</strong></td><td style="padding:8px;border:1px solid #ddd">${order.customerEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email LinkedIn</strong></td><td style="padding:8px;border:1px solid #ddd">${order.linkedinEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Mot de passe</strong></td><td style="padding:8px;border:1px solid #ddd">****</td></tr>
-        </table>
-        <br>
-        <a href="https://karrier.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px">Ouvrir le Dashboard</a>
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+          <h2 style="color:#1565C0;margin:0 0 16px">Nouvelle commande Kareer</h2>
+          <table style="border-collapse:collapse;width:100%;font-size:14px">
+            <tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;font-weight:600;width:40%">Plan</td><td style="padding:10px;border:1px solid #ddd">${planLabel}</td></tr>
+            <tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;font-weight:600">Montant</td><td style="padding:10px;border:1px solid #ddd">${order.amount}€</td></tr>
+            <tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;font-weight:600">Email client</td><td style="padding:10px;border:1px solid #ddd">${order.customerEmail}</td></tr>
+            <tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;font-weight:600">Email LinkedIn</td><td style="padding:10px;border:1px solid #ddd">${order.linkedinEmail}</td></tr>
+            <tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;font-weight:600">Mot de passe</td><td style="padding:10px;border:1px solid #ddd">Voir le dashboard</td></tr>
+          </table>
+          <br>
+          <a href="${siteUrl}/admin" style="display:inline-block;background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Ouvrir le Dashboard</a>
+        </div>
       `
     });
   } catch (error) {
-    console.error('Email error:', error.message);
+    console.error('Admin email error:', error.message);
   }
 }
 
@@ -315,15 +384,18 @@ async function sendTelegramNotification(order) {
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) return;
 
   try {
+    const planLabel = formatPlan(order.plan, order.audience, 'fr');
+    const siteUrl = getSiteUrl();
+
     const text = [
       `🎉 *Nouvelle commande*`,
       ``,
-      `📦 *Plan:* ${order.plan} (${order.audience})`,
+      `📦 *Plan:* ${planLabel}`,
       `💰 *Montant:* ${order.amount}€`,
       `📧 *Email:* ${order.customerEmail}`,
       `🔑 *LinkedIn:* ${order.linkedinEmail}`,
       ``,
-      `👉 [Dashboard](https://karrier.pro/admin)`
+      `👉 [Dashboard](${siteUrl}/admin)`
     ].join('\n');
 
     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {

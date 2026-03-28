@@ -556,12 +556,99 @@ document.querySelectorAll('.faq-question').forEach(btn => {
     });
 });
 
+// ===== Promo Code =====
+window.appliedPromo = null;
+
+async function applyPromoCode() {
+    const input = document.getElementById('promoCodeInput');
+    const result = document.getElementById('promoResult');
+    const code = (input ? input.value || '' : '').trim().toUpperCase();
+    if (!code) return;
+
+    const btn = document.getElementById('promoApplyBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    if (result) { result.className = 'promo-result'; result.textContent = ''; }
+
+    try {
+        const r = await fetch('/api/order-status?action=validate-promo&code=' + encodeURIComponent(code) + '&amount=100');
+        const data = await r.json();
+        if (data.valid) {
+            window.appliedPromo = { code: data.code, discount: data.discount };
+            if (result) {
+                result.className = 'promo-result valid';
+                result.textContent = 'Code appliqué ! -' + data.discount + '€ sur votre commande';
+            }
+            updatePricesWithPromo(data.discount);
+        } else {
+            window.appliedPromo = null;
+            if (result) {
+                result.className = 'promo-result invalid';
+                result.textContent = data.error || 'Code invalide';
+            }
+            updatePricesWithPromo(0);
+        }
+    } catch (e) {
+        if (result) {
+            result.className = 'promo-result invalid';
+            result.textContent = 'Erreur de connexion';
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Appliquer'; }
+    }
+}
+
+function updatePricesWithPromo(discount) {
+    // Remove existing badges first
+    document.querySelectorAll('.promo-discount-badge').forEach(function(el) { el.remove(); });
+    if (discount > 0) {
+        document.querySelectorAll('.price-amount').forEach(function(el) {
+            const badge = document.createElement('span');
+            badge.className = 'promo-discount-badge';
+            badge.style.cssText = 'display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle';
+            badge.textContent = '-' + discount + '\u20ac';
+            el.parentNode.insertBefore(badge, el.nextSibling);
+        });
+    }
+}
+
+// Allow Enter key to apply promo
+(function() {
+    var input = document.getElementById('promoCodeInput');
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') applyPromoCode();
+        });
+    }
+})();
+
 // ===== WhatsApp Order =====
 function commanderWhatsApp(planLabel) {
     const phone = '212651064637';
-    const msg = encodeURIComponent('Bonjour, je souhaite commander : ' + planLabel);
+    var promoSuffix = window.appliedPromo ? ' [Code promo: ' + window.appliedPromo.code + ' -' + window.appliedPromo.discount + '\u20ac]' : '';
+    const msg = encodeURIComponent('Bonjour, je souhaite commander : ' + planLabel + promoSuffix);
     window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
     setTimeout(function() { window.location.href = '/merci.html'; }, 800);
+}
+
+// ===== Stripe Checkout (for plans that support it) =====
+async function commanderStripe(plan, audience, language) {
+    try {
+        const body = { plan, audience, language: language || 'fr' };
+        if (window.appliedPromo) body.promoCode = window.appliedPromo.code;
+        const r = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            console.error('Checkout error:', data.error);
+        }
+    } catch (e) {
+        console.error('Checkout fetch error:', e);
+    }
 }
 
 

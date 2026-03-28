@@ -1,21 +1,22 @@
 require('./_env');
 const Stripe = require('stripe');
 const rateLimit = require('./_rate-limit');
+const kvStore = require('./_kv');
 const checkRate = rateLimit({ windowMs: 60000, max: 10 });
 
 const PRICES = {
-  career: { 
+  career: {
     student: process.env.STRIPE_PRICE_CAREER_STUDENT || 'price_career_student',
     professional: process.env.STRIPE_PRICE_CAREER_PRO || 'price_career_pro'
   },
-  business: { 
+  business: {
     student: process.env.STRIPE_PRICE_BUSINESS_STUDENT || 'price_business_student',
     professional: process.env.STRIPE_PRICE_BUSINESS_PRO || 'price_business_pro'
   },
-  'sales-nav': { 
+  'sales-nav': {
     professional: process.env.STRIPE_PRICE_SALESNAV_PRO || 'price_salesnav_pro'
   },
-  'recruiter': { 
+  'recruiter': {
     professional: process.env.STRIPE_PRICE_RECRUITER_PRO || 'price_recruiter_pro'
   }
 };
@@ -44,7 +45,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { plan, audience, language = 'fr', mode = 'payment' } = req.body;
+    const { plan, audience, language = 'fr', mode = 'payment', promoCode } = req.body;
 
     if (!plan || !audience) {
       return res.status(400).json({ error: 'Missing plan or audience' });
@@ -82,13 +83,44 @@ module.exports = async (req, res) => {
     const t = LABELS[language] || LABELS.fr;
     const locale = LOCALE_MAP[language] || 'fr';
 
+    // ===== Promo Code Validation =====
+    let appliedPromo = null;
+    let stripeDiscounts = undefined;
+
+    if (promoCode) {
+      try {
+        const promoData = await kvStore.get(`promo:${promoCode.trim().toUpperCase()}`);
+        if (promoData) {
+          const promo = typeof promoData === 'string' ? JSON.parse(promoData) : promoData;
+          if (
+            promo.active &&
+            (!promo.expiresAt || new Date(promo.expiresAt) > new Date()) &&
+            (promo.maxUses === 0 || promo.usedCount < promo.maxUses)
+          ) {
+            // Create a one-time Stripe coupon
+            const coupon = await stripe.coupons.create({
+              amount_off: promo.discount * 100,
+              currency: 'eur',
+              duration: 'once',
+              name: `Promo ${promo.code}`,
+              max_redemptions: 1
+            });
+            stripeDiscounts = [{ coupon: coupon.id }];
+            appliedPromo = promo.code;
+          }
+        }
+      } catch (promoErr) {
+        console.error('Promo apply error:', promoErr.message);
+        // Continue without promo rather than failing the checkout
+      }
+    }
+
     const sessionParams = {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: mode === 'subscription' ? 'subscription' : 'payment',
-      allow_promotion_codes: true,
-      success_url: `${process.env.SITE_URL || 'https://karrier.pro'}/merci?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.SITE_URL || 'https://karrier.pro'}/#pricing`,
+      success_url: `${process.env.SITE_URL || 'https://www.kareer.pro'}/merci?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.SITE_URL || 'https://www.kareer.pro'}/#pricing`,
       locale,
       custom_fields: [
         {
@@ -104,8 +136,15 @@ module.exports = async (req, res) => {
           optional: false
         }
       ],
-      metadata: { plan, audience, language }
+      metadata: { plan, audience, language, promoCode: appliedPromo || '' }
     };
+
+    // Apply promo discount OR allow generic promotion codes — mutually exclusive
+    if (stripeDiscounts) {
+      sessionParams.discounts = stripeDiscounts;
+    } else {
+      sessionParams.allow_promotion_codes = true;
+    }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.status(200).json({ url: session.url });

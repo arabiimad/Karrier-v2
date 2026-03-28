@@ -133,6 +133,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
         var tab = $('tab-' + btn.dataset.tab);
         if (tab) tab.classList.add('active');
         if (btn.dataset.tab === 'analytics') loadAnalytics();
+        if (btn.dataset.tab === 'promos') loadPromos();
     });
 });
 
@@ -564,6 +565,145 @@ async function loadConfigCheck() {
         });
     } catch (err) { console.error('Config check error:', err); }
 }
+
+// ===== Promo Codes =====
+async function loadPromos() {
+    var container = $('promosList');
+    if (!container) return;
+    container.innerHTML = '<div class="loading-spinner"></div> Chargement...';
+    try {
+        var res = await fetch(API_BASE + '/automation', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ action: 'list_promos' })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) { container.innerHTML = '<p style="color:#ef4444">Erreur: ' + (data.error || 'Échec') + '</p>'; return; }
+        var promos = data.result || [];
+        if (!promos.length) { container.innerHTML = '<p class="empty-state">Aucun code promo créé</p>'; return; }
+        var html = '<table class="promo-table"><thead><tr>' +
+            '<th>Code</th><th>Remise</th><th>Utilisations</th><th>Expiration</th><th>Statut</th><th>Actions</th>' +
+            '</tr></thead><tbody>';
+        promos.forEach(function(p) {
+            var uses = p.maxUses > 0 ? (p.usedCount || 0) + '/' + p.maxUses : (p.usedCount || 0) + '/∞';
+            var expiry = p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('fr-FR') : '—';
+            var statusBadge = p.active
+                ? '<span class="promo-status-active">Actif</span>'
+                : '<span class="promo-status-inactive">Désactivé</span>';
+            html += '<tr>' +
+                '<td><span class="promo-code-badge">' + p.code + '</span>' + (p.description ? '<br><small style="color:var(--text-muted)">' + p.description + '</small>' : '') + '</td>' +
+                '<td><strong>-' + p.discount + '€</strong></td>' +
+                '<td>' + uses + '</td>' +
+                '<td>' + expiry + '</td>' +
+                '<td>' + statusBadge + '</td>' +
+                '<td class="promo-actions">' +
+                    '<button class="promo-btn-toggle" onclick="togglePromoCode(\'' + p.code + '\')">' + (p.active ? 'Désactiver' : 'Activer') + '</button>' +
+                    '<button class="promo-btn-delete" onclick="deletePromoCode(\'' + p.code + '\')">Supprimer</button>' +
+                '</td>' +
+            '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<p style="color:#ef4444">Erreur réseau</p>';
+        console.error('Promos load error:', err);
+    }
+}
+
+async function createPromoCode() {
+    var codeEl = $('newPromoCode');
+    var discountEl = $('newPromoDiscount');
+    var maxUsesEl = $('newPromoMaxUses');
+    var descEl = $('newPromoDesc');
+    var expiryEl = $('newPromoExpiry');
+    var result = $('resultCreatePromo');
+
+    var code = codeEl ? codeEl.value.trim().toUpperCase() : '';
+    var discount = discountEl ? parseInt(discountEl.value) : 0;
+
+    if (!code) { showToast('Entrez un code', 'error'); return; }
+    if (!discount) { showToast('Sélectionnez une remise', 'error'); return; }
+
+    var btn = $('btnCreatePromo');
+    if (btn) btn.disabled = true;
+    if (result) { result.textContent = 'Création...'; result.className = 'auto-result'; }
+
+    try {
+        var body = {
+            action: 'create_promo',
+            code: code,
+            discount: discount,
+            maxUses: maxUsesEl ? parseInt(maxUsesEl.value) || 0 : 0,
+            description: descEl ? descEl.value.trim() : '',
+            expiresAt: (expiryEl && expiryEl.value) ? expiryEl.value : null
+        };
+        var res = await fetch(API_BASE + '/automation', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify(body)
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (data.success) {
+            if (result) { result.textContent = 'Code "' + data.result.code + '" créé avec succès !'; result.className = 'auto-result auto-result-success'; }
+            showToast('Code promo créé !', 'success');
+            if (codeEl) codeEl.value = '';
+            if (descEl) descEl.value = '';
+            if (expiryEl) expiryEl.value = '';
+            if (maxUsesEl) maxUsesEl.value = '0';
+            loadPromos();
+        } else {
+            if (result) { result.textContent = 'Erreur: ' + (data.error || 'Échec'); result.className = 'auto-result auto-result-error'; }
+            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
+        }
+    } catch (err) {
+        if (result) { result.textContent = 'Erreur réseau'; result.className = 'auto-result auto-result-error'; }
+        showToast('Erreur réseau', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function togglePromoCode(code) {
+    try {
+        var res = await fetch(API_BASE + '/automation', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ action: 'toggle_promo', code: code })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (data.success) {
+            showToast('Code ' + (data.result.active ? 'activé' : 'désactivé') + ' !', 'success');
+            loadPromos();
+        } else {
+            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
+        }
+    } catch (err) { showToast('Erreur réseau', 'error'); }
+}
+
+async function deletePromoCode(code) {
+    if (!confirm('Supprimer le code "' + code + '" ? Cette action est irréversible.')) return;
+    try {
+        var res = await fetch(API_BASE + '/automation', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ action: 'delete_promo', code: code })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (data.success) {
+            showToast('Code supprimé !', 'success');
+            loadPromos();
+        } else {
+            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
+        }
+    } catch (err) { showToast('Erreur réseau', 'error'); }
+}
+
+on('btnCreatePromo', 'click', createPromoCode);
+on('btnRefreshPromos', 'click', loadPromos);
 
 // ===== Init =====
 (function() {

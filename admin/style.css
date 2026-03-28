@@ -1227,3 +1227,114 @@ body {
         padding: 0 16px;
     }
 }
+
+/* ===== Promo Admin Tab ===== */
+.promo-admin-wrap {
+    max-width: 900px;
+}
+.promo-form {
+    margin-top: 12px;
+}
+.promo-form-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.promo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.promo-table th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.promo-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+}
+.promo-table tr:last-child td {
+    border-bottom: none;
+}
+.promo-code-badge {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary-light);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.promo-status-active {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.promo-status-inactive {
+    display: inline-block;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.promo-actions {
+    display: flex;
+    gap: 6px;
+}
+.promo-btn-toggle {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary-light);
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.promo-btn-toggle:hover {
+    background: rgba(99, 102, 241, 0.3);
+}
+.promo-btn-delete {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.promo-btn-delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+.refresh-btn {
+    background: var(--bg-hover);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.refresh-btn:hover {
+    background: var(--border);
+}
