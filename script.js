@@ -598,17 +598,60 @@ async function applyPromoCode() {
 }
 
 function updatePricesWithPromo(discount) {
-    // Remove existing badges first
-    document.querySelectorAll('.promo-discount-badge').forEach(function(el) { el.remove(); });
-    if (discount > 0) {
-        document.querySelectorAll('.price-amount').forEach(function(el) {
-            const badge = document.createElement('span');
+    // Save original prices on first call
+    document.querySelectorAll('.price-amount').forEach(function(el) {
+        if (!el.dataset.originalPrice) {
+            el.dataset.originalPrice = el.textContent.trim();
+        }
+    });
+
+    // Remove existing promo UI
+    document.querySelectorAll('.promo-discount-badge, .promo-original-price').forEach(function(el) { el.remove(); });
+
+    document.querySelectorAll('.price-amount').forEach(function(el) {
+        var original = parseInt(el.dataset.originalPrice, 10);
+        if (isNaN(original)) return;
+
+        if (discount > 0) {
+            var discounted = Math.max(0, original - discount);
+            // Show struck-through original
+            var oldPriceEl = document.createElement('span');
+            oldPriceEl.className = 'promo-original-price';
+            oldPriceEl.style.cssText = 'font-size:0.55em;color:#9ca3af;text-decoration:line-through;margin-right:4px;vertical-align:middle;font-weight:600';
+            oldPriceEl.textContent = original;
+            el.parentNode.insertBefore(oldPriceEl, el);
+            // Update displayed price
+            el.textContent = discounted;
+            el.style.color = '#10b981';
+            // Green badge
+            var badge = document.createElement('span');
             badge.className = 'promo-discount-badge';
-            badge.style.cssText = 'display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle';
+            badge.style.cssText = 'display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle';
             badge.textContent = '-' + discount + '\u20ac';
             el.parentNode.insertBefore(badge, el.nextSibling);
-        });
+        } else {
+            // Restore original
+            el.textContent = el.dataset.originalPrice;
+            el.style.color = '';
+        }
+    });
+}
+
+// commanderWhatsApp — sends discounted price if promo applied
+function commanderWhatsApp(planLabel) {
+    const phone = '212651064637';
+    var msg;
+    if (window.appliedPromo) {
+        // Extract amount from planLabel (e.g. "LinkedIn Career 1 an — 100€")
+        var match = planLabel.match(/(\d+)\u20ac/);
+        var original = match ? parseInt(match[1], 10) : 0;
+        var discounted = Math.max(0, original - window.appliedPromo.discount);
+        var discountedLabel = original > 0 ? planLabel.replace(original + '\u20ac', discounted + '\u20ac') : planLabel;
+        msg = encodeURIComponent('Bonjour, je souhaite commander : ' + discountedLabel + ' \u2014 Code promo: ' + window.appliedPromo.code + ' (-' + window.appliedPromo.discount + '\u20ac)');
+    } else {
+        msg = encodeURIComponent('Bonjour, je souhaite commander : ' + planLabel);
     }
+    window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
 }
 
 // Allow Enter key to apply promo
@@ -621,14 +664,7 @@ function updatePricesWithPromo(discount) {
     }
 })();
 
-// ===== WhatsApp Order =====
-function commanderWhatsApp(planLabel) {
-    const phone = '212651064637';
-    var promoSuffix = window.appliedPromo ? ' [Code promo: ' + window.appliedPromo.code + ' -' + window.appliedPromo.discount + '\u20ac]' : '';
-    const msg = encodeURIComponent('Bonjour, je souhaite commander : ' + planLabel + promoSuffix);
-    window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
-    setTimeout(function() { window.location.href = '/merci.html'; }, 800);
-}
+// commanderWhatsApp defined above in Promo Code section
 
 // ===== Stripe Checkout (for plans that support it) =====
 async function commanderStripe(plan, audience, language) {
