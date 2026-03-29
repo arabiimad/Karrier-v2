@@ -93,15 +93,15 @@ async function sendWelcomeEmail(order) {
     console.log('[Email] Resend initialized, preparing email content');
 
   const t = lang === 'fr' ? {
-    subject: 'Commande reçue — Kareer',
+    subject: 'Confirmez votre commande — Kareer',
     title: 'Merci pour votre commande !',
-    body: 'Nous avons bien reçu votre commande. Notre équipe va procéder à l\'activation de votre compte LinkedIn Premium dans les prochaines 24 à 48 heures.',
+    body: 'Votre commande a été enregistrée avec succès. Pour finaliser votre achat et procéder à l\'activation de votre compte LinkedIn Premium, merci de procéder au paiement via WhatsApp.',
     steps_title: 'Prochaines étapes',
-    step1: 'Nous vérifions vos informations LinkedIn',
-    step2: 'Activation de votre compte Premium (24-48h)',
-    step3: 'Vous recevrez un email de confirmation',
-    delay: 'Délai estimé : 24 à 48 heures',
-    contact: 'Une question ? Contactez-nous sur WhatsApp'
+    step1: 'Contactez-nous sur WhatsApp pour le paiement',
+    step2: 'Nous validons votre paiement (quelques minutes)',
+    step3: 'Activation de votre compte Premium (24-48h)',
+    delay: 'Délai total estimé : 24 à 48 heures après paiement',
+    contact: 'Procéder au paiement sur WhatsApp'
   } : lang === 'es' ? {
     subject: 'Pedido recibido — Kareer',
     title: '¡Gracias por tu pedido!',
@@ -113,15 +113,15 @@ async function sendWelcomeEmail(order) {
     delay: 'Tiempo estimado: 24 a 48 horas',
     contact: '¿Una pregunta? Contáctanos por WhatsApp'
   } : lang === 'de' ? {
-    subject: 'Bestellung eingegangen — Kareer',
+    subject: 'Bestätigen Sie Ihre Bestellung — Kareer',
     title: 'Vielen Dank für Ihre Bestellung!',
-    body: 'Wir haben Ihre Bestellung erhalten. Unser Team wird Ihr LinkedIn Premium-Konto innerhalb der nächsten 24 bis 48 Stunden aktivieren.',
+    body: 'Ihre Bestellung wurde erfolgreich registriert. Um Ihren Kauf abzuschließen und die Aktivierung Ihres LinkedIn Premium-Kontos zu starten, zahlen Sie bitte über WhatsApp.',
     steps_title: 'Nächste Schritte',
-    step1: 'Wir überprüfen Ihre LinkedIn-Daten',
-    step2: 'Aktivierung Ihres Premium-Kontos (24-48h)',
-    step3: 'Sie erhalten eine Bestätigungs-E-Mail',
-    delay: 'Geschätzte Zeit: 24 bis 48 Stunden',
-    contact: 'Fragen? Kontaktieren Sie uns über WhatsApp'
+    step1: 'Kontaktieren Sie uns auf WhatsApp für die Zahlung',
+    step2: 'Wir bestätigen Ihre Zahlung (wenige Minuten)',
+    step3: 'Aktivierung Ihres Premium-Kontos (24-48h)',
+    delay: 'Geschätzte Gesamtzeit: 24 bis 48 Stunden nach Zahlung',
+    contact: 'Zur Zahlung auf WhatsApp'
   } : {
     subject: 'Order received — Kareer',
     title: 'Thank you for your order!',
