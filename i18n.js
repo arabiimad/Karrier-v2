@@ -600,7 +600,7 @@ function detectGeoLang(callback) {
 }
 
 // Resolve initial language: URL > saved > default (French)
-let currentLang = (function() {
+window.currentLang = (function() {
     const urlLang = detectUrlLang();
     if (urlLang) return urlLang;
     try {
@@ -609,6 +609,7 @@ let currentLang = (function() {
     } catch(e) {}
     return 'fr';
 })();
+let currentLang = window.currentLang;
 
 function setLanguage(lang) {
     if (!translations[lang]) return;
