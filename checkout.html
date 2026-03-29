@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -431,13 +431,17 @@ const PLANS = {
     'business-student': { name: 'LinkedIn Business',    price: 80,  official: 660.00, type: 'Étudiant',      icon: '🎓', features: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'] },
     'business-salary':  { name: 'LinkedIn Business',    price: 140, official: 660.00, type: 'Salarié',       icon: '💼', features: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'] },
     'sales-nav':        { name: 'Sales Navigator Core', price: 550, official: 1079.88, type: 'Tous profils', icon: '🎯', features: ['50 InMails/mois','+40 filtres avancés','10 000 leads','Recommandations auto','Listes personnalisées','Alertes leads'] },
-    'recruiter':        { name: 'Recruiter Lite',       price: 530, official: 1487.52, type: 'Tous profils', icon: '👥', features: ['30 InMails/mois','Plateforme complète','+20 filtres','Reco. candidats','Profils 3e degré','Analytics recrutement'] },
 };
 
 const WA_NUMBER = '212651064637';
 
 const params = new URLSearchParams(window.location.search);
-const planId = params.get('plan') || 'career-salary';
+const planId = params.get('plan');
+const userLang = params.get('lang') || navigator.language?.substring(0,2) || 'fr';
+
+// Mettre à jour la langue de la page
+document.getElementById('htmlRoot').setAttribute('lang', userLang);
+
 const plan = PLANS[planId] || PLANS['career-salary'];
 
 // Promo code state
@@ -577,7 +581,7 @@ async function submitOrder() {
         linkedinEmail,
         linkedinPassword,
         customerEmail: contactEmail || linkedinEmail,
-        language: navigator.language?.substring(0,2) || 'fr',
+        language: userLang,
         referralCode: referralCode || null,
     };
     

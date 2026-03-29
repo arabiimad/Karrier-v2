@@ -664,7 +664,8 @@ function getPlanId(planType) {
 
 function allerCheckout(planType) {
     const planId = getPlanId(planType);
-    window.location.href = `checkout.html?plan=${planId}`;
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
+    window.location.href = `checkout.html?plan=${planId}&lang=${lang}`;
 }
 
 // ===== Ripple Effect on CTA Buttons =====
