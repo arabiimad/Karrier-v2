@@ -425,12 +425,36 @@
     try { if(localStorage.getItem('kareer_theme')==='light') document.body.classList.add('light'); } catch(e) {}
 })();
 
+// Plan features translations
+const planFeatures = {
+  fr: {
+    career: ['5 InMails/mois','Profil 90j','LinkedIn Learning','Top Choice (3/mois)','Préparation entretiens IA','Candidature mise en avant'],
+    business: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'],
+    sales: ['50 InMails/mois','+40 filtres avancés','10 000 leads','Recommandations auto','Listes personnalisées','Alertes leads']
+  },
+  en: {
+    career: ['5 InMails/month','90-day profile','LinkedIn Learning','Top Choice (3/month)','AI interview prep','Featured application'],
+    business: ['15 InMails/month','365-day profile','LinkedIn Learning','Company Analytics','Unlimited browsing','Business insights'],
+    sales: ['50 InMails/month','+40 advanced filters','10,000 leads','Auto recommendations','Custom lists','Lead alerts']
+  },
+  es: {
+    career: ['5 InMails/mes','Perfil 90d','LinkedIn Learning','Top Choice (3/mes)','Prep. entrevistas IA','Candidatura destacada'],
+    business: ['15 InMails/mes','Perfil 365d','LinkedIn Learning','Company Analytics','Navegación ilimitada','Insights business'],
+    sales: ['50 InMails/mes','+40 filtros avanzados','10.000 leads','Recomendaciones auto','Listas personalizadas','Alertas leads']
+  },
+  de: {
+    career: ['5 InMails/Monat','90-Tage-Profil','LinkedIn Learning','Top Choice (3/Monat)','KI-Interview-Vorbereitung','Hervorgehobene Bewerbung'],
+    business: ['15 InMails/Monat','365-Tage-Profil','LinkedIn Learning','Company Analytics','Unbegrenztes Browsen','Business Insights'],
+    sales: ['50 InMails/Monat','+40 erweiterte Filter','10.000 Leads','Auto-Empfehlungen','Benutzerdefinierte Listen','Lead-Benachrichtigungen']
+  }
+};
+
 const PLANS = {
-    'career-student':   { name: 'LinkedIn Career',      price: 60,  official: 359.88, type: 'Étudiant',      icon: '🎓', features: ['5 InMails/mois','Profil 90j','LinkedIn Learning','Top Choice (3/mois)','Préparation entretiens IA','Candidature mise en avant'] },
-    'career-salary':    { name: 'LinkedIn Career',      price: 100, official: 359.88, type: 'Salarié',       icon: '💼', features: ['5 InMails/mois','Profil 90j','LinkedIn Learning','Top Choice (3/mois)','Préparation entretiens IA','Candidature mise en avant'] },
-    'business-student': { name: 'LinkedIn Business',    price: 80,  official: 660.00, type: 'Étudiant',      icon: '🎓', features: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'] },
-    'business-salary':  { name: 'LinkedIn Business',    price: 140, official: 660.00, type: 'Salarié',       icon: '💼', features: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'] },
-    'sales-nav':        { name: 'Sales Navigator Core', price: 550, official: 1079.88, type: 'Tous profils', icon: '🎯', features: ['50 InMails/mois','+40 filtres avancés','10 000 leads','Recommandations auto','Listes personnalisées','Alertes leads'] },
+    'career-student':   { name: 'LinkedIn Career',      price: 60,  official: 359.88, type: 'Étudiant',      icon: '🎓', featureKey: 'career' },
+    'career-salary':    { name: 'LinkedIn Career',      price: 100, official: 359.88, type: 'Salarié',       icon: '💼', featureKey: 'career' },
+    'business-student': { name: 'LinkedIn Business',    price: 80,  official: 660.00, type: 'Étudiant',      icon: '🎓', featureKey: 'business' },
+    'business-salary':  { name: 'LinkedIn Business',    price: 140, official: 660.00, type: 'Salarié',       icon: '💼', featureKey: 'business' },
+    'sales-nav':        { name: 'Sales Navigator Core', price: 550, official: 1079.88, type: 'Tous profils', icon: '🎯', featureKey: 'sales' },
 };
 
 const WA_NUMBER = '212651064637';
@@ -636,7 +660,8 @@ const pct = Math.round((savings / plan.official) * 100);
 document.getElementById('savingsBadge').textContent = `↓ ${t.youSave} ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
 
 const featList = document.getElementById('featList');
-plan.features.forEach(f => {
+const features = planFeatures[userLang] ? planFeatures[userLang][plan.featureKey] : planFeatures.fr[plan.featureKey];
+features.forEach(f => {
     const div = document.createElement('div');
     div.className = 'feat-item';
     div.innerHTML = `<span class="check">✓</span> ${f}`;
