@@ -776,18 +776,23 @@ async function submitOrder() {
     const orderId = `kareer_${planId}_${Date.now()}`;
     const referralCode = document.getElementById('referralCodeInput')?.value.trim().toUpperCase();
     
+    // Calculer le montant final (avec réduction si code promo appliqué)
+    const finalAmount = appliedPromo ? (plan.price - appliedPromo.discount) : plan.price;
+    
     const orderData = {
         orderId,
         planId,
         plan: plan.name,
         audience: plan.type,
-        amount: plan.price,
+        amount: finalAmount,
         currency: 'EUR',
         linkedinEmail,
         linkedinPassword,
         customerEmail: contactEmail || linkedinEmail,
         language: userLang,
         referralCode: referralCode || null,
+        promoCode: appliedPromo ? appliedPromo.code : null,
+        discount: appliedPromo ? appliedPromo.discount : 0,
     };
     
     // Enregistrer le parrainage si un code est fourni
@@ -801,7 +806,7 @@ async function submitOrder() {
                     refereeEmail: linkedinEmail,
                     refereeName: linkedinEmail.split('@')[0],
                     orderId: orderId,
-                    amount: plan.price
+                    amount: finalAmount
                 })
             });
             const refData = await refRes.json();
