@@ -114,14 +114,20 @@ on('logoutBtn', 'click', function() {
 
 // ===== 401 handler =====
 function logout401() {
+    console.log('[logout401] Session expirée - déconnexion');
     authToken = null;
     clearToken();
     var ls = $('loginScreen');
     var db = $('dashboard');
-    var le = $('loginError');
-    if (ls) ls.style.display = '';
+    if (ls) ls.style.display = 'flex';
     if (db) db.style.display = 'none';
-    if (le) le.textContent = 'Session expirée';
+    
+    // Vider complètement le sessionStorage
+    try {
+        sessionStorage.clear();
+    } catch(e) {}
+    
+    showToast('Session expirée. Veuillez vous reconnecter.', 'error');
 }
 
 // ===== Tabs =====
@@ -132,8 +138,15 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
         btn.classList.add('active');
         var tab = $('tab-' + btn.dataset.tab);
         if (tab) tab.classList.add('active');
+        
+        // Charger les données spécifiques à l'onglet
+        if (btn.dataset.tab === 'promos') {
+            loadPromos();
+        }
+        if (btn.dataset.tab === 'referrals') {
+            loadReferrals();
+        }
         if (btn.dataset.tab === 'analytics') loadAnalytics();
-        if (btn.dataset.tab === 'promos') loadPromos();
     });
 });
 
@@ -566,144 +579,369 @@ async function loadConfigCheck() {
     } catch (err) { console.error('Config check error:', err); }
 }
 
-// ===== Promo Codes =====
-async function loadPromos() {
-    var container = $('promosList');
-    if (!container) return;
-    container.innerHTML = '<div class="loading-spinner"></div> Chargement...';
-    try {
-        var res = await fetch(API_BASE + '/automation', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ action: 'list_promos' })
-        });
-        if (res.status === 401) return logout401();
-        var data = await res.json();
-        if (!data.success) { container.innerHTML = '<p style="color:#ef4444">Erreur: ' + (data.error || 'Échec') + '</p>'; return; }
-        var promos = data.result || [];
-        if (!promos.length) { container.innerHTML = '<p class="empty-state">Aucun code promo créé</p>'; return; }
-        var html = '<table class="promo-table"><thead><tr>' +
-            '<th>Code</th><th>Remise</th><th>Utilisations</th><th>Expiration</th><th>Statut</th><th>Actions</th>' +
-            '</tr></thead><tbody>';
-        promos.forEach(function(p) {
-            var uses = p.maxUses > 0 ? (p.usedCount || 0) + '/' + p.maxUses : (p.usedCount || 0) + '/∞';
-            var expiry = p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('fr-FR') : '—';
-            var statusBadge = p.active
-                ? '<span class="promo-status-active">Actif</span>'
-                : '<span class="promo-status-inactive">Désactivé</span>';
-            html += '<tr>' +
-                '<td><span class="promo-code-badge">' + p.code + '</span>' + (p.description ? '<br><small style="color:var(--text-muted)">' + p.description + '</small>' : '') + '</td>' +
-                '<td><strong>-' + p.discount + '€</strong></td>' +
-                '<td>' + uses + '</td>' +
-                '<td>' + expiry + '</td>' +
-                '<td>' + statusBadge + '</td>' +
-                '<td class="promo-actions">' +
-                    '<button class="promo-btn-toggle" onclick="togglePromoCode(\'' + p.code + '\')">' + (p.active ? 'Désactiver' : 'Activer') + '</button>' +
-                    '<button class="promo-btn-delete" onclick="deletePromoCode(\'' + p.code + '\')">Supprimer</button>' +
-                '</td>' +
-            '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = '<p style="color:#ef4444">Erreur réseau</p>';
-        console.error('Promos load error:', err);
-    }
+// ===== authFetch =====
+async function authFetch(url, opts) {
+    opts = opts || {};
+    var token = authToken || getToken();
+    return fetch(url, Object.assign({}, opts, {
+        headers: Object.assign(
+            { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            opts.headers || {}
+        )
+    }));
 }
 
-async function createPromoCode() {
-    var codeEl = $('newPromoCode');
-    var discountEl = $('newPromoDiscount');
-    var maxUsesEl = $('newPromoMaxUses');
-    var descEl = $('newPromoDesc');
-    var expiryEl = $('newPromoExpiry');
-    var result = $('resultCreatePromo');
-
-    var code = codeEl ? codeEl.value.trim().toUpperCase() : '';
-    var discount = discountEl ? parseInt(discountEl.value) : 0;
-
-    if (!code) { showToast('Entrez un code', 'error'); return; }
-    if (!discount) { showToast('Sélectionnez une remise', 'error'); return; }
-
-    var btn = $('btnCreatePromo');
-    if (btn) btn.disabled = true;
-    if (result) { result.textContent = 'Création...'; result.className = 'auto-result'; }
-
+// ===== Promos ===== 
+async function deletePromo(code) {
+    if (!confirm('Supprimer le code "' + code + '" ?')) return;
     try {
-        var body = {
-            action: 'create_promo',
-            code: code,
-            discount: discount,
-            maxUses: maxUsesEl ? parseInt(maxUsesEl.value) || 0 : 0,
-            description: descEl ? descEl.value.trim() : '',
-            expiresAt: (expiryEl && expiryEl.value) ? expiryEl.value : null
-        };
-        var res = await fetch(API_BASE + '/automation', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify(body)
+        var res = await authFetch('/api/promo-codes?code=' + encodeURIComponent(code), {
+            method: 'DELETE'
         });
         if (res.status === 401) return logout401();
         var data = await res.json();
         if (data.success) {
-            if (result) { result.textContent = 'Code "' + data.result.code + '" créé avec succès !'; result.className = 'auto-result auto-result-success'; }
-            showToast('Code promo créé !', 'success');
-            if (codeEl) codeEl.value = '';
-            if (descEl) descEl.value = '';
-            if (expiryEl) expiryEl.value = '';
-            if (maxUsesEl) maxUsesEl.value = '0';
             loadPromos();
+            showToast('Code supprimé', 'success');
         } else {
-            if (result) { result.textContent = 'Erreur: ' + (data.error || 'Échec'); result.className = 'auto-result auto-result-error'; }
-            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
+            showToast(data.error || 'Erreur', 'error');
         }
     } catch (err) {
-        if (result) { result.textContent = 'Erreur réseau'; result.className = 'auto-result auto-result-error'; }
         showToast('Erreur réseau', 'error');
-    } finally {
-        if (btn) btn.disabled = false;
     }
 }
 
-async function togglePromoCode(code) {
-    try {
-        var res = await fetch(API_BASE + '/automation', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ action: 'toggle_promo', code: code })
-        });
-        if (res.status === 401) return logout401();
-        var data = await res.json();
-        if (data.success) {
-            showToast('Code ' + (data.result.active ? 'activé' : 'désactivé') + ' !', 'success');
-            loadPromos();
-        } else {
-            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
-        }
-    } catch (err) { showToast('Erreur réseau', 'error'); }
+// Mettre à jour le placeholder selon le type
+function updatePromoValuePlaceholder() {
+    var type = $('promoType').value;
+    var input = $('promoValue');
+    if (type === 'percentage') {
+        input.placeholder = 'Ex: 10 (pour 10%)';
+        input.max = '100';
+    } else {
+        input.placeholder = 'Ex: 20 (pour 20€)';
+        input.removeAttribute('max');
+    }
 }
 
-async function deletePromoCode(code) {
-    if (!confirm('Supprimer le code "' + code + '" ? Cette action est irréversible.')) return;
+// Créer un code promo
+async function createPromoCode(event) {
+    event.preventDefault();
+    
+    var code = $('promoCode').value.trim().toUpperCase();
+    var type = $('promoType').value;
+    var value = parseFloat($('promoValue').value);
+    var maxUses = parseInt($('promoMaxUses').value) || null;
+    var minAmount = parseFloat($('promoMinAmount').value) || 0;
+    var description = $('promoDescription').value.trim();
+    var expiresAt = $('promoExpiry').value || null;
+    var applicablePlans = $('promoPlans').value;
+
+    if (!value || value <= 0) {
+        return showToast('Valeur invalide', 'error');
+    }
+
+    if (type === 'percentage' && value > 100) {
+        return showToast('Le pourcentage ne peut pas dépasser 100%', 'error');
+    }
+
     try {
-        var res = await fetch(API_BASE + '/automation', {
+        console.log('[createPromoCode] Envoi de la requête...');
+        console.log('[createPromoCode] Token actuel:', authToken ? 'Présent (' + authToken.substring(0, 20) + '...)' : 'MANQUANT');
+        var res = await authFetch('/api/promo-codes', {
             method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ action: 'delete_promo', code: code })
+            body: JSON.stringify({
+                code: code || null,
+                type: type,
+                value: value,
+                maxUses: maxUses,
+                minAmount: minAmount,
+                description: description,
+                expiresAt: expiresAt,
+                applicablePlans: applicablePlans,
+                autoGenerate: !code
+            })
         });
-        if (res.status === 401) return logout401();
+
+        console.log('[createPromoCode] Statut de la réponse:', res.status);
+        
+        if (res.status === 401) {
+            console.error('[createPromoCode] 401 - Token invalide ou expiré');
+            return logout401();
+        }
+        
         var data = await res.json();
+        console.log('[createPromoCode] Réponse:', data);
+        
         if (data.success) {
-            showToast('Code supprimé !', 'success');
+            showToast('Code créé : ' + data.code, 'success');
+            $('createPromoForm').reset();
             loadPromos();
         } else {
-            showToast('Erreur: ' + (data.error || 'Échec'), 'error');
+            showToast(data.error || 'Erreur lors de la création', 'error');
         }
-    } catch (err) { showToast('Erreur réseau', 'error'); }
+    } catch (err) {
+        console.error('[createPromoCode] Erreur:', err);
+        showToast('Erreur: ' + err.message, 'error');
+    }
 }
 
-on('btnCreatePromo', 'click', createPromoCode);
-on('btnRefreshPromos', 'click', loadPromos);
+// Charger la liste des codes promo
+async function loadPromos() {
+    var list = $('promosList');
+    if (!list) return;
+    
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ Chargement...</div>';
+    
+    try {
+        var res = await authFetch('/api/promo-codes');
+        if (res.status === 401) return logout401();
+        
+        var data = await res.json();
+        
+        if (!data.codes || data.codes.length === 0) {
+            list.innerHTML = '<div class="promo-empty-state">' +
+                '<div class="promo-empty-icon">🏷️</div>' +
+                '<div class="promo-empty-text">Aucun code promo créé</div>' +
+                '<div class="promo-empty-hint">Créez votre premier code promo ci-dessus</div>' +
+                '</div>';
+            return;
+        }
+
+        var html = '';
+        data.codes.forEach(function(promo) {
+            var isExpired = promo.expiresAt && new Date(promo.expiresAt) < new Date();
+            var isExhausted = promo.maxUses && promo.usedCount >= promo.maxUses;
+            var isActive = promo.active && !isExpired && !isExhausted;
+            var statusClass = isActive ? 'active' : (isExpired ? 'expired' : 'inactive');
+            var statusText = isActive ? 'Actif' : (isExpired ? 'Expiré' : (isExhausted ? 'Épuisé' : 'Inactif'));
+
+            html += '<div class="promo-card">';
+            html += '<div class="promo-card-header">';
+            html += '<div class="promo-code-badge">' + promo.code + '</div>';
+            html += '<div class="promo-status-badge ' + statusClass + '">' + statusText + '</div>';
+            html += '</div>';
+            
+            if (promo.description) {
+                html += '<div class="promo-description">' + promo.description + '</div>';
+            }
+            
+            html += '<div class="promo-card-body">';
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Réduction</div>';
+            html += '<div class="promo-info-value highlight">';
+            html += (promo.type === 'percentage' ? '-' + promo.value + '%' : '-' + promo.value + '€');
+            html += '</div></div>';
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Utilisations</div>';
+            html += '<div class="promo-info-value">' + (promo.usedCount || 0) + (promo.maxUses ? '/' + promo.maxUses : '/∞') + '</div>';
+            html += '</div>';
+            
+            if (promo.minAmount > 0) {
+                html += '<div class="promo-info-item">';
+                html += '<div class="promo-info-label">Montant min.</div>';
+                html += '<div class="promo-info-value">' + promo.minAmount + '€</div>';
+                html += '</div>';
+            }
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Expiration</div>';
+            html += '<div class="promo-info-value">' + (promo.expiresAt ? new Date(promo.expiresAt).toLocaleDateString('fr-FR') : 'Jamais') + '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Plans</div>';
+            html += '<div class="promo-info-value" style="font-size:12px">' + (promo.applicablePlans === 'all' ? 'Tous' : 'Spécifiques') + '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-card-actions">';
+            html += '<button onclick="togglePromoStatus(\'' + promo.code + '\', ' + !promo.active + ')" class="promo-action-btn ' + (promo.active ? '' : 'success') + '">';
+            html += (promo.active ? '⏸️ Désactiver' : '▶️ Activer');
+            html += '</button>';
+            html += '<button onclick="deletePromo(\'' + promo.code + '\')" class="promo-action-btn danger">🗑️ Supprimer</button>';
+            html += '</div>';
+            html += '</div>';
+        });
+
+        list.innerHTML = html;
+        
+    } catch (err) {
+        list.innerHTML = '<div class="promo-empty-state">' +
+            '<div class="promo-empty-icon">❌</div>' +
+            '<div class="promo-empty-text">Erreur de chargement</div>' +
+            '<div class="promo-empty-hint">' + err.message + '</div>' +
+            '</div>';
+    }
+}
+
+// Activer/désactiver un code promo
+async function togglePromoStatus(code, newStatus) {
+    try {
+        var res = await authFetch('/api/promo-codes', {
+            method: 'PUT',
+            body: JSON.stringify({
+                code: code,
+                updates: { active: newStatus }
+            })
+        });
+
+        if (res.status === 401) return logout401();
+        
+        var data = await res.json();
+        
+        if (data.success) {
+            showToast('Statut mis à jour', 'success');
+            loadPromos();
+        } else {
+            showToast(data.error || 'Erreur', 'error');
+        }
+    } catch (err) {
+        showToast('Erreur réseau', 'error');
+    }
+}
+
+// ===== Referrals =====
+async function loadReferrals() {
+    var list = $('referralsList');
+    if (!list) return;
+    
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ Chargement...</div>';
+    
+    try {
+        var res = await authFetch('/api/referral');
+        if (res.status === 401) return logout401();
+        
+        var data = await res.json();
+        
+        if (!data.referrals || data.referrals.length === 0) {
+            list.innerHTML = '<div class="promo-empty-state">' +
+                '<div class="promo-empty-icon">👥</div>' +
+                '<div class="promo-empty-text">Aucun parrainage enregistré</div>' +
+                '<div class="promo-empty-hint">Les parrainages apparaîtront ici automatiquement</div>' +
+                '</div>';
+            return;
+        }
+
+        // Calculer les statistiques
+        var totalReferrals = 0;
+        var totalEarnings = 0;
+        data.referrals.forEach(function(ref) {
+            var count = ref.referralCount || 0;
+            totalReferrals += count;
+            totalEarnings += count * 20; // 10€ parrain + 10€ filleul = 20€ par parrainage
+        });
+        
+        $('totalReferrers').textContent = data.referrals.length;
+        $('totalReferrals').textContent = totalReferrals;
+        $('totalReferralEarnings').textContent = totalEarnings + '€';
+
+        // Afficher les parrainages triés par nombre de filleuls
+        data.referrals.sort(function(a, b) {
+            return (b.referralCount || 0) - (a.referralCount || 0);
+        });
+        
+        var html = '';
+        data.referrals.forEach(function(referrer, index) {
+            var referralCount = referrer.referralCount || 0;
+            var totalEarned = referralCount * 10;
+            
+            html += '<div class="promo-card">';
+            html += '<div class="promo-card-header">';
+            html += '<div class="promo-code-badge">' + referrer.code + '</div>';
+            html += '<div class="promo-status-badge active" style="font-size:16px;font-weight:700">';
+            html += '👥 ' + referralCount + ' filleul' + (referralCount > 1 ? 's' : '');
+            html += ' • 💰 ' + totalEarned + '€';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-card-body">';
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Parrain</div>';
+            html += '<div class="promo-info-value">' + (referrer.referrerName || referrer.referrerEmail) + '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Email</div>';
+            html += '<div class="promo-info-value" style="font-size:13px">' + referrer.referrerEmail + '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Mode de récompense</div>';
+            html += '<div class="promo-info-value">' + (referrer.rewardMode === 'transfer' ? '💸 Virement' : '🎟️ Codes promo') + '</div>';
+            html += '</div>';
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Gains totaux</div>';
+            html += '<div class="promo-info-value highlight">' + ((referrer.referralCount || 0) * 10) + '€</div>';
+            html += '</div>';
+            
+            if (referrer.rewardMode === 'transfer') {
+                html += '<div class="promo-info-item">';
+                html += '<div class="promo-info-label">Solde en attente</div>';
+                html += '<div class="promo-info-value" style="color:var(--warning)">' + (referrer.pendingBalance || 0) + '€</div>';
+                html += '</div>';
+            }
+            
+            html += '<div class="promo-info-item">';
+            html += '<div class="promo-info-label">Créé le</div>';
+            html += '<div class="promo-info-value">' + new Date(referrer.createdAt).toLocaleDateString('fr-FR') + '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Afficher les demandes de virement
+            if (referrer.transferRequests && referrer.transferRequests.length > 0) {
+                html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">';
+                html += '<div class="promo-info-label" style="margin-bottom:12px">💸 Demandes de virement (' + referrer.transferRequests.length + ')</div>';
+                referrer.transferRequests.forEach(function(req) {
+                    var statusColor = req.status === 'completed' ? 'var(--success)' : req.status === 'rejected' ? 'var(--error)' : 'var(--warning)';
+                    var statusText = req.status === 'completed' ? '✓ Effectué' : req.status === 'rejected' ? '✗ Refusé' : '⏳ En attente';
+                    html += '<div style="padding:12px;background:rgba(255,193,7,0.1);border-left:3px solid ' + statusColor + ';border-radius:6px;margin-bottom:8px">';
+                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px">';
+                    html += '<div style="font-weight:600;font-size:14px">' + req.amount + '€</div>';
+                    html += '<div style="font-size:13px;color:' + statusColor + ';font-weight:600">' + statusText + '</div>';
+                    html += '</div>';
+                    html += '<div style="font-size:12px;color:var(--text-muted)">Demandé le ' + new Date(req.requestedAt).toLocaleDateString('fr-FR') + '</div>';
+                    if (req.paymentInfo) {
+                        html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">IBAN: ' + req.paymentInfo.iban.substring(0, 10) + '...</div>';
+                        html += '<div style="font-size:12px;color:var(--text-muted)">Titulaire: ' + req.paymentInfo.accountName + '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            // Afficher les filleuls
+            if (referrer.referrals && referrer.referrals.length > 0) {
+                html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">';
+                html += '<div class="promo-info-label" style="margin-bottom:12px">👥 Filleuls (' + referrer.referrals.length + ')</div>';
+                referrer.referrals.forEach(function(ref) {
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(21,101,192,0.05);border-radius:6px;margin-bottom:6px">';
+                    html += '<div>';
+                    html += '<div style="font-weight:600;font-size:14px">' + (ref.refereeName || ref.refereeEmail) + '</div>';
+                    html += '<div style="font-size:12px;color:var(--text-muted)">' + new Date(ref.referredAt).toLocaleDateString('fr-FR') + '</div>';
+                    html += '</div>';
+                    html += '<div style="font-weight:700;color:var(--success)">+10€</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            html += '</div>';
+        });
+
+        list.innerHTML = html;
+        
+    } catch (err) {
+        console.error('[loadReferrals] Erreur:', err);
+        list.innerHTML = '<div class="promo-empty-state">' +
+            '<div class="promo-empty-icon">❌</div>' +
+            '<div class="promo-empty-text">Erreur de chargement</div>' +
+            '<div class="promo-empty-hint">' + err.message + '</div>' +
+            '</div>';
+    }
+}
 
 // ===== Init =====
 (function() {

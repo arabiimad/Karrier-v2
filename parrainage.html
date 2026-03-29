@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parrainage — Kareer</title>
+    <meta name="description" content="Parrainez vos amis et gagnez 10€ de réduction sur votre prochaine commande LinkedIn Premium !">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="kareer-logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .referral-hero {
+            background: linear-gradient(135deg, #1565C0 0%, #8B5CF6 100%);
+            padding: 80px 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            animation: float 20s linear infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+        .referral-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .referral-hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            position: relative;
+            z-index: 1;
+        }
+        .referral-container {
+            max-width: 900px;
+            margin: -60px auto 60px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+        }
+        .referral-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .referral-code-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .referral-code-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .referral-code-display {
+            background: linear-gradient(135deg, rgba(21, 101, 192, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .referral-code-text {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+        .referral-code-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .referral-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .referral-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .referral-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+            box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+        }
+        .referral-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(21, 101, 192, 0.4);
+        }
+        .referral-btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .referral-btn-secondary:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+        }
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .referral-stat {
+            background: linear-gradient(135deg, rgba(21, 101, 192, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        .referral-stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .referral-stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .referral-how-it-works {
+            margin-bottom: 40px;
+        }
+        .referral-how-it-works h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .referral-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+        .referral-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+        }
+        .referral-step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+        }
+        .referral-step h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .referral-step p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .referral-list {
+            margin-top: 40px;
+        }
+        .referral-list h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .referral-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .referral-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .referral-item-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+        .referral-item-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .referral-item-details p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .referral-item-reward {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .reward-mode-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .reward-mode-btn:hover {
+            border-color: var(--primary);
+            background: rgba(21, 101, 192, 0.05);
+        }
+        .reward-mode-btn.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .referral-hero h1 {
+                font-size: 2rem;
+            }
+            .referral-code-text {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            }
+            .referral-card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <div class="referral-hero">
+        <h1>🎁 Parrainez vos amis</h1>
+        <p>Gagnez 10€ pour chaque ami parrainé, et votre ami reçoit aussi 10€ de réduction !</p>
+    </div>
+
+    <div class="referral-container">
+        <div class="referral-card">
+            <!-- Code de parrainage -->
+            <div class="referral-code-section">
+                <div class="referral-code-label">Votre code de parrainage</div>
+                <div class="referral-code-display">
+                    <div class="referral-code-text" id="referralCode">Chargement...</div>
+                    <div class="referral-code-hint">Partagez ce code avec vos amis</div>
+                </div>
+                <div class="referral-actions">
+                    <button class="referral-btn referral-btn-primary" onclick="copyCode()">
+                        📋 Copier le code
+                    </button>
+                    <button class="referral-btn referral-btn-secondary" onclick="shareWhatsApp()">
+                        💬 Partager sur WhatsApp
+                    </button>
+                    <button class="referral-btn referral-btn-secondary" onclick="shareEmail()">
+                        ✉️ Partager par Email
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="referral-stats">
+                <div class="referral-stat">
+                    <div class="referral-stat-value" id="referralCount">0</div>
+                    <div class="referral-stat-label">Amis parrainés</div>
+                </div>
+                <div class="referral-stat">
+                    <div class="referral-stat-value" id="totalEarned">0€</div>
+                    <div class="referral-stat-label">Gains totaux</div>
+                </div>
+                <div class="referral-stat" id="pendingBalanceStat" style="display:none">
+                    <div class="referral-stat-value" id="pendingBalance">0€</div>
+                    <div class="referral-stat-label">Solde en attente</div>
+                </div>
+            </div>
+
+            <!-- Mode de récompense -->
+            <div class="referral-reward-mode" style="margin-bottom:40px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px">
+                <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">💰 Mode de récompense</h3>
+                <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
+                    Choisissez comment vous souhaitez recevoir vos récompenses de parrainage (10€ par filleul)
+                </p>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+                    <button class="reward-mode-btn active" data-mode="discount" onclick="selectRewardMode('discount')">
+                        🎟️ Codes promo
+                    </button>
+                    <button class="reward-mode-btn" data-mode="transfer" onclick="selectRewardMode('transfer')">
+                        💸 Virement bancaire
+                    </button>
+                </div>
+                <div id="rewardModeDescription" style="font-size:13px;color:var(--text-muted);padding:12px;background:rgba(21,101,192,0.05);border-radius:8px">
+                    Vous recevrez un code promo de 10€ pour chaque ami parrainé
+                </div>
+
+                <!-- Section virement -->
+                <div id="transferSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+                    <h4 style="font-size:15px;font-weight:600;margin-bottom:12px">Informations bancaires</h4>
+                    <input type="text" id="ibanInput" placeholder="IBAN (ex: FR76 XXXX XXXX XXXX XXXX XXXX XXX)" 
+                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-family:monospace">
+                    <input type="text" id="accountNameInput" placeholder="Nom du titulaire du compte" 
+                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+                    <button onclick="savePaymentInfo()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">
+                        💾 Enregistrer les informations
+                    </button>
+                    
+                    <div id="transferRequestSection" style="display:none;margin-top:20px">
+                        <div style="padding:16px;background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:8px;margin-bottom:12px">
+                            <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">Solde disponible pour virement</div>
+                            <div style="font-size:2rem;font-weight:800;color:var(--primary)" id="transferableBalance">0€</div>
+                        </div>
+                        <button onclick="requestTransfer()" id="requestTransferBtn" 
+                                style="width:100%;padding:14px;background:linear-gradient(135deg, var(--success), #059669);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
+                            💸 Demander un virement
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comment ça marche -->
+            <div class="referral-how-it-works">
+                <h2>💡 Comment ça marche ?</h2>
+                <div class="referral-steps">
+                    <div class="referral-step">
+                        <div class="referral-step-number">1</div>
+                        <h3>Partagez votre code</h3>
+                        <p>Envoyez votre code de parrainage unique à vos amis par WhatsApp, email ou réseaux sociaux.</p>
+                    </div>
+                    <div class="referral-step">
+                        <div class="referral-step-number">2</div>
+                        <h3>Votre ami commande</h3>
+                        <p>Votre ami utilise votre code lors de sa première commande et reçoit 10€ de réduction immédiate.</p>
+                    </div>
+                    <div class="referral-step">
+                        <div class="referral-step-number">3</div>
+                        <h3>Vous gagnez 10€</h3>
+                        <p>Dès que votre ami valide sa commande, vous recevez un code promo de 10€ pour votre prochaine commande !</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des parrainages -->
+            <div class="referral-list" id="referralListSection" style="display:none">
+                <h2>👥 Vos parrainages</h2>
+                <div id="referralList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userEmail = '';
+        let referralCode = '';
+        let currentRewardMode = 'discount';
+        let pendingBalanceAmount = 0;
+
+        // Sélectionner le mode de récompense
+        function selectRewardMode(mode) {
+            currentRewardMode = mode;
+            
+            // Mettre à jour l'UI
+            document.querySelectorAll('.reward-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Afficher/masquer la section virement
+            const transferSection = document.getElementById('transferSection');
+            const description = document.getElementById('rewardModeDescription');
+            
+            if (mode === 'transfer') {
+                transferSection.style.display = 'block';
+                description.textContent = 'Vos récompenses seront cumulées et vous pourrez demander un virement bancaire';
+                if (pendingBalanceAmount > 0) {
+                    document.getElementById('transferRequestSection').style.display = 'block';
+                    document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
+                }
+            } else {
+                transferSection.style.display = 'none';
+                description.textContent = 'Vous recevrez un code promo de 10€ pour chaque ami parrainé';
+            }
+
+            // Sauvegarder le choix
+            saveRewardMode(mode);
+        }
+
+        // Sauvegarder le mode de récompense
+        async function saveRewardMode(mode) {
+            try {
+                const res = await fetch('/api/referral', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userEmail,
+                        rewardMode: mode
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Mode de récompense mis à jour !');
+                }
+            } catch (err) {
+                console.error('Erreur:', err);
+            }
+        }
+
+        // Sauvegarder les informations de paiement
+        async function savePaymentInfo() {
+            const iban = document.getElementById('ibanInput').value.trim();
+            const accountName = document.getElementById('accountNameInput').value.trim();
+
+            if (!iban || !accountName) {
+                showToast('❌ Veuillez remplir tous les champs');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/referral', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userEmail,
+                        paymentInfo: { iban, accountName }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Informations bancaires enregistrées !');
+                    if (pendingBalanceAmount > 0) {
+                        document.getElementById('transferRequestSection').style.display = 'block';
+                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
+                    }
+                }
+            } catch (err) {
+                showToast('❌ Erreur lors de l\'enregistrement');
+            }
+        }
+
+        // Demander un virement
+        async function requestTransfer() {
+            if (pendingBalanceAmount === 0) {
+                showToast('❌ Aucun solde disponible');
+                return;
+            }
+
+            if (!confirm(`Demander un virement de ${pendingBalanceAmount}€ ?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/referral', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userEmail,
+                        requestTransfer: true
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Demande de virement envoyée ! Vous serez contacté sous 48h.');
+                    pendingBalanceAmount = 0;
+                    document.getElementById('pendingBalance').textContent = '0€';
+                    document.getElementById('transferableBalance').textContent = '0€';
+                    document.getElementById('requestTransferBtn').disabled = true;
+                    document.getElementById('requestTransferBtn').textContent = '✓ Demande envoyée';
+                }
+            } catch (err) {
+                showToast('❌ Erreur lors de la demande');
+            }
+        }
+
+        // Demander l'email de l'utilisateur
+        function initReferral() {
+            const email = prompt('Entrez votre email pour accéder à votre code de parrainage :');
+            if (!email || !email.includes('@')) {
+                alert('Email invalide');
+                return;
+            }
+            userEmail = email;
+            loadReferralData();
+        }
+
+        // Charger les données de parrainage
+        async function loadReferralData() {
+            try {
+                const res = await fetch(`/api/referral?email=${encodeURIComponent(userEmail)}`);
+                const data = await res.json();
+                
+                if (res.status === 403 || data.hasOrdered === false) {
+                    // L'utilisateur n'a pas encore commandé
+                    document.querySelector('.referral-card').innerHTML = `
+                        <div style="text-align:center;padding:60px 20px">
+                            <div style="font-size:4rem;margin-bottom:20px">🛒</div>
+                            <h2 style="font-size:1.5rem;margin-bottom:16px;color:var(--text)">Commandez d'abord pour parrainer !</h2>
+                            <p style="color:var(--text-muted);margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto">
+                                Pour accéder au programme de parrainage et obtenir votre code unique, 
+                                vous devez d'abord passer une commande sur Kareer.
+                            </p>
+                            <a href="/" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg, var(--primary), var(--purple));color:white;text-decoration:none;border-radius:10px;font-weight:600">
+                                🚀 Découvrir nos offres
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                referralCode = data.code;
+                document.getElementById('referralCode').textContent = data.code;
+                document.getElementById('referralCount').textContent = data.referralCount || 0;
+                document.getElementById('totalEarned').textContent = (data.totalEarned || 0) + '€';
+
+                // Charger le mode de récompense
+                currentRewardMode = data.rewardMode || 'discount';
+                selectRewardMode(currentRewardMode);
+
+                // Afficher le solde en attente si mode virement
+                pendingBalanceAmount = data.pendingBalance || 0;
+                if (pendingBalanceAmount > 0) {
+                    document.getElementById('pendingBalanceStat').style.display = 'block';
+                    document.getElementById('pendingBalance').textContent = pendingBalanceAmount + '€';
+                }
+
+                // Pré-remplir les infos de paiement si elles existent
+                if (data.paymentInfo) {
+                    document.getElementById('ibanInput').value = data.paymentInfo.iban || '';
+                    document.getElementById('accountNameInput').value = data.paymentInfo.accountName || '';
+                    if (pendingBalanceAmount > 0) {
+                        document.getElementById('transferRequestSection').style.display = 'block';
+                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
+                    }
+                }
+
+                // Afficher la liste des parrainages
+                if (data.referrals && data.referrals.length > 0) {
+                    document.getElementById('referralListSection').style.display = 'block';
+                    displayReferrals(data.referrals);
+                }
+            } catch (err) {
+                console.error('Erreur:', err);
+                document.getElementById('referralCode').textContent = 'Erreur de chargement';
+            }
+        }
+
+        // Afficher la liste des parrainages
+        function displayReferrals(referrals) {
+            const list = document.getElementById('referralList');
+            list.innerHTML = referrals.map(ref => `
+                <div class="referral-item">
+                    <div class="referral-item-info">
+                        <div class="referral-item-avatar">👤</div>
+                        <div class="referral-item-details">
+                            <h4>${ref.refereeName || ref.refereeEmail}</h4>
+                            <p>${new Date(ref.referredAt).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                    </div>
+                    <div class="referral-item-reward">+10€</div>
+                </div>
+            `).join('');
+        }
+
+        // Copier le code
+        function copyCode() {
+            navigator.clipboard.writeText(referralCode).then(() => {
+                showToast('✅ Code copié dans le presse-papier !');
+            });
+        }
+
+        // Partager sur WhatsApp
+        function shareWhatsApp() {
+            const message = `🎁 Profite de 10€ de réduction sur LinkedIn Premium avec mon code de parrainage : ${referralCode}\n\nCommande sur https://kareer.pro et utilise mon code pour bénéficier de ta réduction ! 🚀`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Partager par Email
+        function shareEmail() {
+            const subject = '🎁 10€ de réduction sur LinkedIn Premium';
+            const body = `Salut !\n\nJe t'offre 10€ de réduction sur LinkedIn Premium !\n\nUtilise mon code de parrainage : ${referralCode}\n\nCommande sur https://kareer.pro et profite de ta réduction immédiate.\n\nÀ bientôt ! 🚀`;
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        // Afficher un toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialiser au chargement
+        initReferral();
+    </script>
+</body>
+</html>

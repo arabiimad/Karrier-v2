@@ -129,7 +129,7 @@ async function sendWelcomeEmail(order) {
     html: `
       <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
         <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
-          <img src="${siteUrl}/karrier-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
+          <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
           <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
         </div>
         <div style="padding:32px">

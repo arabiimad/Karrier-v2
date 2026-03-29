@@ -240,6 +240,32 @@
             .secure-badge { font-size: 0.7rem; padding: 5px 10px; }
             .back-link { font-size: 0.8rem; }
         }
+        /* Promo code section */
+        .promo-section { margin-bottom: 20px; }
+        .promo-section > label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .promo-input-row { display: flex; gap: 10px; }
+        .promo-input-row input {
+            flex: 1; padding: 14px 16px; background: var(--surface);
+            border: 1px solid var(--card-border); border-radius: 12px;
+            color: #fff; font-size: 1rem; font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+        }
+        .promo-input-row input::placeholder { color: #475569; }
+        .promo-input-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow); }
+        .promo-input-row button {
+            padding: 0 20px; background: var(--surface);
+            border: 1px solid var(--card-border); border-radius: 12px;
+            color: var(--primary-light); font-size: 0.85rem; font-weight: 700;
+            font-family: inherit; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .promo-input-row button:hover { background: rgba(37,99,235,0.15); border-color: var(--primary); }
+        #promoResult { margin-top: 8px; font-size: 0.82rem; padding: 4px 0; }
+
         @media (max-width: 360px) {
             body { padding: 12px; }
             .order-summary, .price-block, .form-section { padding: 16px 12px; }
@@ -257,7 +283,7 @@
     </a>
 
     <div class="checkout-logo">
-        <img src="karrier-logo.png" alt="Kareer">
+        <img src="kareer-logo.png" alt="Kareer">
         <span>Kareer</span>
     </div>
 
@@ -340,6 +366,21 @@
                 <div class="form-hint">Pour recevoir la confirmation d'activation (si différent du LinkedIn)</div>
             </div>
 
+            <div class="form-group">
+                <label class="form-label" for="referralCodeInput">Code de parrainage (optionnel)</label>
+                <input type="text" id="referralCodeInput" class="form-input" placeholder="Ex: REF12AB34CD" style="text-transform:uppercase">
+                <div class="form-hint">👥 Vous avez été parrainé ? Entrez le code pour recevoir 10€ de réduction !</div>
+            </div>
+
+            <div class="promo-section">
+                <label>Code promo (optionnel)</label>
+                <div class="promo-input-row">
+                    <input type="text" id="promoCodeInput" placeholder="Ex: BIENVENUE10" style="text-transform:uppercase">
+                    <button type="button" onclick="applyPromoCode()" id="promoBtn">Appliquer</button>
+                </div>
+                <div id="promoResult" style="display:none"></div>
+            </div>
+
             <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
                 <span id="submitBtnText">📩 Valider et continuer vers WhatsApp</span>
                 <div class="spinner" id="spinner"></div>
@@ -399,6 +440,9 @@ const params = new URLSearchParams(window.location.search);
 const planId = params.get('plan') || 'career-salary';
 const plan = PLANS[planId] || PLANS['career-salary'];
 
+// Promo code state
+let appliedPromo = null;
+
 // Populate page
 document.getElementById('planIcon').textContent = plan.icon;
 document.getElementById('planName').textContent = plan.name;
@@ -427,6 +471,77 @@ function togglePassword() {
     else { input.type = 'password'; btn.textContent = '👁️'; }
 }
 
+// Apply promo code
+async function applyPromoCode() {
+    const input = document.getElementById('promoCodeInput');
+    const btn = document.getElementById('promoBtn');
+    const result = document.getElementById('promoResult');
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) {
+        result.style.display = 'block';
+        result.style.color = 'var(--error)';
+        result.textContent = '⚠️ Veuillez entrer un code promo';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Vérification...';
+    result.style.display = 'none';
+
+    try {
+        const response = await fetch(`/api/promo-codes?code=${encodeURIComponent(code)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Code invalide');
+        }
+
+        // Vérifier si le code est applicable au plan
+        if (data.applicablePlans !== 'all' && !data.applicablePlans.includes(planId)) {
+            throw new Error('Code non applicable à ce plan');
+        }
+
+        // Vérifier le montant minimum
+        if (data.minAmount && plan.price < data.minAmount) {
+            throw new Error(`Montant minimum requis: ${data.minAmount}€`);
+        }
+
+        // Calculer la réduction
+        let discount = 0;
+        if (data.type === 'percentage') {
+            discount = Math.round((plan.price * data.value) / 100);
+        } else if (data.type === 'fixed') {
+            discount = data.value;
+        }
+        discount = Math.min(discount, plan.price);
+
+        // Appliquer le code
+        appliedPromo = { code, discount, type: data.type, value: data.value };
+
+        // Mettre à jour l'affichage
+        const newTotal = plan.price - discount;
+        document.getElementById('totalPrice').textContent = newTotal.toFixed(2).replace('.', ',') + '€';
+        
+        // Afficher le message de succès
+        result.style.display = 'block';
+        result.style.color = 'var(--success)';
+        result.innerHTML = `✅ Code appliqué ! -${discount}€ ${data.description ? `(${data.description})` : ''}`;
+
+        // Désactiver l'input et le bouton
+        input.disabled = true;
+        btn.textContent = 'Appliqué';
+        btn.style.background = 'var(--success)';
+
+    } catch (error) {
+        result.style.display = 'block';
+        result.style.color = 'var(--error)';
+        result.textContent = '❌ ' + error.message;
+        btn.disabled = false;
+        btn.textContent = 'Appliquer';
+    }
+}
+
 // Submit order
 async function submitOrder() {
     const linkedinEmail = document.getElementById('linkedinEmail').value.trim();
@@ -450,6 +565,8 @@ async function submitOrder() {
     hideError();
 
     const orderId = `kareer_${planId}_${Date.now()}`;
+    const referralCode = document.getElementById('referralCodeInput')?.value.trim().toUpperCase();
+    
     const orderData = {
         orderId,
         planId,
@@ -461,7 +578,32 @@ async function submitOrder() {
         linkedinPassword,
         customerEmail: contactEmail || linkedinEmail,
         language: navigator.language?.substring(0,2) || 'fr',
+        referralCode: referralCode || null,
     };
+    
+    // Enregistrer le parrainage si un code est fourni
+    if (referralCode) {
+        try {
+            const refRes = await fetch('/api/referral', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: referralCode,
+                    refereeEmail: linkedinEmail,
+                    refereeName: linkedinEmail.split('@')[0],
+                    orderId: orderId,
+                    amount: plan.price
+                })
+            });
+            const refData = await refRes.json();
+            if (refData.success) {
+                console.log('Parrainage enregistré:', refData);
+                // Le filleul recevra automatiquement son code promo de 10€
+            }
+        } catch (e) {
+            console.log('Erreur parrainage (non bloquant):', e.message);
+        }
+    }
 
     // Save order to admin dashboard
     try {
@@ -475,11 +617,13 @@ async function submitOrder() {
     }
 
     // Build WhatsApp message
+    const promoLine = appliedPromo ? `\n🏷️ Code promo : ${appliedPromo.code} (-${appliedPromo.discount}€)` : '';
+    const finalPrice = appliedPromo ? (plan.price - appliedPromo.discount) : plan.price;
     const msg = `Bonjour ! 👋\n\n` +
         `📋 *Nouvelle commande Kareer*\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `📦 Plan : ${plan.name} — ${plan.type}\n` +
-        `💰 Montant : ${plan.price}€\n` +
+        `💰 Montant : ${finalPrice}€${promoLine}\n` +
         `📧 Email LinkedIn : ${linkedinEmail}\n` +
         `🆔 Commande : ${orderId}\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
@@ -510,6 +654,9 @@ function hideError() {
 document.querySelectorAll('.form-input').forEach(input => {
     input.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitOrder(); });
 });
+
+// ── Promo code ──────────────────────────────────────────────────────────────
+// La fonction applyPromoCode() est définie plus haut dans le fichier
 </script>
 
 </body>

@@ -82,7 +82,7 @@ function buildEmailHtml({ siteUrl, headerColor, title, preheader, content, foote
 
         <!-- Header -->
         <tr><td class="email-header" align="center" style="background:${color};padding:36px 32px">
-          <img src="${siteUrl}/karrier-logo.png" alt="Kareer" width="52" height="52" style="display:block;margin:0 auto 12px;border-radius:10px;border:0" onerror="this.style.display='none'">
+          <img src="${siteUrl}/kareer-logo.png" alt="Kareer" width="52" height="52" style="display:block;margin:0 auto 12px;border-radius:10px;border:0" onerror="this.style.display='none'">
           <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase">KAREER</p>
           <h1 style="margin:10px 0 0;color:#ffffff;font-size:22px;font-weight:700;line-height:1.3">${title}</h1>
         </td></tr>

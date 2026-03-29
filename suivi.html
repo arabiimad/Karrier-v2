@@ -7,48 +7,267 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <link rel="icon" href="kareer-logo.png" type="image/png">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --bg: #0F172A; --card: #1E293B; --border: #334155; --text: #CBD5E1; --bright: #F1F5F9; --muted: #94A3B8; --primary: #1565C0; --primary-light: #42A5F5; --success: #10B981; --warning: #F59E0B; --info: #3B82F6; --danger: #EF4444; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .track-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 48px 40px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .track-logo { width: 56px; height: 56px; margin-bottom: 16px; }
-        .track-card h1 { font-size: 1.5rem; font-weight: 800; color: var(--bright); margin-bottom: 8px; }
-        .track-card .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 32px; }
-        .track-loading { color: var(--muted); padding: 40px 0; }
-        .track-error { color: var(--danger); padding: 20px; background: rgba(239,68,68,0.1); border-radius: 12px; margin-top: 16px; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0F172A;
+            --card: #1E293B;
+            --border: #334155;
+            --text: #CBD5E1;
+            --bright: #F1F5F9;
+            --muted: #94A3B8;
+            --primary: #1565C0;
+            --primary-light: #42A5F5;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --danger: #EF4444;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .track-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .track-logo { width: 52px; height: 52px; margin-bottom: 14px; }
+        .track-card h1 { font-size: 1.4rem; font-weight: 800; color: var(--bright); margin-bottom: 6px; }
+        .track-subtitle { color: var(--muted); font-size: 0.875rem; margin-bottom: 28px; }
 
-        .status-timeline { display: flex; flex-direction: column; gap: 0; text-align: left; margin: 24px 0; }
-        .timeline-step { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-bottom: 24px; }
+        /* Progress bar */
+        .progress-container { margin: 0 0 20px; }
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .progress-labels span.active-label { color: var(--primary-light); }
+        .progress-labels span.done-label { color: var(--success); }
+        .progress-track {
+            height: 8px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            width: 0%;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-fill.done {
+            background: linear-gradient(90deg, var(--success), #34d399);
+        }
+
+        /* ETA badge */
+        .eta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            border: 1px solid;
+        }
+        .eta-badge.pending  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warning); }
+        .eta-badge.activating { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--info); }
+        .eta-badge.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--success); }
+        .eta-badge.refunded { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--danger); }
+
+        /* Status timeline */
+        .status-timeline { display: flex; flex-direction: column; gap: 0; text-align: left; margin: 0 0 24px; }
+        .timeline-step { display: flex; align-items: flex-start; gap: 14px; position: relative; padding-bottom: 20px; }
         .timeline-step:last-child { padding-bottom: 0; }
-        .timeline-dot { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.3s; }
-        .timeline-step.active .timeline-dot { border-color: var(--primary); background: var(--primary); }
+        .timeline-dot {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem; flex-shrink: 0;
+            position: relative; z-index: 1;
+            transition: all 0.3s;
+        }
+        .timeline-step.active .timeline-dot { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 12px rgba(21,101,192,0.4); }
         .timeline-step.completed .timeline-dot { border-color: var(--success); background: var(--success); }
-        .timeline-line { position: absolute; left: 17px; top: 36px; width: 2px; height: calc(100% - 36px); background: var(--border); }
+        .timeline-line {
+            position: absolute; left: 16px; top: 34px;
+            width: 2px; height: calc(100% - 34px);
+            background: var(--border);
+        }
         .timeline-step.completed .timeline-line { background: var(--success); }
         .timeline-step:last-child .timeline-line { display: none; }
-        .timeline-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--bright); margin-bottom: 2px; }
-        .timeline-info p { font-size: 0.8rem; color: var(--muted); }
+        .timeline-info h3 { font-size: 0.9rem; font-weight: 700; color: var(--bright); margin-bottom: 2px; }
+        .timeline-info p { font-size: 0.78rem; color: var(--muted); }
         .timeline-step.active .timeline-info h3 { color: var(--primary-light); }
+        .timeline-step.completed .timeline-info h3 { color: var(--success); }
 
-        .order-details { background: var(--bg); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
-        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        /* Order details */
+        .order-details {
+            background: rgba(15,23,42,0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .detail-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(51,65,85,0.5); font-size: 0.82rem; }
         .detail-row:last-child { border-bottom: none; }
         .detail-label { color: var(--muted); }
-        .detail-val { color: var(--bright); font-weight: 600; }
+        .detail-val { color: var(--bright); font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
 
-        .back-link { display: inline-block; margin-top: 24px; color: var(--primary-light); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+        /* Referral section */
+        .referral-section {
+            background: rgba(16,185,129,0.07);
+            border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .referral-section h3 { font-size: 0.9rem; font-weight: 700; color: var(--success); margin-bottom: 8px; }
+        .referral-section p { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; }
+        .referral-code-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(15,23,42,0.6);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+        .referral-code {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: var(--success);
+            flex: 1;
+        }
+        .copy-btn {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: var(--success);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover { background: rgba(16,185,129,0.25); }
+        .wa-share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #25D366;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .wa-share-btn:hover { background: #1fbd5a; }
+
+        /* Last checked + auto-refresh */
+        .poll-info {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+        .poll-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 5px;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* WhatsApp support */
+        .wa-support {
+            display: none;
+            margin-top: 16px;
+        }
+        .wa-support a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(37,211,102,0.1);
+            border: 1px solid rgba(37,211,102,0.25);
+            color: #25D366;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .wa-support a:hover { background: rgba(37,211,102,0.18); }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--primary-light);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
         .back-link:hover { text-decoration: underline; }
 
-        @media (max-width: 480px) { .track-card { padding: 32px 24px; } }
+        .track-loading { color: var(--muted); padding: 40px 0; }
+        .track-error {
+            color: var(--danger);
+            padding: 16px 20px;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 12px;
+            margin: 16px 0;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 480px) {
+            .track-card { padding: 28px 20px; }
+            .referral-code { font-size: 1.1rem; letter-spacing: 2px; }
+        }
     </style>
 </head>
 <body>
     <div class="track-card">
-        <img src="karrier-logo.png" alt="Kareer" class="track-logo">
+        <img src="kareer-logo.png" alt="Kareer" class="track-logo">
         <h1>Suivi de commande</h1>
-        <p class="subtitle">Suivez l'avancement de votre commande en temps réel</p>
+        <p class="track-subtitle">Suivez l'avancement de votre activation LinkedIn Premium</p>
         <div id="trackContent">
             <div class="track-loading">Chargement...</div>
         </div>
@@ -56,69 +275,187 @@
     </div>
 
     <script>
-    (async function() {
+    (function() {
         var container = document.getElementById('trackContent');
         var params = new URLSearchParams(window.location.search);
         var sessionId = params.get('id') || params.get('session_id');
+        var pollTimer = null;
+        var orderCreatedAt = null;
 
         if (!sessionId) {
             container.innerHTML = '<div class="track-error">Aucun identifiant de commande fourni.</div>';
             return;
         }
 
-        try {
-            var res = await fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId));
-            if (!res.ok) {
-                container.innerHTML = '<div class="track-error">Commande introuvable. Vérifiez votre lien.</div>';
-                return;
-            }
-            var order = await res.json();
-            renderTracking(order);
-        } catch (err) {
-            container.innerHTML = '<div class="track-error">Erreur de connexion. Réessayez plus tard.</div>';
+        function fetchOrder() {
+            return fetch('/api/order-status?session_id=' + encodeURIComponent(sessionId))
+                .then(function(res) {
+                    if (!res.ok) throw new Error('not_found');
+                    return res.json();
+                });
         }
 
-        function renderTracking(order) {
-            var steps = [
-                { key: 'pending', icon: '📦', title: 'Commande reçue', desc: 'Votre paiement a été confirmé' },
-                { key: 'activating', icon: '⚡', title: 'Activation en cours', desc: 'Votre compte LinkedIn est en cours d\'activation' },
-                { key: 'done', icon: '✅', title: 'Terminé', desc: 'Votre compte LinkedIn Premium est activé !' }
-            ];
+        function render(order, isRefresh) {
+            if (!isRefresh) orderCreatedAt = order.createdAt;
 
-            if (order.status === 'refunded') {
-                steps = [
-                    { key: 'pending', icon: '📦', title: 'Commande reçue', desc: 'Paiement confirmé' },
-                    { key: 'refunded', icon: '💸', title: 'Remboursé', desc: 'Votre commande a été remboursée' }
-                ];
+            var statusProgressMap = { pending: 10, activating: 55, done: 100, refunded: 100 };
+            var pct = statusProgressMap[order.status] || 0;
+
+            var etaText = '';
+            var etaCls = order.status;
+            if (order.status === 'pending') {
+                etaText = '⏳ Livraison estimée sous 24–48h';
+            } else if (order.status === 'activating') {
+                etaText = '⚡ Activation en cours — sous 24h';
+            } else if (order.status === 'done') {
+                etaText = '✅ Activé !';
+            } else if (order.status === 'refunded') {
+                etaText = '💸 Remboursé';
             }
 
-            var statusOrder = { pending: 0, activating: 1, done: 2, refunded: 1 };
-            var currentIdx = statusOrder[order.status] || 0;
+            // Timeline steps
+            var steps = order.status === 'refunded'
+                ? [
+                    { key: 'pending',   icon: '📦', title: 'Commande reçue',   desc: 'Paiement confirmé' },
+                    { key: 'refunded',  icon: '💸', title: 'Remboursé',         desc: 'Votre commande a été remboursée' }
+                  ]
+                : [
+                    { key: 'pending',    icon: '📦', title: 'Commande reçue',       desc: 'Paiement WhatsApp confirmé' },
+                    { key: 'activating', icon: '⚡', title: 'Activation en cours',  desc: 'Votre compte LinkedIn est en cours d\'activation' },
+                    { key: 'done',       icon: '✅', title: 'Activé !',             desc: 'Votre LinkedIn Premium est opérationnel' }
+                  ];
 
-            var html = '<div class="status-timeline">';
+            var statusOrder = { pending: 0, activating: 1, done: 2, refunded: 1 };
+            var currentIdx = statusOrder[order.status] !== undefined ? statusOrder[order.status] : 0;
+
+            var progressLabelCls = order.status === 'done' ? 'done-label' : (order.status === 'activating' ? 'active-label' : '');
+
+            var html = '';
+
+            // Progress bar
+            html += '<div class="progress-container">';
+            html += '<div class="progress-labels">';
+            html += '<span>Reçue</span>';
+            html += '<span class="' + progressLabelCls + '">Activation</span>';
+            html += '<span class="' + (order.status === 'done' ? 'done-label' : '') + '">Activé</span>';
+            html += '</div>';
+            html += '<div class="progress-track"><div class="progress-fill' + (order.status === 'done' ? ' done' : '') + '" id="progressFill" style="width:0%"></div></div>';
+            html += '</div>';
+
+            // ETA badge
+            html += '<div class="eta-badge ' + etaCls + '">' + etaText + '</div>';
+
+            // Timeline
+            html += '<div class="status-timeline">';
             steps.forEach(function(step, i) {
                 var cls = '';
                 if (i < currentIdx) cls = 'completed';
                 else if (i === currentIdx) cls = 'active';
-                html += '<div class="timeline-step ' + cls + '">' +
-                    '<div class="timeline-dot">' + step.icon + '</div>' +
-                    '<div class="timeline-line"></div>' +
-                    '<div class="timeline-info"><h3>' + step.title + '</h3><p>' + step.desc + '</p></div>' +
-                '</div>';
+                html += '<div class="timeline-step ' + cls + '">';
+                html += '<div class="timeline-dot">' + step.icon + '</div>';
+                html += '<div class="timeline-line"></div>';
+                html += '<div class="timeline-info"><h3>' + step.title + '</h3><p>' + step.desc + '</p></div>';
+                html += '</div>';
             });
             html += '</div>';
 
+            // Order details
             html += '<div class="order-details">';
             html += '<div class="detail-row"><span class="detail-label">Plan</span><span class="detail-val">' + (order.plan || '—') + '</span></div>';
             html += '<div class="detail-row"><span class="detail-label">Audience</span><span class="detail-val">' + (order.audience || '—') + '</span></div>';
             html += '<div class="detail-row"><span class="detail-label">Montant</span><span class="detail-val">' + (order.amount || 0) + ' ' + (order.currency || 'EUR').toUpperCase() + '</span></div>';
-            html += '<div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">' + (order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR') : '—') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Commande créée</span><span class="detail-val">' + (order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR') : '—') + '</span></div>';
+            if (order.expiresAt) {
+                html += '<div class="detail-row"><span class="detail-label">Expire le</span><span class="detail-val" style="color:var(--warning)">' + new Date(order.expiresAt).toLocaleDateString('fr-FR') + '</span></div>';
+            }
             html += '<div class="detail-row"><span class="detail-label">Dernière mise à jour</span><span class="detail-val">' + (order.updatedAt ? new Date(order.updatedAt).toLocaleString('fr-FR') : '—') + '</span></div>';
             html += '</div>';
 
+            // Referral section (only when done)
+            if (order.status === 'done' && order.referralCode) {
+                var refUrl = 'https://kareer.pro/?ref=' + order.referralCode;
+                var waShareText = encodeURIComponent('Je viens d\'activer LinkedIn Premium via Kareer 🚀\nUtilise mon code ' + order.referralCode + ' pour bénéficier d\'une réduction : ' + refUrl);
+                html += '<div class="referral-section">';
+                html += '<h3>🎁 Parrainez vos amis !</h3>';
+                html += '<p>Partagez votre code de parrainage et gagnez des avantages exclusifs.</p>';
+                html += '<div class="referral-code-box">';
+                html += '<span class="referral-code" id="refCode">' + order.referralCode + '</span>';
+                html += '<button class="copy-btn" onclick="copyRefCode(\'' + order.referralCode + '\', this)">📋 Copier</button>';
+                html += '</div>';
+                html += '<a href="https://wa.me/?text=' + waShareText + '" target="_blank" class="wa-share-btn">💬 Partager sur WhatsApp</a>';
+                html += '</div>';
+            }
+
+            // Poll info
+            html += '<div class="poll-info" id="pollInfo">';
+            if (order.status !== 'done' && order.status !== 'refunded') {
+                html += '<span class="poll-dot"></span> Mise à jour automatique toutes les 60s · ';
+            }
+            html += 'Vérifié : <span id="lastCheckedTime">' + new Date().toLocaleTimeString('fr-FR') + '</span>';
+            html += '</div>';
+
+            // WhatsApp support (show after 48h of pending/activating)
+            var showWaSupport = false;
+            if ((order.status === 'pending' || order.status === 'activating') && orderCreatedAt) {
+                var hoursElapsed = (Date.now() - new Date(orderCreatedAt).getTime()) / (1000 * 60 * 60);
+                if (hoursElapsed >= 48) showWaSupport = true;
+            }
+            html += '<div class="wa-support" id="waSupportBlock" style="display:' + (showWaSupport ? 'block' : 'none') + '">';
+            html += '<a href="https://wa.me/212651064637" target="_blank">💬 Contacter le support WhatsApp</a>';
+            html += '</div>';
+
             container.innerHTML = html;
+
+            // Animate progress bar after DOM insert
+            setTimeout(function() {
+                var fill = document.getElementById('progressFill');
+                if (fill) fill.style.width = pct + '%';
+            }, 80);
+
+            // Stop polling when terminal status
+            if (order.status === 'done' || order.status === 'refunded') {
+                if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            }
         }
+
+        function updateLastChecked() {
+            var el = document.getElementById('lastCheckedTime');
+            if (el) el.textContent = new Date().toLocaleTimeString('fr-FR');
+        }
+
+        // Initial load
+        fetchOrder().then(function(order) {
+            render(order, false);
+
+            // Start auto-poll every 60s if not terminal
+            if (order.status !== 'done' && order.status !== 'refunded') {
+                pollTimer = setInterval(function() {
+                    fetchOrder().then(function(newOrder) {
+                        updateLastChecked();
+                        render(newOrder, true);
+                    }).catch(function() {
+                        updateLastChecked();
+                    });
+                }, 60000);
+            }
+        }).catch(function() {
+            container.innerHTML = '<div class="track-error">Commande introuvable. Vérifiez votre lien de suivi.</div>';
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (pollTimer) clearInterval(pollTimer);
+        });
     })();
+
+    function copyRefCode(code, btn) {
+        navigator.clipboard.writeText(code).then(function() {
+            btn.textContent = '✅ Copié !';
+            setTimeout(function() { btn.textContent = '📋 Copier'; }, 2000);
+        }).catch(function() {
+            btn.textContent = '📋 Copier';
+        });
+    }
     </script>
 </body>
 </html>

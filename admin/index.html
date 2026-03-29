@@ -7,15 +7,16 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="/karrier-logo.png" type="image/png">
+    <link rel="icon" href="/kareer-logo.png" type="image/png">
     <link rel="stylesheet" href="/admin/style.css">
+    <link rel="stylesheet" href="/admin/promo-styles.css">
 </head>
 <body>
 
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
-            <img src="/karrier-logo.png" alt="Kareer" class="login-logo">
+            <img src="/kareer-logo.png" alt="Kareer" class="login-logo">
             <h1>Kareer Admin</h1>
             <div id="loginForm">
                 <input type="password" id="loginPassword" placeholder="Mot de passe admin" autocomplete="current-password">
@@ -31,7 +32,7 @@
         <header class="admin-header">
             <div class="admin-header-inner">
                 <div class="admin-brand">
-                    <img src="/karrier-logo.png" alt="Kareer" class="admin-logo">
+                    <img src="/kareer-logo.png" alt="Kareer" class="admin-logo">
                     <span>Kareer Admin</span>
                 </div>
                 <div class="header-actions">
@@ -81,8 +82,9 @@
             <button class="tab-btn active" data-tab="orders">📋 Commandes</button>
             <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
             <button class="tab-btn" data-tab="automation">🤖 Automatisations</button>
-            <button class="tab-btn" data-tab="promos">🏷️ Codes Promo</button>
             <button class="tab-btn" data-tab="settings">⚙️ Outils</button>
+            <button class="tab-btn" data-tab="promos">🏷️ Codes Promo</button>
+            <button class="tab-btn" data-tab="referrals">👥 Parrainage</button>
         </nav>
 
         <!-- TAB: Orders -->
@@ -228,44 +230,6 @@
         </div>
 
         <!-- TAB: Settings / Tools -->
-        <!-- TAB: Promos -->
-        <div class="tab-content" id="tab-promos">
-            <div class="promo-admin-wrap">
-                <!-- Create promo form -->
-                <div class="settings-card" style="margin-bottom:24px">
-                    <h3>➕ Créer un code promo</h3>
-                    <div class="promo-form">
-                        <div class="promo-form-row">
-                            <input type="text" id="newPromoCode" placeholder="Ex: WELCOME20" class="auto-input" style="text-transform:uppercase;flex:1" maxlength="20">
-                            <select id="newPromoDiscount" class="auto-select">
-                                <option value="10">-10€</option>
-                                <option value="20" selected>-20€</option>
-                                <option value="30">-30€</option>
-                                <option value="50">-50€</option>
-                                <option value="100">-100€</option>
-                            </select>
-                            <input type="number" id="newPromoMaxUses" placeholder="Max utilisations (0=∞)" class="auto-input" style="width:180px" value="0" min="0">
-                        </div>
-                        <div class="promo-form-row" style="margin-top:8px">
-                            <input type="text" id="newPromoDesc" placeholder="Description (optionnel)" class="auto-input" style="flex:1">
-                            <input type="date" id="newPromoExpiry" class="auto-input" style="width:160px">
-                            <button class="auto-btn" id="btnCreatePromo">Créer le code</button>
-                        </div>
-                    </div>
-                    <div class="auto-result" id="resultCreatePromo"></div>
-                </div>
-
-                <!-- Promo codes list -->
-                <div class="settings-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h3 style="margin:0">🏷️ Codes actifs</h3>
-                        <button class="refresh-btn" id="btnRefreshPromos">🔄 Actualiser</button>
-                    </div>
-                    <div id="promosList">Chargement...</div>
-                </div>
-            </div>
-        </div>
-
         <div class="tab-content" id="tab-settings">
             <div class="settings-grid">
                 <div class="settings-card">
@@ -307,6 +271,97 @@
                         <div class="config-row"><span>Vercel KV</span><span class="config-badge" id="cfgKV">—</span></div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- TAB: Promos -->
+        <div class="tab-content" id="tab-promos">
+            <div class="promo-form-container">
+                <div class="promo-form-header">
+                    <div class="promo-form-icon">🏷️</div>
+                    <h2 class="promo-form-title">Créer un code promo</h2>
+                </div>
+                <form id="createPromoForm" onsubmit="createPromoCode(event)" class="promo-form-grid">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">🎫</span> Code promo</label>
+                            <input type="text" id="promoCode" placeholder="Ex: BIENVENUE10" class="promo-input" style="text-transform:uppercase">
+                            <small class="promo-input-hint">Laisser vide pour générer automatiquement</small>
+                        </div>
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">💰</span> Type de réduction</label>
+                            <select id="promoType" required class="promo-input" onchange="updatePromoValuePlaceholder()">
+                                <option value="fixed">Montant fixe (€)</option>
+                                <option value="percentage">Pourcentage (%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">📊</span> Valeur</label>
+                            <input type="number" id="promoValue" placeholder="10" required min="0" step="0.01" class="promo-input">
+                        </div>
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">💵</span> Montant minimum (€)</label>
+                            <input type="number" id="promoMinAmount" placeholder="0" min="0" step="0.01" class="promo-input">
+                        </div>
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">🔢</span> Max utilisations</label>
+                            <input type="number" id="promoMaxUses" placeholder="0 = illimité" min="0" class="promo-input">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">📝</span> Description</label>
+                            <input type="text" id="promoDescription" placeholder="Ex: Offre de bienvenue" class="promo-input">
+                        </div>
+                        <div class="promo-input-group">
+                            <label class="promo-input-label"><span class="icon">📅</span> Date d'expiration</label>
+                            <input type="date" id="promoExpiry" class="promo-input">
+                        </div>
+                    </div>
+                    <div class="promo-input-group">
+                        <label class="promo-input-label"><span class="icon">🎯</span> Plans applicables</label>
+                        <select id="promoPlans" class="promo-input">
+                            <option value="all">Tous les plans</option>
+                            <option value="career-student,career-salary">Career uniquement</option>
+                            <option value="business-student,business-salary">Business uniquement</option>
+                            <option value="sales-nav">Sales Navigator uniquement</option>
+                            <option value="recruiter">Recruiter uniquement</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="promo-submit-btn">✨ Créer le code promo</button>
+                </form>
+            </div>
+            <div class="promo-list-container">
+                <div class="promo-list-header">
+                    <h2 class="promo-list-title">📋 Codes promo actifs</h2>
+                </div>
+                <div id="promosList">Chargement...</div>
+            </div>
+        </div>
+
+        <!-- TAB: Referrals -->
+        <div class="tab-content" id="tab-referrals">
+            <div class="promo-list-container">
+                <div class="promo-list-header">
+                    <h2 class="promo-list-title">👥 Système de Parrainage</h2>
+                    <div class="promo-stats">
+                        <div class="promo-stat">
+                            <div class="promo-stat-value" id="totalReferrers">0</div>
+                            <div class="promo-stat-label">Parrains actifs</div>
+                        </div>
+                        <div class="promo-stat">
+                            <div class="promo-stat-value" id="totalReferrals">0</div>
+                            <div class="promo-stat-label">Total filleuls</div>
+                        </div>
+                        <div class="promo-stat">
+                            <div class="promo-stat-value" id="totalReferralEarnings">0€</div>
+                            <div class="promo-stat-label">Récompenses distribuées</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="referralsList">Chargement...</div>
             </div>
         </div>
 
