@@ -134,42 +134,47 @@ async function sendWelcomeEmail(order) {
     contact: 'Any questions? Contact us on WhatsApp'
   };
 
-  await resend.emails.send({
-    from: 'Kareer <notifications@kareer.pro>',
-    to: order.customerEmail,
-    subject: t.subject,
-    html: `
-      <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-        <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
-          <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
-          <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
-        </div>
-        <div style="padding:32px">
-          <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-          <table style="width:100%;border-collapse:collapse;margin:24px 0">
-            <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.planLabel} (${order.audience})</td></tr>
-            <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-            <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Commande' : lang === 'es' ? 'Pedido' : lang === 'de' ? 'Bestellung' : 'Order'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;font-size:12px;color:#666">${order.sessionId}</td></tr>
-          </table>
-          <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
-            <h3 style="color:#1565C0;margin:0 0 12px;font-size:15px">${t.steps_title}</h3>
-            <p style="margin:6px 0;color:#333;font-size:14px">1️⃣ ${t.step1}</p>
-            <p style="margin:6px 0;color:#333;font-size:14px">2️⃣ ${t.step2}</p>
-            <p style="margin:6px 0;color:#333;font-size:14px">3️⃣ ${t.step3}</p>
-            <p style="margin:12px 0 0;color:#666;font-size:13px;font-style:italic">⏱️ ${t.delay}</p>
+    console.log('[Email] Calling resend.emails.send...');
+    const emailResult = await resend.emails.send({
+      from: 'Kareer <notifications@kareer.pro>',
+      to: order.customerEmail,
+      subject: t.subject,
+      html: `
+        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+          <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
+            <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
+            <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
           </div>
-          <div style="text-align:center;margin-top:24px">
-            <a href="https://wa.me/212651064637" style="background:#25D366;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">💬 ${t.contact}</a>
+          <div style="padding:32px">
+            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
+            <table style="width:100%;border-collapse:collapse;margin:24px 0">
+              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.planLabel} (${order.audience})</td></tr>
+              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
+              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Commande' : lang === 'es' ? 'Pedido' : lang === 'de' ? 'Bestellung' : 'Order'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;font-size:12px;color:#666">${order.sessionId}</td></tr>
+            </table>
+            <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
+              <h3 style="color:#1565C0;margin:0 0 12px;font-size:15px">${t.steps_title}</h3>
+              <p style="margin:6px 0;color:#333;font-size:14px">1️⃣ ${t.step1}</p>
+              <p style="margin:6px 0;color:#333;font-size:14px">2️⃣ ${t.step2}</p>
+              <p style="margin:6px 0;color:#333;font-size:14px">3️⃣ ${t.step3}</p>
+              <p style="margin:12px 0 0;color:#666;font-size:13px;font-style:italic">⏱️ ${t.delay}</p>
+            </div>
+            <div style="text-align:center;margin-top:24px">
+              <a href="https://wa.me/212651064637" style="background:#25D366;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">💬 ${t.contact}</a>
+            </div>
+          </div>
+          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
+            Kareer — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : lang === 'es' ? 'a precio reducido' : lang === 'de' ? 'zum reduzierten Preis' : 'at reduced price'}
           </div>
         </div>
-        <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-          Kareer — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : lang === 'es' ? 'a precio reducido' : lang === 'de' ? 'zum reduzierten Preis' : 'at reduced price'}
-        </div>
-      </div>
-    `
-  });
-  
-  console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`);
+      `
+    });
+    
+    console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`, emailResult);
+  } catch (error) {
+    console.error('[Email] Error sending welcome email:', error.message);
+    console.error('[Email] Full error:', error);
+  }
 }
 
 async function sendAdminNotification(order) {

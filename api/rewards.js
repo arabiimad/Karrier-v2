@@ -335,7 +335,8 @@ module.exports = async (req, res) => {
 
       // POST - Créer ou utiliser un code de parrainage
       if (req.method === 'POST') {
-        const { action, referrerEmail, referrerName, refereeEmail, refereeName, code } = req.body;
+        const { action } = req.query;
+        const { referrerEmail, referrerName, refereeEmail, refereeName, code } = req.body;
 
         if (action === 'create') {
           if (!referrerEmail) {
