@@ -413,22 +413,6 @@ module.exports = async (req, res) => {
             return res.status(400).json({ error: 'Vous avez déjà utilisé ce code' });
           }
 
-          if (!referral.referrals) {
-            referral.referrals = [];
-          }
-          referral.referrals.push({
-            email: refereeEmail.toLowerCase(),
-            name: refereeName || refereeEmail,
-            usedAt: new Date().toISOString()
-          });
-
-          referral.referralCount = (referral.referralCount || 0) + 1;
-          referral.lastReferralAt = new Date().toISOString();
-
-          console.log('[Referral] Saving updated referral - count:', referral.referralCount);
-          await kv.set(`referral:${code.toUpperCase()}`, referral);
-          console.log('[Referral] Referral saved successfully');
-
           let referrerPromoCode = null;
           
           if (referral.rewardMode === 'transfer') {
@@ -452,25 +436,31 @@ module.exports = async (req, res) => {
             });
           }
 
-          // Le filleul a déjà reçu sa réduction de 10€ au checkout en utilisant le code de parrainage
-          // Pas besoin de créer un code promo supplémentaire pour lui
-
-          await sendReferralEmails({
-            referrerEmail: referral.referrerEmail,
-            referrerName: referral.referrerName,
-            referrerPromoCode,
-            referrerMode: referral.rewardMode,
-            referrerBalance: referral.pendingBalance,
-            refereeEmail,
-            refereeName,
-            refereePromoCode: null,
-            referralCode: code.toUpperCase()
+          if (!referral.referrals) {
+            referral.referrals = [];
+          }
+          referral.referrals.push({
+            email: refereeEmail.toLowerCase(),
+            name: refereeName || refereeEmail,
+            usedAt: new Date().toISOString(),
+            referrerPromoCode: referrerPromoCode,
+            orderId: null // Sera mis à jour quand la commande sera créée
           });
+
+          referral.referralCount = (referral.referralCount || 0) + 1;
+          referral.lastReferralAt = new Date().toISOString();
+
+          console.log('[Referral] Saving updated referral - count:', referral.referralCount);
+          await kv.set(`referral:${code.toUpperCase()}`, referral);
+          console.log('[Referral] Referral saved successfully');
+
+          // Le filleul a déjà reçu sa réduction de 10€ au checkout en utilisant le code de parrainage
+          // L'email au parrain sera envoyé quand la commande du filleul passera en statut "done"
 
           return res.status(200).json({
             success: true,
             referrerPromoCode,
-            message: 'Parrainage enregistré ! Votre parrain recevra 10€ de réduction.'
+            message: 'Parrainage enregistré ! Votre parrain recevra 10€ de réduction après validation de votre commande.'
           });
         }
       }
@@ -524,6 +514,7 @@ module.exports = async (req, res) => {
             accountName: referral.paymentInfo.accountName
           });
           
+          // IMPORTANT : Demander un virement réinitialise le solde de parrainage à 0
           referral.pendingBalance = 0;
         }
 

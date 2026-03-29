@@ -1,6 +1,7 @@
 require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { Resend } = require('resend');
 
 const VALID_STATUSES = ['pending', 'activating', 'done', 'refunded'];
 
@@ -112,6 +113,33 @@ module.exports = async (req, res) => {
       const refIndex = refIndexData ? (typeof refIndexData === 'string' ? JSON.parse(refIndexData) : refIndexData) : [];
       refIndex.push(order.referralCode);
       await kvStore.set('referrals:index', JSON.stringify(refIndex));
+
+      // Si cette commande a utilisé un code de parrainage, notifier le parrain
+      if (order.referralCode && order.referralCode.startsWith('REF')) {
+        try {
+          const referralData = await kvStore.get(`referral:${order.referralCode}`);
+          if (referralData) {
+            const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
+            
+            // Trouver le filleul dans la liste
+            const referee = referral.referrals?.find(r => r.email === order.customerEmail.toLowerCase());
+            if (referee && referee.referrerPromoCode) {
+              // Envoyer l'email au parrain
+              await sendReferrerEmail({
+                referrerEmail: referral.referrerEmail,
+                referrerName: referral.referrerName,
+                referrerPromoCode: referee.referrerPromoCode,
+                referrerMode: referral.rewardMode,
+                referrerBalance: referral.pendingBalance,
+                refereeName: referee.name || order.customerEmail.split('@')[0],
+                referralCode: order.referralCode
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[Referral] Error sending referrer notification:', err);
+        }
+      }
     }
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
@@ -226,5 +254,78 @@ async function logAction(kv, entry) {
     await kv.set('audit:log', JSON.stringify(logs));
   } catch (e) {
     console.error('Audit log error:', e.message);
+  }
+}
+
+// Fonction pour envoyer l'email au parrain quand la commande du filleul est terminée
+async function sendReferrerEmail(data) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const { buildEmailHtml } = require('./_email');
+
+    const referrerContent = data.referrerMode === 'transfer' 
+      ? `
+        <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
+          Félicitations ! <strong>${data.refereeName}</strong> a terminé sa commande en utilisant votre code de parrainage <strong>${data.referralCode}</strong>.
+        </p>
+        <div style="background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:12px;padding:24px;margin:24px 0;text-align:center">
+          <div style="font-size:14px;color:#64748b;margin-bottom:8px">💰 Votre nouveau solde</div>
+          <div style="font-size:2.5rem;font-weight:800;background:linear-gradient(135deg, #1565C0, #8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${data.referrerBalance}€</div>
+          <div style="font-size:13px;color:#64748b;margin-top:8px">+10€ ajoutés à votre solde</div>
+        </div>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
+          Continuez à parrainer pour augmenter vos gains, ou demandez un virement bancaire dès maintenant.<br>
+          <strong style="color:#f59e0b">⚠️ Attention :</strong> Demander un virement réinitialisera votre solde de parrainage à 0€.
+        </p>
+        <div style="text-align:center;margin-top:28px">
+          <a href="${siteUrl}/parrainage.html" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
+            💸 Gérer mes gains
+          </a>
+        </div>
+      `
+      : `
+        <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
+          Félicitations ! <strong>${data.refereeName}</strong> a terminé sa commande en utilisant votre code de parrainage <strong>${data.referralCode}</strong>.
+        </p>
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:24px;margin:24px 0;text-align:center">
+          <div style="font-size:14px;color:#166534;margin-bottom:12px">🎁 Votre code promo de récompense</div>
+          <div style="background:#fff;border:2px dashed #86efac;border-radius:8px;padding:16px;margin:12px 0">
+            <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:#15803d;font-family:monospace">${data.referrerPromoCode}</div>
+          </div>
+          <div style="font-size:15px;color:#15803d;font-weight:600;margin-top:12px">Valeur : 10€ de réduction</div>
+        </div>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
+          Utilisez ce code lors de votre prochaine commande pour bénéficier de 10€ de réduction immédiate.
+        </p>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
+          💡 <strong>Continuez à parrainer</strong> pour cumuler encore plus de réductions ! Vous pouvez aussi choisir de recevoir vos gains par virement bancaire depuis votre page de parrainage.
+        </p>
+        <div style="text-align:center;margin-top:28px">
+          <a href="${siteUrl}/#pricing" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px;margin-right:12px">
+            🛒 Commander maintenant
+          </a>
+          <a href="${siteUrl}/parrainage.html" style="background:#fff;color:#1565C0;border:2px solid #1565C0;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
+            👥 Mes parrainages
+          </a>
+        </div>
+      `;
+
+    await resend.emails.send({
+      from: 'Kareer <notifications@kareer.pro>',
+      to: data.referrerEmail,
+      subject: '🎉 Parrainage validé ! Votre récompense de 10€ est prête',
+      html: buildEmailHtml({
+        siteUrl,
+        headerColor: '#10b981',
+        title: '🎉 Parrainage réussi !',
+        preheader: 'Votre filleul a terminé sa commande',
+        content: referrerContent
+      })
+    });
+  } catch (error) {
+    console.error('[Referral] Error sending referrer email:', error);
   }
 }
