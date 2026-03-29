@@ -938,8 +938,8 @@ async function loadReferrals() {
                 referrer.referrals.forEach(function(ref) {
                     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(21,101,192,0.05);border-radius:6px;margin-bottom:6px">';
                     html += '<div>';
-                    html += '<div style="font-weight:600;font-size:14px">' + (ref.refereeName || ref.refereeEmail) + '</div>';
-                    html += '<div style="font-size:12px;color:var(--text-muted)">' + new Date(ref.referredAt).toLocaleDateString('fr-FR') + '</div>';
+                    html += '<div style="font-weight:600;font-size:14px">' + (ref.name || ref.email) + '</div>';
+                    html += '<div style="font-size:12px;color:var(--text-muted)">' + new Date(ref.usedAt).toLocaleDateString('fr-FR') + '</div>';
                     html += '</div>';
                     html += '<div style="font-weight:700;color:var(--success)">+10€</div>';
                     html += '</div>';
