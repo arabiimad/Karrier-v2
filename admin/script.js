@@ -829,7 +829,7 @@ async function loadReferrals() {
     list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ Chargement...</div>';
     
     try {
-        var res = await authFetch('/api/referral');
+        var res = await authFetch('/api/rewards?type=referral');
         if (res.status === 401) return logout401();
         
         var data = await res.json();

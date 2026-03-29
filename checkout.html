@@ -819,6 +819,23 @@ async function submitOrder() {
         }
     }
 
+    // Enregistrer l'utilisation du code promo si appliqué
+    if (appliedPromo) {
+        try {
+            await fetch('/api/rewards?type=promo&action=use', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: appliedPromo.code,
+                    orderId: orderId,
+                    amount: finalAmount
+                })
+            });
+        } catch (e) {
+            console.log('Promo usage tracking (non-blocking):', e.message);
+        }
+    }
+
     // Save order to admin dashboard
     try {
         await fetch('/api/create-order', {
