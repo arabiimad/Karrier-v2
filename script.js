@@ -664,7 +664,7 @@ function getPlanId(planType) {
 
 function allerCheckout(planType) {
     const planId = getPlanId(planType);
-    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
+    const lang = document.documentElement.lang || 'fr';
     window.location.href = `checkout.html?plan=${planId}&lang=${lang}`;
 }
 
