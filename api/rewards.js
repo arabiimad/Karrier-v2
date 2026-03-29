@@ -379,24 +379,36 @@ module.exports = async (req, res) => {
         }
 
         if (action === 'use') {
+          console.log('[Referral] Use action - code:', code, 'refereeEmail:', refereeEmail);
+          
           if (!code || !refereeEmail) {
+            console.log('[Referral] Missing code or email');
             return res.status(400).json({ error: 'Code et email requis' });
           }
 
           const referralData = await kv.get(`referral:${code.toUpperCase()}`);
+          console.log('[Referral] Referral data found:', !!referralData);
           
           if (!referralData) {
+            console.log('[Referral] Code not found in KV:', code.toUpperCase());
             return res.status(404).json({ error: 'Code de parrainage invalide' });
           }
 
           const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
+          console.log('[Referral] Referral structure:', { 
+            hasReferrerEmail: !!referral.referrerEmail,
+            hasReferrals: !!referral.referrals,
+            referralCount: referral.referralCount
+          });
 
           if (referral.referrerEmail.toLowerCase() === refereeEmail.toLowerCase()) {
+            console.log('[Referral] Self-referral attempt');
             return res.status(400).json({ error: 'Vous ne pouvez pas utiliser votre propre code' });
           }
 
           const alreadyUsed = referral.referrals?.some(r => r.email.toLowerCase() === refereeEmail.toLowerCase());
           if (alreadyUsed) {
+            console.log('[Referral] Code already used by this email');
             return res.status(400).json({ error: 'Vous avez déjà utilisé ce code' });
           }
 
@@ -412,7 +424,9 @@ module.exports = async (req, res) => {
           referral.referralCount = (referral.referralCount || 0) + 1;
           referral.lastReferralAt = new Date().toISOString();
 
+          console.log('[Referral] Saving updated referral - count:', referral.referralCount);
           await kv.set(`referral:${code.toUpperCase()}`, referral);
+          console.log('[Referral] Referral saved successfully');
 
           let referrerPromoCode = null;
           

@@ -84,10 +84,13 @@ async function sendWelcomeEmail(order) {
 
   console.log(`[Email] Sending welcome email to ${order.customerEmail} (${order.language})`);
 
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const lang = order.language || 'fr';
-  const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+  try {
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const lang = order.language || 'fr';
+    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    
+    console.log('[Email] Resend initialized, preparing email content');
 
   const t = lang === 'fr' ? {
     subject: 'Commande reçue — Kareer',

@@ -805,6 +805,7 @@ async function submitOrder() {
     // Enregistrer le parrainage si un code est fourni
     if (referralCode) {
         try {
+            console.log('[Parrainage] Tentative avec code:', referralCode);
             const refRes = await fetch('/api/rewards?type=referral&action=use', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -816,13 +817,16 @@ async function submitOrder() {
                     amount: finalAmount
                 })
             });
+            console.log('[Parrainage] Statut réponse:', refRes.status);
             const refData = await refRes.json();
+            console.log('[Parrainage] Données reçues:', refData);
             if (refData.success) {
-                console.log('Parrainage enregistré:', refData);
-                // Le filleul recevra automatiquement son code promo de 10€
+                console.log('[Parrainage] ✅ Enregistré avec succès');
+            } else if (refData.error) {
+                console.error('[Parrainage] ❌ Erreur:', refData.error);
             }
         } catch (e) {
-            console.log('Erreur parrainage (non bloquant):', e.message);
+            console.error('[Parrainage] ❌ Exception:', e.message);
         }
     }
 
