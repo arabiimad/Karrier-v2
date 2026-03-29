@@ -380,7 +380,7 @@ async function updateStatus(sessionId, status) {
 async function deleteOrder(sessionId) {
     if (!confirm('⚠️ Supprimer définitivement cette commande ?\n\nCette action est irréversible.')) return;
     try {
-        var res = await fetch(API_BASE + '/delete-order?session_id=' + encodeURIComponent(sessionId), { method: 'DELETE', headers: authHeaders() });
+        var res = await fetch(API_BASE + '/update-order?session_id=' + encodeURIComponent(sessionId), { method: 'DELETE', headers: authHeaders() });
         var data = await res.json();
         if (data.success) { 
             showToast('Commande supprimée', 'success'); 

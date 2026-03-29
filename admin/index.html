@@ -389,7 +389,7 @@
         var err = document.getElementById('loginError');
         btn.disabled = true; btn.textContent = 'Connexion...';
         err.textContent = '';
-        fetch('/api/auth', {
+        fetch('/api/config-check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: pwd })
