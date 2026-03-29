@@ -458,7 +458,7 @@
         // Sauvegarder le mode de récompense
         async function saveRewardMode(mode) {
             try {
-                const res = await fetch('/api/referral', {
+                const res = await fetch('/api/rewards?type=referral', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -486,7 +486,7 @@
             }
 
             try {
-                const res = await fetch('/api/referral', {
+                const res = await fetch('/api/rewards?type=referral', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -519,7 +519,7 @@
             }
 
             try {
-                const res = await fetch('/api/referral', {
+                const res = await fetch('/api/rewards?type=referral', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -555,7 +555,7 @@
         // Charger les données de parrainage
         async function loadReferralData() {
             try {
-                const res = await fetch(`/api/referral?email=${encodeURIComponent(userEmail)}`);
+                const res = await fetch(`/api/rewards?type=referral&email=${encodeURIComponent(userEmail)}`);
                 const data = await res.json();
                 
                 if (res.status === 403 || data.hasOrdered === false) {

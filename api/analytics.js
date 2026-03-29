@@ -13,7 +13,47 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { period = '30' } = req.query;
+    const { type = 'analytics', period = '30' } = req.query;
+
+    // Route simple stats (anciennement /api/stats)
+    if (type === 'stats') {
+      const allOrders = await kvStore.getAllOrders();
+      const today = new Date().toISOString().split('T')[0];
+
+      let totalRevenue = 0;
+      let pendingCount = 0;
+      let activatingCount = 0;
+      let doneCount = 0;
+      let todayOrders = 0;
+      let todayRevenue = 0;
+
+      for (const order of allOrders) {
+        totalRevenue += order.amount || 0;
+
+        if (order.status === 'pending') pendingCount++;
+        else if (order.status === 'activating') activatingCount++;
+        else if (order.status === 'done') doneCount++;
+
+        if (order.createdAt && order.createdAt.startsWith(today)) {
+          todayOrders++;
+          todayRevenue += order.amount || 0;
+        }
+      }
+
+      const totalOrders = allOrders.length;
+
+      return res.status(200).json({
+        totalRevenue,
+        totalOrders,
+        pendingCount,
+        activatingCount,
+        doneCount,
+        todayOrders,
+        todayRevenue
+      });
+    }
+
+    // Route analytics détaillées (par défaut)
     const days = parseInt(period, 10);
 
     const cutoffDate = new Date();

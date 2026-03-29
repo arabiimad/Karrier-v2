@@ -73,8 +73,8 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // API: Stats (for local admin testing)
-    if (req.url.startsWith('/api/stats') && req.method === 'GET') {
+    // API: Analytics (for local admin testing)
+    if (req.url.startsWith('/api/analytics') && req.method === 'GET') {
         const totalRevenue = orders.reduce((s, o) => s + (o.amount || 0), 0);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({

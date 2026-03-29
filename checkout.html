@@ -490,7 +490,7 @@ async function applyPromoCode() {
     result.style.display = 'none';
 
     try {
-        const response = await fetch(`/api/promo-codes?code=${encodeURIComponent(code)}`);
+        const response = await fetch(`/api/rewards?type=promo&code=${encodeURIComponent(code)}`);
         const data = await response.json();
 
         if (!response.ok) {

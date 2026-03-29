@@ -595,7 +595,7 @@ async function authFetch(url, opts) {
 async function deletePromo(code) {
     if (!confirm('Supprimer le code "' + code + '" ?')) return;
     try {
-        var res = await authFetch('/api/promo-codes?code=' + encodeURIComponent(code), {
+        var res = await authFetch('/api/rewards?type=promo&code=' + encodeURIComponent(code), {
             method: 'DELETE'
         });
         if (res.status === 401) return logout401();
@@ -648,7 +648,7 @@ async function createPromoCode(event) {
     try {
         console.log('[createPromoCode] Envoi de la requête...');
         console.log('[createPromoCode] Token actuel:', authToken ? 'Présent (' + authToken.substring(0, 20) + '...)' : 'MANQUANT');
-        var res = await authFetch('/api/promo-codes', {
+        var res = await authFetch('/api/rewards?type=promo', {
             method: 'POST',
             body: JSON.stringify({
                 code: code || null,
@@ -694,7 +694,7 @@ async function loadPromos() {
     list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ Chargement...</div>';
     
     try {
-        var res = await authFetch('/api/promo-codes');
+        var res = await authFetch('/api/rewards?type=promo');
         if (res.status === 401) return logout401();
         
         var data = await res.json();
@@ -779,7 +779,7 @@ async function loadPromos() {
 // Activer/désactiver un code promo
 async function togglePromoStatus(code, newStatus) {
     try {
-        var res = await authFetch('/api/promo-codes', {
+        var res = await authFetch('/api/rewards?type=promo', {
             method: 'PUT',
             body: JSON.stringify({
                 code: code,
