@@ -103,6 +103,18 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
         done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn.' },
         refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
         pending: { subject: 'Order update', title: 'Order pending', body: 'Your order is pending processing. We will get back to you shortly.' }
+      },
+      es: {
+        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tu información y tu cuenta LinkedIn Premium está siendo activada. Recibirás una confirmación cuando esté lista.' },
+        done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn.' },
+        refunded: { subject: 'Tu reembolso ha sido procesado', title: 'Reembolso confirmado', body: 'Tu pedido ha sido reembolsado. El monto será acreditado en tu cuenta en 5-10 días hábiles.' },
+        pending: { subject: 'Actualización de tu pedido', title: 'Pedido pendiente', body: 'Tu pedido está pendiente de procesamiento. Te contactaremos pronto.' }
+      },
+      de: {
+        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Informationen erhalten und Ihr LinkedIn Premium-Konto wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist.' },
+        done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen.' },
+        refunded: { subject: 'Ihre Rückerstattung wurde bearbeitet', title: 'Rückerstattung bestätigt', body: 'Ihre Bestellung wurde erstattet. Der Betrag wird innerhalb von 5-10 Werktagen auf Ihrem Konto gutgeschrieben.' },
+        pending: { subject: 'Bestellaktualisierung', title: 'Bestellung ausstehend', body: 'Ihre Bestellung wird bearbeitet. Wir werden uns in Kürze bei Ihnen melden.' }
       }
     };
 
@@ -111,8 +123,8 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
 
     const referralSection = (toStatus === 'done' && order.referralCode) ? `
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin-top:24px">
-              <h3 style="color:#15803d;margin:0 0 8px;font-size:15px">${lang === 'fr' ? '🎁 Parrainez vos amis et gagnez !' : '🎁 Refer friends and earn!'}</h3>
-              <p style="color:#166534;font-size:13px;margin:0 0 12px">${lang === 'fr' ? 'Partagez votre code de parrainage et obtenez des avantages exclusifs.' : 'Share your referral code and get exclusive benefits.'}</p>
+              <h3 style="color:#15803d;margin:0 0 8px;font-size:15px">${lang === 'fr' ? '🎁 Parrainez vos amis et gagnez !' : lang === 'es' ? '🎁 ¡Refiere amigos y gana!' : lang === 'de' ? '🎁 Freunde werben und verdienen!' : '🎁 Refer friends and earn!'}</h3>
+              <p style="color:#166534;font-size:13px;margin:0 0 12px">${lang === 'fr' ? 'Partagez votre code de parrainage et obtenez des avantages exclusifs.' : lang === 'es' ? 'Comparte tu código de referido y obtén beneficios exclusivos.' : lang === 'de' ? 'Teilen Sie Ihren Empfehlungscode und erhalten Sie exklusive Vorteile.' : 'Share your referral code and get exclusive benefits.'}</p>
               <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;font-size:20px;font-weight:800;letter-spacing:4px;color:#15803d">${order.referralCode}</div>
               <p style="text-align:center;margin:10px 0 0;font-size:12px;color:#166534">
                 <a href="${siteUrl}/?ref=${order.referralCode}" style="color:#15803d">${siteUrl}/?ref=${order.referralCode}</a>
@@ -126,22 +138,22 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
       html: `
         <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
           <div style="background:#1565C0;padding:32px;text-align:center">
-            <img src="${siteUrl}/kareer-logo.png" alt="Karrier" style="width:48px;height:48px;margin-bottom:12px">
+            <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:12px">
             <h1 style="color:#ffffff;margin:0;font-size:22px">${t.title}</h1>
           </div>
           <div style="padding:32px">
             <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
             <table style="width:100%;border-collapse:collapse;margin:24px 0">
               <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.plan} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
+              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
             </table>
             ${referralSection}
             <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${lang === 'fr' ? 'Suivre ma commande' : 'Track my order'}</a>
+              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${lang === 'fr' ? 'Suivre ma commande' : lang === 'es' ? 'Seguir mi pedido' : lang === 'de' ? 'Meine Bestellung verfolgen' : 'Track my order'}</a>
             </div>
           </div>
           <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Karrier — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : 'at reduced price'}
+            Kareer — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : lang === 'es' ? 'a precio reducido' : lang === 'de' ? 'zum reduzierten Preis' : 'at reduced price'}
           </div>
         </div>
       `
