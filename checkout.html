@@ -715,7 +715,7 @@ async function applyPromoCode() {
             throw new Error(userLang === 'fr' ? `Montant minimum requis: ${data.minAmount}€` : userLang === 'es' ? `Monto mínimo requerido: ${data.minAmount}€` : userLang === 'de' ? `Mindestbetrag erforderlich: ${data.minAmount}€` : `Minimum amount required: ${data.minAmount}€`);
         }
 
-        // Calculer la réduction
+        // Calculer la réduction du code promo
         let discount = 0;
         if (data.type === 'percentage') {
             discount = Math.round((plan.price * data.value) / 100);
@@ -727,8 +727,12 @@ async function applyPromoCode() {
         // Appliquer le code
         appliedPromo = { code, discount, type: data.type, value: data.value };
 
-        // Mettre à jour l'affichage
-        const newTotal = plan.price - discount;
+        // Calculer le total avec réduction parrainage (10€) + code promo
+        const referralInput = document.getElementById('referralCodeInput');
+        const referralDiscount = referralInput && referralInput.value.trim() ? 10 : 0;
+        const totalDiscount = discount + referralDiscount;
+        const newTotal = Math.max(0, plan.price - totalDiscount);
+        
         document.getElementById('totalPrice').textContent = newTotal.toFixed(2).replace('.', ',') + '€';
         
         // Afficher le message de succès
@@ -776,8 +780,11 @@ async function submitOrder() {
     const orderId = `kareer_${planId}_${Date.now()}`;
     const referralCode = document.getElementById('referralCodeInput')?.value.trim().toUpperCase();
     
-    // Calculer le montant final (avec réduction si code promo appliqué)
-    const finalAmount = appliedPromo ? (plan.price - appliedPromo.discount) : plan.price;
+    // Calculer le montant final (avec réduction parrainage + code promo)
+    const referralDiscount = referralCode ? 10 : 0;
+    const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
+    const totalDiscount = referralDiscount + promoDiscount;
+    const finalAmount = Math.max(0, plan.price - totalDiscount);
     
     const orderData = {
         orderId,
@@ -798,7 +805,7 @@ async function submitOrder() {
     // Enregistrer le parrainage si un code est fourni
     if (referralCode) {
         try {
-            const refRes = await fetch('/api/referral', {
+            const refRes = await fetch('/api/rewards?type=referral&action=use', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -848,13 +855,16 @@ async function submitOrder() {
     }
 
     // Build WhatsApp message
+    const referralLine = referralCode ? `\n👥 Code parrainage : ${referralCode} (-10€)` : '';
     const promoLine = appliedPromo ? `\n🏷️ Code promo : ${appliedPromo.code} (-${appliedPromo.discount}€)` : '';
-    const finalPrice = appliedPromo ? (plan.price - appliedPromo.discount) : plan.price;
+    const discountInfo = (referralLine || promoLine) ? `${referralLine}${promoLine}` : '';
+    
     const msg = `Bonjour ! 👋\n\n` +
         `📋 *Nouvelle commande Kareer*\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `📦 Plan : ${plan.name} — ${plan.type}\n` +
-        `💰 Montant : ${finalPrice}€${promoLine}\n` +
+        `💰 Prix initial : ${plan.price}€${discountInfo}\n` +
+        `💵 Total à payer : ${finalAmount}€\n` +
         `📧 Email LinkedIn : ${linkedinEmail}\n` +
         `🆔 Commande : ${orderId}\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
