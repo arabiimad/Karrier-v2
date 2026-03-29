@@ -90,13 +90,22 @@ module.exports = async (req, res) => {
       order.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
       order.referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // Store referral in KV
+      // Store referral in KV with correct structure
       await kvStore.set('referral:' + order.referralCode, JSON.stringify({
+        referrerEmail: order.customerEmail,
+        referrerName: order.customerEmail ? order.customerEmail.split('@')[0] : 'Client',
+        referralCount: 0,
+        referrals: [],
+        rewardMode: 'promo',
+        pendingBalance: 0,
+        transferRequests: [],
         sessionId: session_id,
-        customerEmail: order.customerEmail,
         plan: order.plan,
         createdAt: new Date().toISOString()
       }));
+
+      // Create email mapping for easy lookup
+      await kvStore.set(`referral:email:${order.customerEmail.toLowerCase()}`, order.referralCode);
 
       // Update referrals index
       const refIndexData = await kvStore.get('referrals:index');
