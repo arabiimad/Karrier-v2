@@ -849,7 +849,7 @@ async function loadReferrals() {
         data.referrals.forEach(function(ref) {
             var count = ref.referralCount || 0;
             totalReferrals += count;
-            totalEarnings += count * 20; // 10€ parrain + 10€ filleul = 20€ par parrainage
+            totalEarnings += count * 10; // 10€ pour le parrain uniquement
         });
         
         $('totalReferrers').textContent = data.referrals.length;

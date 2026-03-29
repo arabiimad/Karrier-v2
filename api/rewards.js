@@ -452,22 +452,8 @@ module.exports = async (req, res) => {
             });
           }
 
-          const refereePromoCode = 'FILLEUL' + crypto.randomBytes(4).toString('hex').toUpperCase();
-          await kv.set(`promo:${refereePromoCode}`, {
-            type: 'fixed',
-            value: 10,
-            description: `Bienvenue via parrainage de ${referral.referrerName || referral.referrerEmail}`,
-            maxUses: 1,
-            expiresAt: null,
-            minAmount: 0,
-            applicablePlans: 'all',
-            active: true,
-            usedCount: 0,
-            createdAt: new Date().toISOString(),
-            usageHistory: [],
-            referralCode: code.toUpperCase(),
-            referralType: 'referee'
-          });
+          // Le filleul a déjà reçu sa réduction de 10€ au checkout en utilisant le code de parrainage
+          // Pas besoin de créer un code promo supplémentaire pour lui
 
           await sendReferralEmails({
             referrerEmail: referral.referrerEmail,
@@ -477,15 +463,14 @@ module.exports = async (req, res) => {
             referrerBalance: referral.pendingBalance,
             refereeEmail,
             refereeName,
-            refereePromoCode,
+            refereePromoCode: null,
             referralCode: code.toUpperCase()
           });
 
           return res.status(200).json({
             success: true,
             referrerPromoCode,
-            refereePromoCode,
-            message: 'Parrainage enregistré ! Vous et votre parrain recevez chacun 10€ de réduction.'
+            message: 'Parrainage enregistré ! Votre parrain recevra 10€ de réduction.'
           });
         }
       }
