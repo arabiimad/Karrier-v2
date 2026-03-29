@@ -153,7 +153,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 // ===== Stats =====
 async function loadStats() {
     try {
-        var res = await fetch(API_BASE + '/stats', { headers: authHeaders() });
+        var res = await fetch(API_BASE + '/analytics?type=stats', { headers: authHeaders() });
         if (res.status === 401) return logout401();
         if (res.status === 429) { showToast('Rate limit — patientez', 'error'); return; }
         setConnected(true);
