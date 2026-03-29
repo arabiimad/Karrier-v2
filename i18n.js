@@ -656,6 +656,11 @@ function setLanguage(lang) {
     document.querySelectorAll('.mobile-lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
     });
+    
+    // Restore pricing toggle state after language change
+    if (typeof window.restorePricingToggle === 'function') {
+        setTimeout(() => window.restorePricingToggle(), 600);
+    }
 }
 
 // Initialize on load

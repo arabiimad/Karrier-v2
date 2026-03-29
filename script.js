@@ -170,6 +170,13 @@ function getTrans(key) {
     setTimeout(() => {
         updatePricing(isStudent);
     }, 500);
+    
+    // Expose function globally to restore state after language change
+    window.restorePricingToggle = function() {
+        const savedType = safeGet('kareer_pricing_type') || 'student';
+        const isStudent = savedType === 'student';
+        updatePricing(isStudent);
+    };
 })();
 
 // ===== Theme Toggle =====
