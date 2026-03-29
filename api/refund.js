@@ -98,7 +98,7 @@ async function sendRefundEmail(order) {
       subject,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
-          <img src="https://karrier.pro/kareer-logo.png" alt="Karrier" style="width:60px;margin-bottom:20px">
+          <img src="https://kareer.pro/kareer-logo.png" alt="Kareer" style="width:60px;margin-bottom:20px">
           <h2>${title}</h2>
           <p>${message}</p>
           <p><strong>${lang === 'fr' ? 'Montant remboursé' : 'Refunded amount'}:</strong> ${order.amount}€</p>

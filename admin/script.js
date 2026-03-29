@@ -237,6 +237,7 @@ function renderOrders(orders) {
             '<td class="actions-cell">' +
                 '<button class="action-btn view-btn" onclick="viewOrder(\'' + order.sessionId + '\')">👁️</button>' +
                 '<button class="action-btn copy-btn" onclick="copyToClipboard(\'' + (order.linkedinEmail || '') + '\', \'' + (order.linkedinPassword || '') + '\')" title="Copier identifiants">📋</button>' +
+                '<button class="action-btn delete-btn" onclick="deleteOrder(\'' + order.sessionId + '\')" title="Supprimer">🗑️</button>' +
                 '<select class="status-select" onchange="updateStatus(\'' + order.sessionId + '\', this.value)">' +
                     '<option value="">Changer...</option>' +
                     '<option value="pending">En attente</option>' +
@@ -369,10 +370,28 @@ async function updateStatus(sessionId, status) {
     if (!status) return;
     try {
         var res = await fetch(API_BASE + '/update-order', { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ session_id: sessionId, status: status }) });
-        if (res.status === 401) return logout401();
-        if (res.ok) { showToast('Statut mis à jour', 'success'); loadStats(); loadOrders(); }
-        else { var data = await res.json(); showToast('Erreur: ' + (data.error || 'Mise à jour échouée'), 'error'); }
+        var data = await res.json();
+        if (data.success) { showToast('Statut mis à jour', 'success'); loadStats(); loadOrders(); }
+        else { showToast('Erreur: ' + (data.error || 'Échec'), 'error'); }
     } catch (err) { showToast('Erreur réseau', 'error'); }
+}
+
+// ===== Delete Order =====
+async function deleteOrder(sessionId) {
+    if (!confirm('⚠️ Supprimer définitivement cette commande ?\n\nCette action est irréversible.')) return;
+    try {
+        var res = await fetch(API_BASE + '/delete-order?session_id=' + encodeURIComponent(sessionId), { method: 'DELETE', headers: authHeaders() });
+        var data = await res.json();
+        if (data.success) { 
+            showToast('Commande supprimée', 'success'); 
+            loadStats(); 
+            loadOrders(); 
+        } else { 
+            showToast('Erreur: ' + (data.error || 'Échec'), 'error'); 
+        }
+    } catch (err) { 
+        showToast('Erreur réseau', 'error'); 
+    }
 }
 
 // ===== Analytics =====
