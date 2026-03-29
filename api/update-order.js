@@ -6,6 +6,51 @@ const VALID_STATUSES = ['pending', 'activating', 'done', 'refunded'];
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
+  
+  // DELETE - Supprimer une commande
+  if (req.method === 'DELETE') {
+    try {
+      verifyAuth(req);
+    } catch (e) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { session_id } = req.query;
+
+      if (!session_id) {
+        return res.status(400).json({ error: 'Missing session_id' });
+      }
+
+      const data = await kvStore.get(`order:${session_id}`);
+      if (!data) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      await kvStore.del(`order:${session_id}`);
+
+      const indexData = await kvStore.get('orders:index');
+      if (indexData) {
+        const allIds = typeof indexData === 'string' ? JSON.parse(indexData) : indexData;
+        const updatedIds = allIds.filter(id => id !== session_id);
+        await kvStore.set('orders:index', JSON.stringify(updatedIds));
+      }
+
+      await logAction(kvStore, {
+        action: 'order_deleted',
+        sessionId: session_id,
+        timestamp: new Date().toISOString()
+      });
+
+      console.log(`[Order] Deleted: ${session_id}`);
+      return res.status(200).json({ success: true, message: 'Order deleted successfully' });
+
+    } catch (error) {
+      console.error('Delete order error:', error.message);
+      return res.status(500).json({ error: 'Failed to delete order' });
+    }
+  }
+  
   if (req.method !== 'PATCH') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
