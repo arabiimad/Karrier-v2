@@ -435,9 +435,150 @@ const PLANS = {
 
 const WA_NUMBER = '212651064637';
 
+// Traductions checkout
+const checkoutTranslations = {
+  fr: {
+    backToOffers: 'Retour aux offres',
+    step1: 'Vos identifiants', step2: 'Paiement WhatsApp', step3: 'Activation',
+    secureData: 'Données chiffrées · Confidentiel',
+    orderSummary: 'Récapitulatif de commande',
+    subscription1y: 'Abonnement 1 an',
+    officialPrice: 'Prix officiel LinkedIn',
+    yourPrice: 'Votre tarif Kareer',
+    totalToPay: 'Total à payer',
+    youSave: 'Vous économisez',
+    includedInPlan: 'Inclus dans votre plan',
+    emailLinkedin: 'Email LinkedIn à activer',
+    emailPlaceholder: 'votre@email.com',
+    emailHint: 'L\'email de votre compte LinkedIn sur lequel activer le Premium',
+    passwordLinkedin: 'Mot de passe LinkedIn',
+    passwordHint: '⚠️ Nécessaire pour activer le Premium sur votre compte. Vos identifiants sont chiffrés et supprimés après activation.',
+    contactEmail: 'Email de contact (optionnel)',
+    contactHint: 'Pour recevoir la confirmation d\'activation (si différent du LinkedIn)',
+    referralCode: 'Code de parrainage (optionnel)',
+    referralHint: '👥 Vous avez été parrainé ? Entrez le code pour recevoir 10€ de réduction !',
+    promoCode: 'Code promo (optionnel)',
+    promoPlaceholder: 'Ex: BIENVENUE10',
+    applyBtn: 'Appliquer',
+    submitBtn: '📩 Valider et continuer vers WhatsApp',
+    orderSaved: 'Commande enregistrée !',
+    redirectMsg: 'Vous allez être redirigé vers WhatsApp pour finaliser le paiement.',
+    clickHere: 'cliquez ici',
+    sslEncrypted: 'Chiffré SSL',
+    refund30d: 'Remboursé 30j',
+    activation24h: 'Activation 24-48h',
+    footerTerms: 'En commandant, vous acceptez les',
+    footerPrivacy: 'politique de confidentialité',
+    footerCopyright: '© 2026 Kareer · Vos données sont protégées'
+  },
+  en: {
+    backToOffers: 'Back to offers',
+    step1: 'Your credentials', step2: 'WhatsApp Payment', step3: 'Activation',
+    secureData: 'Encrypted data · Confidential',
+    orderSummary: 'Order summary',
+    subscription1y: '1-year subscription',
+    officialPrice: 'Official LinkedIn price',
+    yourPrice: 'Your Kareer price',
+    totalToPay: 'Total to pay',
+    youSave: 'You save',
+    includedInPlan: 'Included in your plan',
+    emailLinkedin: 'LinkedIn email to activate',
+    emailPlaceholder: 'your@email.com',
+    emailHint: 'The email of your LinkedIn account to activate Premium on',
+    passwordLinkedin: 'LinkedIn password',
+    passwordHint: '⚠️ Required to activate Premium on your account. Your credentials are encrypted and deleted after activation.',
+    contactEmail: 'Contact email (optional)',
+    contactHint: 'To receive activation confirmation (if different from LinkedIn)',
+    referralCode: 'Referral code (optional)',
+    referralHint: '👥 Been referred? Enter the code to get €10 off!',
+    promoCode: 'Promo code (optional)',
+    promoPlaceholder: 'Ex: WELCOME10',
+    applyBtn: 'Apply',
+    submitBtn: '📩 Validate and continue to WhatsApp',
+    orderSaved: 'Order saved!',
+    redirectMsg: 'You will be redirected to WhatsApp to complete payment.',
+    clickHere: 'click here',
+    sslEncrypted: 'SSL Encrypted',
+    refund30d: 'Refunded 30d',
+    activation24h: 'Activation 24-48h',
+    footerTerms: 'By ordering, you accept the',
+    footerPrivacy: 'privacy policy',
+    footerCopyright: '© 2026 Kareer · Your data is protected'
+  },
+  es: {
+    backToOffers: 'Volver a las ofertas',
+    step1: 'Tus credenciales', step2: 'Pago WhatsApp', step3: 'Activación',
+    secureData: 'Datos cifrados · Confidencial',
+    orderSummary: 'Resumen del pedido',
+    subscription1y: 'Suscripción 1 año',
+    officialPrice: 'Precio oficial LinkedIn',
+    yourPrice: 'Tu precio Kareer',
+    totalToPay: 'Total a pagar',
+    youSave: 'Ahorras',
+    includedInPlan: 'Incluido en tu plan',
+    emailLinkedin: 'Email LinkedIn a activar',
+    emailPlaceholder: 'tu@email.com',
+    emailHint: 'El email de tu cuenta LinkedIn para activar Premium',
+    passwordLinkedin: 'Contraseña LinkedIn',
+    passwordHint: '⚠️ Necesario para activar Premium en tu cuenta. Tus credenciales están cifradas y se eliminan después de la activación.',
+    contactEmail: 'Email de contacto (opcional)',
+    contactHint: 'Para recibir confirmación de activación (si es diferente del LinkedIn)',
+    referralCode: 'Código de referido (opcional)',
+    referralHint: '👥 ¿Te han referido? ¡Ingresa el código para obtener 10€ de descuento!',
+    promoCode: 'Código promocional (opcional)',
+    promoPlaceholder: 'Ej: BIENVENIDO10',
+    applyBtn: 'Aplicar',
+    submitBtn: '📩 Validar y continuar a WhatsApp',
+    orderSaved: '¡Pedido guardado!',
+    redirectMsg: 'Serás redirigido a WhatsApp para completar el pago.',
+    clickHere: 'haz clic aquí',
+    sslEncrypted: 'Cifrado SSL',
+    refund30d: 'Reembolso 30d',
+    activation24h: 'Activación 24-48h',
+    footerTerms: 'Al ordenar, aceptas los',
+    footerPrivacy: 'política de privacidad',
+    footerCopyright: '© 2026 Kareer · Tus datos están protegidos'
+  },
+  de: {
+    backToOffers: 'Zurück zu Angeboten',
+    step1: 'Ihre Anmeldedaten', step2: 'WhatsApp Zahlung', step3: 'Aktivierung',
+    secureData: 'Verschlüsselte Daten · Vertraulich',
+    orderSummary: 'Bestellübersicht',
+    subscription1y: '1-Jahres-Abonnement',
+    officialPrice: 'Offizieller LinkedIn-Preis',
+    yourPrice: 'Ihr Kareer-Preis',
+    totalToPay: 'Zu zahlen',
+    youSave: 'Sie sparen',
+    includedInPlan: 'In Ihrem Plan enthalten',
+    emailLinkedin: 'LinkedIn-E-Mail zu aktivieren',
+    emailPlaceholder: 'ihre@email.com',
+    emailHint: 'Die E-Mail Ihres LinkedIn-Kontos, auf dem Premium aktiviert werden soll',
+    passwordLinkedin: 'LinkedIn-Passwort',
+    passwordHint: '⚠️ Erforderlich, um Premium auf Ihrem Konto zu aktivieren. Ihre Anmeldedaten werden verschlüsselt und nach der Aktivierung gelöscht.',
+    contactEmail: 'Kontakt-E-Mail (optional)',
+    contactHint: 'Um Aktivierungsbestätigung zu erhalten (falls anders als LinkedIn)',
+    referralCode: 'Empfehlungscode (optional)',
+    referralHint: '👥 Wurden Sie empfohlen? Geben Sie den Code ein, um 10€ Rabatt zu erhalten!',
+    promoCode: 'Aktionscode (optional)',
+    promoPlaceholder: 'Z.B.: WILLKOMMEN10',
+    applyBtn: 'Anwenden',
+    submitBtn: '📩 Bestätigen und zu WhatsApp fortfahren',
+    orderSaved: 'Bestellung gespeichert!',
+    redirectMsg: 'Sie werden zu WhatsApp weitergeleitet, um die Zahlung abzuschließen.',
+    clickHere: 'hier klicken',
+    sslEncrypted: 'SSL-verschlüsselt',
+    refund30d: 'Rückerstattung 30T',
+    activation24h: 'Aktivierung 24-48h',
+    footerTerms: 'Mit der Bestellung akzeptieren Sie die',
+    footerPrivacy: 'Datenschutzrichtlinie',
+    footerCopyright: '© 2026 Kareer · Ihre Daten sind geschützt'
+  }
+};
+
 const params = new URLSearchParams(window.location.search);
 const planId = params.get('plan');
 const userLang = params.get('lang') || navigator.language?.substring(0,2) || 'fr';
+const t = checkoutTranslations[userLang] || checkoutTranslations.fr;
 
 // Mettre à jour la langue de la page
 document.getElementById('htmlRoot').setAttribute('lang', userLang);
@@ -446,6 +587,41 @@ const plan = PLANS[planId] || PLANS['career-salary'];
 
 // Promo code state
 let appliedPromo = null;
+
+// Appliquer les traductions
+function applyTranslations() {
+    document.querySelector('.back-link').childNodes[2].textContent = ' ' + t.backToOffers;
+    document.querySelectorAll('.step')[0].childNodes[1].textContent = ' ' + t.step1;
+    document.querySelectorAll('.step')[1].childNodes[1].textContent = ' ' + t.step2;
+    document.querySelectorAll('.step')[2].childNodes[1].textContent = ' ' + t.step3;
+    document.querySelector('.secure-badge').childNodes[2].textContent = ' ' + t.secureData;
+    document.querySelector('.order-label').textContent = t.orderSummary;
+    document.querySelector('.plan-type').innerHTML = `${t.subscription1y} · <span class="type-badge" id="planTypeBadge">${plan.type}</span>`;
+    document.querySelectorAll('.price-row .label')[0].textContent = t.officialPrice;
+    document.querySelectorAll('.price-row .label')[1].textContent = t.yourPrice;
+    document.querySelector('.price-row.total .label').textContent = t.totalToPay;
+    document.querySelector('.feat-label').textContent = t.includedInPlan;
+    document.querySelectorAll('.form-label')[0].textContent = t.emailLinkedin;
+    document.querySelectorAll('.form-hint')[0].textContent = t.emailHint;
+    document.getElementById('linkedinEmail').placeholder = t.emailPlaceholder;
+    document.querySelectorAll('.form-label')[1].textContent = t.passwordLinkedin;
+    document.querySelectorAll('.form-hint')[1].textContent = t.passwordHint;
+    document.querySelectorAll('.form-label')[2].textContent = t.contactEmail;
+    document.querySelectorAll('.form-hint')[2].textContent = t.contactHint;
+    document.querySelectorAll('.form-label')[3].textContent = t.referralCode;
+    document.querySelectorAll('.form-hint')[3].textContent = t.referralHint;
+    document.querySelector('.promo-section > label').textContent = t.promoCode;
+    document.getElementById('promoCodeInput').placeholder = t.promoPlaceholder;
+    document.getElementById('promoBtn').textContent = t.applyBtn;
+    document.getElementById('submitBtnText').textContent = t.submitBtn;
+    document.querySelector('.success-state h2').textContent = t.orderSaved;
+    document.querySelector('.success-state p').textContent = t.redirectMsg;
+    document.querySelectorAll('.trust-item')[0].childNodes[2].textContent = ' ' + t.sslEncrypted;
+    document.querySelectorAll('.trust-item')[1].childNodes[2].textContent = ' ' + t.refund30d;
+    document.querySelectorAll('.trust-item')[2].childNodes[2].textContent = ' ' + t.activation24h;
+    document.querySelector('.checkout-footer p').innerHTML = `${t.footerTerms} <a href="cgv.html">CGV</a> et la <a href="confidentialite.html">${t.footerPrivacy}</a>.`;
+    document.querySelectorAll('.checkout-footer p')[1].textContent = t.footerCopyright;
+}
 
 // Populate page
 document.getElementById('planIcon').textContent = plan.icon;
@@ -457,7 +633,7 @@ document.getElementById('totalPrice').textContent = plan.price.toFixed(2).replac
 
 const savings = plan.official - plan.price;
 const pct = Math.round((savings / plan.official) * 100);
-document.getElementById('savingsBadge').textContent = `↓ Vous économisez ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
+document.getElementById('savingsBadge').textContent = `↓ ${t.youSave} ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
 
 const featList = document.getElementById('featList');
 plan.features.forEach(f => {
@@ -466,6 +642,9 @@ plan.features.forEach(f => {
     div.innerHTML = `<span class="check">✓</span> ${f}`;
     featList.appendChild(div);
 });
+
+// Appliquer les traductions au chargement
+applyTranslations();
 
 // Toggle password visibility
 function togglePassword() {
@@ -485,12 +664,12 @@ async function applyPromoCode() {
     if (!code) {
         result.style.display = 'block';
         result.style.color = 'var(--error)';
-        result.textContent = '⚠️ Veuillez entrer un code promo';
+        result.textContent = userLang === 'fr' ? '⚠️ Veuillez entrer un code promo' : userLang === 'es' ? '⚠️ Por favor ingresa un código' : userLang === 'de' ? '⚠️ Bitte Code eingeben' : '⚠️ Please enter a code';
         return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Vérification...';
+    btn.textContent = userLang === 'fr' ? 'Vérification...' : userLang === 'es' ? 'Verificando...' : userLang === 'de' ? 'Überprüfung...' : 'Checking...';
     result.style.display = 'none';
 
     try {
@@ -498,17 +677,17 @@ async function applyPromoCode() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Code invalide');
+            throw new Error(data.error || (userLang === 'fr' ? 'Code invalide' : userLang === 'es' ? 'Código inválido' : userLang === 'de' ? 'Ungültiger Code' : 'Invalid code'));
         }
 
         // Vérifier si le code est applicable au plan
         if (data.applicablePlans !== 'all' && !data.applicablePlans.includes(planId)) {
-            throw new Error('Code non applicable à ce plan');
+            throw new Error(userLang === 'fr' ? 'Code non applicable à ce plan' : userLang === 'es' ? 'Código no aplicable a este plan' : userLang === 'de' ? 'Code nicht für diesen Plan gültig' : 'Code not applicable to this plan');
         }
 
         // Vérifier le montant minimum
         if (data.minAmount && plan.price < data.minAmount) {
-            throw new Error(`Montant minimum requis: ${data.minAmount}€`);
+            throw new Error(userLang === 'fr' ? `Montant minimum requis: ${data.minAmount}€` : userLang === 'es' ? `Monto mínimo requerido: ${data.minAmount}€` : userLang === 'de' ? `Mindestbetrag erforderlich: ${data.minAmount}€` : `Minimum amount required: ${data.minAmount}€`);
         }
 
         // Calculer la réduction
@@ -530,11 +709,12 @@ async function applyPromoCode() {
         // Afficher le message de succès
         result.style.display = 'block';
         result.style.color = 'var(--success)';
-        result.innerHTML = `✅ Code appliqué ! -${discount}€ ${data.description ? `(${data.description})` : ''}`;
+        const appliedMsg = userLang === 'fr' ? 'Code appliqué !' : userLang === 'es' ? '¡Código aplicado!' : userLang === 'de' ? 'Code angewendet!' : 'Code applied!';
+        result.innerHTML = `✅ ${appliedMsg} -${discount}€ ${data.description ? `(${data.description})` : ''}`;
 
         // Désactiver l'input et le bouton
         input.disabled = true;
-        btn.textContent = 'Appliqué';
+        btn.textContent = userLang === 'fr' ? 'Appliqué' : userLang === 'es' ? 'Aplicado' : userLang === 'de' ? 'Angewendet' : 'Applied';
         btn.style.background = 'var(--success)';
 
     } catch (error) {
@@ -542,7 +722,7 @@ async function applyPromoCode() {
         result.style.color = 'var(--error)';
         result.textContent = '❌ ' + error.message;
         btn.disabled = false;
-        btn.textContent = 'Appliquer';
+        btn.textContent = t.applyBtn;
     }
 }
 
@@ -553,10 +733,10 @@ async function submitOrder() {
     const contactEmail = document.getElementById('contactEmail').value.trim();
 
     if (!linkedinEmail || !linkedinEmail.includes('@')) {
-        return showError('Veuillez entrer votre email LinkedIn.');
+        return showError(userLang === 'fr' ? 'Veuillez entrer votre email LinkedIn.' : userLang === 'es' ? 'Por favor ingresa tu email de LinkedIn.' : userLang === 'de' ? 'Bitte geben Sie Ihre LinkedIn-E-Mail ein.' : 'Please enter your LinkedIn email.');
     }
     if (!linkedinPassword || linkedinPassword.length < 4) {
-        return showError('Veuillez entrer votre mot de passe LinkedIn.');
+        return showError(userLang === 'fr' ? 'Veuillez entrer votre mot de passe LinkedIn.' : userLang === 'es' ? 'Por favor ingresa tu contraseña de LinkedIn.' : userLang === 'de' ? 'Bitte geben Sie Ihr LinkedIn-Passwort ein.' : 'Please enter your LinkedIn password.');
     }
 
     const btn = document.getElementById('submitBtn');

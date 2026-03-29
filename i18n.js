@@ -614,6 +614,7 @@ let currentLang = window.currentLang;
 function setLanguage(lang) {
     if (!translations[lang]) return;
     currentLang = lang;
+    window.currentLang = lang;
     try { localStorage.setItem('kareer_lang', lang); } catch(e) {}
     document.documentElement.lang = lang;
 
