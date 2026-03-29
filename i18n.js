@@ -97,7 +97,7 @@ const translations = {
         faq_title: "Questions fréquentes",
         faq1_q: "La facturation est-elle annuelle ?", faq1_a: "Oui, la facturation est annuelle. Vous payez une seule fois pour 12 mois d'accès complet.",
         faq2_q: "Comment passer commande ?", faq2_a: "Cliquez sur \"Commander via WhatsApp\" sur l'offre de votre choix. Notre équipe vous contacte pour finaliser rapidement.",
-        faq3_q: "Comment se comparent vos prix aux prix officiels 2026 ?", faq3_a: "Career dès 60€ vs 359,88€ (-83%), Business dès 80€ vs 660€ (-88%), Sales Nav 550€ vs 1 079,88€ (-49%), Recruiter 530€ vs 1 487,52€ (-64%).",
+        faq3_q: "Comment se comparent vos prix aux prix officiels 2026 ?", faq3_a: "Career 60€/80€ vs 359,88€ (-83%/-78%), Business 80€/120€ vs 660€ (-88%/-82%), Sales Nav 550€ vs 1 079,88€ (-49%), Recruiter 530€ vs 1 487,52€ (-64%).",
         faq4_q: "Quelle est la politique de remboursement ?", faq4_a: "Si l'activation échoue dans les 30 jours, vous êtes intégralement remboursé. Aucune question posée.",
         faq5_q: "Proposez-vous des tarifs étudiants ?", faq5_a: "Oui ! Tarifs réduits pour étudiants et jeunes diplômés : Career à 60€ et Business à 80€. Sélectionnez « Étudiant » dans le sélecteur de profil.",
         faq6_q: "D'où viennent les prix officiels mentionnés ?", faq6_a: "Les prix officiels sont les tarifs LinkedIn Premium France 2025/2026 en facturation annuelle. Career : 29,99€/mois, Business : 55,00€/mois, Sales Navigator : 89,99€/mois, Recruiter Lite : 123,96€/mois.",

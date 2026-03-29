@@ -181,22 +181,22 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
         pending: { subject: 'Paiement en cours de vérification', title: 'Paiement en attente', body: 'Nous avons bien reçu votre demande de paiement. Notre équipe est en train de vérifier votre paiement. Vous recevrez une confirmation dès que ce sera validé.' }
       },
       en: {
-        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your information and your LinkedIn Premium account is being activated. You will receive a confirmation once it\'s done.' },
+        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your payment and your LinkedIn Premium account is being activated. You will receive a confirmation once it\'s done.' },
         done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn.' },
         refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
-        pending: { subject: 'Order update', title: 'Order pending', body: 'Your order is pending processing. We will get back to you shortly.' }
+        pending: { subject: 'Payment verification in progress', title: 'Payment pending', body: 'We have received your payment request. Our team is verifying your payment. You will receive a confirmation once it\'s validated.' }
       },
       es: {
-        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tu información y tu cuenta LinkedIn Premium está siendo activada. Recibirás una confirmación cuando esté lista.' },
+        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tu pago y tu cuenta LinkedIn Premium está siendo activada. Recibirás una confirmación cuando esté lista.' },
         done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn.' },
         refunded: { subject: 'Tu reembolso ha sido procesado', title: 'Reembolso confirmado', body: 'Tu pedido ha sido reembolsado. El monto será acreditado en tu cuenta en 5-10 días hábiles.' },
-        pending: { subject: 'Actualización de tu pedido', title: 'Pedido pendiente', body: 'Tu pedido está pendiente de procesamiento. Te contactaremos pronto.' }
+        pending: { subject: 'Verificación de pago en curso', title: 'Pago pendiente', body: 'Hemos recibido tu solicitud de pago. Nuestro equipo está verificando tu pago. Recibirás una confirmación una vez validado.' }
       },
       de: {
-        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Informationen erhalten und Ihr LinkedIn Premium-Konto wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist.' },
+        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zahlung erhalten und Ihr LinkedIn Premium-Konto wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist.' },
         done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen.' },
         refunded: { subject: 'Ihre Rückerstattung wurde bearbeitet', title: 'Rückerstattung bestätigt', body: 'Ihre Bestellung wurde erstattet. Der Betrag wird innerhalb von 5-10 Werktagen auf Ihrem Konto gutgeschrieben.' },
-        pending: { subject: 'Bestellaktualisierung', title: 'Bestellung ausstehend', body: 'Ihre Bestellung wird bearbeitet. Wir werden uns in Kürze bei Ihnen melden.' }
+        pending: { subject: 'Zahlungsüberprüfung läuft', title: 'Zahlung ausstehend', body: 'Wir haben Ihre Zahlungsanfrage erhalten. Unser Team überprüft Ihre Zahlung. Sie erhalten eine Bestätigung, sobald sie validiert ist.' }
       }
     };
 
