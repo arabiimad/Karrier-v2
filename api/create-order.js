@@ -73,7 +73,16 @@ module.exports = async (req, res) => {
 };
 
 async function sendWelcomeEmail(order) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  if (!process.env.RESEND_API_KEY) {
+    console.log('[Email] RESEND_API_KEY not configured');
+    return;
+  }
+  if (!order.customerEmail) {
+    console.log('[Email] No customer email in order:', order.sessionId);
+    return;
+  }
+
+  console.log(`[Email] Sending welcome email to ${order.customerEmail} (${order.language})`);
 
   const { Resend } = require('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -156,6 +165,8 @@ async function sendWelcomeEmail(order) {
       </div>
     `
   });
+  
+  console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`);
 }
 
 async function sendAdminNotification(order) {
