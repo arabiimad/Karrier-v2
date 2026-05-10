@@ -345,65 +345,44 @@ async function sendMonthlyReport() {
   const refundRate = stats.total > 0 ? ((stats.refunds / stats.total) * 100).toFixed(1) : '0.0';
 
   const planRows = Object.entries(stats.byPlan).map(([plan, d]) =>
-    `<tr><td style="padding:10px;border-bottom:1px solid #eee">${plan}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center">${d.count}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:right;font-weight:600">${d.revenue.toFixed(2)}€</td></tr>`
+    `<tr>
+      <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#1f2937">${escapeHtml(plan)}</td>
+      <td style="padding:10px;border-bottom:1px solid #e5e7eb;text-align:center;color:#1f2937">${escapeHtml(d.count)}</td>
+      <td style="padding:10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;color:#1f2937">${formatCurrency(d.revenue, 'EUR', 'fr')}</td>
+    </tr>`
   ).join('');
 
-  const html = `
-    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:650px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-      <div style="background:linear-gradient(135deg,#1565C0,#1e40af);padding:32px;text-align:center">
-        <h1 style="color:#fff;margin:0;font-size:22px">📊 Rapport mensuel Kareer</h1>
-        <p style="color:#bfdbfe;margin:8px 0 0;font-size:15px">${monthLabel} ${reportYear}</p>
-      </div>
-      <div style="padding:32px">
-        <h2 style="color:#1e293b;font-size:16px;margin:0 0 16px">Résumé du mois</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-          <tr style="background:#f8fafc">
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">Commandes totales</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-size:20px;font-weight:800;color:#1e293b">${stats.total}</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">Revenu net</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-size:20px;font-weight:800;color:#10b981">${stats.revenue.toFixed(2)}€</td>
-          </tr>
-          <tr style="background:#f8fafc">
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">En attente</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0">${stats.byStatus.pending || 0}</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">En activation</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0">${stats.byStatus.activating || 0}</td>
-          </tr>
-          <tr style="background:#f8fafc">
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">Terminées</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;color:#10b981;font-weight:700">${stats.byStatus.done || 0}</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">Remboursements</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;color:#ef4444">${stats.refunds} (${stats.refundRevenue.toFixed(2)}€)</td>
-          </tr>
-          <tr style="background:#f8fafc">
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;font-weight:600;color:#475569">Taux de remboursement</td>
-            <td style="padding:12px 16px;border:1px solid #e2e8f0;color:${parseFloat(refundRate) > 10 ? '#ef4444' : '#64748b'}">${refundRate}%</td>
-          </tr>
-        </table>
-
-        <h2 style="color:#1e293b;font-size:16px;margin:0 0 12px">Répartition par plan</h2>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
-          <thead>
-            <tr style="background:#f1f5f9">
-              <th style="padding:10px;text-align:left;border-bottom:2px solid #e2e8f0;color:#475569;font-size:13px">Plan</th>
-              <th style="padding:10px;text-align:center;border-bottom:2px solid #e2e8f0;color:#475569;font-size:13px">Commandes</th>
-              <th style="padding:10px;text-align:right;border-bottom:2px solid #e2e8f0;color:#475569;font-size:13px">Revenu</th>
-            </tr>
-          </thead>
-          <tbody>${planRows || '<tr><td colspan="3" style="padding:10px;text-align:center;color:#94a3b8">Aucune donnée</td></tr>'}</tbody>
-        </table>
-      </div>
-      <div style="background:#f8fafc;padding:20px;text-align:center;font-size:13px;color:#94a3b8">
-        Rapport automatique Kareer · ${monthLabel} ${reportYear}
-      </div>
-    </div>
+  const reportContent = `
+    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Résumé automatique pour ${escapeHtml(monthLabel)} ${escapeHtml(reportYear)}.</p>
+    ${detailTable([
+      { label: 'Commandes totales', value: stats.total },
+      { label: 'Revenu net', value: formatCurrency(stats.revenue, 'EUR', 'fr') },
+      { label: 'En attente', value: stats.byStatus.pending || 0 },
+      { label: 'En activation', value: stats.byStatus.activating || 0 },
+      { label: 'Terminées', value: stats.byStatus.done || 0 },
+      { label: 'Remboursements', value: `${stats.refunds} (${formatCurrency(stats.refundRevenue, 'EUR', 'fr')})` },
+      { label: 'Taux de remboursement', value: `${refundRate}%` }
+    ])}
+    <h2 style="color:#1e293b;font-size:16px;margin:24px 0 12px">Répartition par plan</h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin-bottom:8px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+      <thead>
+        <tr style="background:#f1f5f9">
+          <th style="padding:10px;text-align:left;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Plan</th>
+          <th style="padding:10px;text-align:center;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Commandes</th>
+          <th style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Revenu</th>
+        </tr>
+      </thead>
+      <tbody>${planRows || '<tr><td colspan="3" style="padding:10px;text-align:center;color:#94a3b8">Aucune donnée</td></tr>'}</tbody>
+    </table>
   `;
+  const html = buildEmailHtml({
+    siteUrl: getSiteUrl(),
+    title: `Rapport mensuel Kareer — ${monthLabel} ${reportYear}`,
+    preheader: `Résumé mensuel Kareer pour ${monthLabel} ${reportYear}`,
+    content: reportContent,
+    footer: `Rapport automatique Kareer · ${monthLabel} ${reportYear}`,
+    lang: 'fr'
+  });
 
   try {
     await resend.emails.send({
