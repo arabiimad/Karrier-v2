@@ -40,7 +40,8 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Inbox error:', error.message);
-    return res.status(error.statusCode || 500).json({ error: error.message || 'Inbox error' });
+    const statusCode = error.statusCode || (error.message === 'Unauthorized' ? 401 : 500);
+    return res.status(statusCode).json({ error: error.message || 'Inbox error' });
   }
 };
 
