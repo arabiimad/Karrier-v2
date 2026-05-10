@@ -9,7 +9,7 @@ const checkAuthRate = rateLimit({ windowMs: 60000, max: 5 });
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   
-  // POST - Admin login (from /api/auth)
+  // POST - Admin login
   if (req.method === 'POST') {
     const rate = checkAuthRate(req);
     if (!rate.allowed) {

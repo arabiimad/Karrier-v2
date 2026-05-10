@@ -14,7 +14,7 @@ document.getElementById('testForm').addEventListener('submit', async function(e)
     var out = document.getElementById('output');
     out.textContent = 'Envoi en cours...';
     try {
-        var res = await fetch('/api/auth', {
+        var res = await fetch('/api/config-check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: document.getElementById('testPwd').value })

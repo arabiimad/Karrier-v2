@@ -142,19 +142,17 @@
         btn.disabled = true;
         btn.textContent = 'Traitement...';
 
-        // Call mock webhook to create the order
-        fetch('/api/mock-webhook', {
+        var planId = plan === 'sales-nav' ? 'sales-nav' : plan + '-' + (audience === 'professional' ? 'salary' : 'student');
+
+        fetch('/api/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                session_id: sessionId,
-                plan: plan,
-                audience: audience,
-                amount: parseFloat(amount),
-                currency: currency,
+                orderId: sessionId,
+                planId: planId,
                 language: language,
-                customer_email: email,
-                linkedin_email: liEmail
+                customerEmail: email,
+                linkedinEmail: liEmail
             })
         })
         .then(function(r) { return r.json(); })

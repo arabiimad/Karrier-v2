@@ -3,11 +3,35 @@ const crypto = require('crypto');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { Resend } = require('resend');
+const { generateToken, hashToken, decryptSecret } = require('./_credentials');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
+const LINK_TTL_MS = 72 * 60 * 60 * 1000;
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  if (req.method === 'POST') {
+    try {
+      verifyAuth(req);
+    } catch (e) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { action, session_id } = req.body || {};
+      if (action === 'credential_link') {
+        return await createCredentialLink(session_id, res);
+      }
+      if (action === 'reveal_credentials') {
+        return await revealCredentials(session_id, res);
+      }
+      return res.status(400).json({ error: 'Invalid action' });
+    } catch (error) {
+      console.error('Order action error:', error.message);
+      return res.status(500).json({ error: 'Order action failed' });
+    }
+  }
   
   // DELETE - Supprimer une commande
   if (req.method === 'DELETE') {
@@ -171,6 +195,119 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: 'Failed to update order' });
   }
 };
+
+async function createCredentialLink(sessionId, res) {
+  if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
+
+  const data = await kvStore.get(`order:${sessionId}`);
+  if (!data) return res.status(404).json({ error: 'Order not found' });
+
+  const order = typeof data === 'string' ? JSON.parse(data) : data;
+  if (order.status === 'done' || order.status === 'refunded') {
+    return res.status(400).json({ error: 'Cannot request credentials for this status' });
+  }
+  if (order.hasCredentials || (order.credentials && order.credentials.linkedinPassword)) {
+    return res.status(400).json({ error: 'Credentials already received' });
+  }
+
+  const token = generateToken();
+  const tokenHash = hashToken(token);
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + LINK_TTL_MS).toISOString();
+  const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+  const link = `${siteUrl.replace(/\/$/, '')}/credentials.html?token=${encodeURIComponent(token)}`;
+
+  if (order.credentialLink && order.credentialLink.tokenHash) {
+    await kvStore.del(`credential-token:${order.credentialLink.tokenHash}`);
+  }
+
+  order.status = 'awaiting_credentials';
+  order.credentialLink = { tokenHash, sentAt: now, expiresAt, usedAt: null };
+  order.credentialLinkSentAt = now;
+  order.updatedAt = now;
+
+  await kvStore.set(`credential-token:${tokenHash}`, sessionId);
+  await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+  await logAction(kvStore, { action: 'credential_link_created', sessionId, timestamp: now });
+
+  const emailSent = await sendCredentialLinkEmail(order, link, expiresAt);
+  return res.status(200).json({ success: true, link, expiresAt, emailSent });
+}
+
+async function revealCredentials(sessionId, res) {
+  if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
+
+  const data = await kvStore.get(`order:${sessionId}`);
+  if (!data) return res.status(404).json({ error: 'Order not found' });
+
+  const order = typeof data === 'string' ? JSON.parse(data) : data;
+  let linkedinPassword = null;
+  let source = 'encrypted';
+
+  if (order.credentials && order.credentials.linkedinPassword) {
+    linkedinPassword = decryptSecret(order.credentials.linkedinPassword);
+  } else if (order.linkedinPassword) {
+    linkedinPassword = order.linkedinPassword;
+    source = 'legacy_plaintext';
+  }
+
+  if (!linkedinPassword) {
+    return res.status(404).json({ error: 'No credentials available' });
+  }
+
+  await logAction(kvStore, {
+    action: 'credentials_revealed',
+    sessionId,
+    source,
+    timestamp: new Date().toISOString()
+  });
+
+  return res.status(200).json({
+    success: true,
+    linkedinEmail: order.linkedinEmail,
+    linkedinPassword
+  });
+}
+
+async function sendCredentialLinkEmail(order, link, expiresAt) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return false;
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const lang = order.language || 'fr';
+    const isFr = lang === 'fr';
+    const subject = isFr
+      ? 'Lien securise pour votre activation Kareer'
+      : 'Secure link for your Kareer activation';
+
+    await resend.emails.send({
+      from: 'Kareer <notifications@kareer.pro>',
+      to: order.customerEmail,
+      subject,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+          <div style="background:#1565C0;padding:28px;text-align:center">
+            <img src="${process.env.SITE_URL || 'https://kareer.pro'}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:10px">
+            <h1 style="margin:0;color:#fff;font-size:22px">${isFr ? 'Paiement valide' : 'Payment confirmed'}</h1>
+          </div>
+          <div style="padding:28px;color:#1f2937">
+            <p>${isFr ? 'Votre paiement a ete valide. Pour demarrer l activation, transmettez votre mot de passe LinkedIn via le lien securise ci-dessous.' : 'Your payment has been confirmed. To start activation, submit your LinkedIn password through the secure link below.'}</p>
+            <p style="font-size:14px;color:#64748b">${isFr ? 'Le lien expire le' : 'The link expires on'} ${new Date(expiresAt).toLocaleString('fr-FR')}.</p>
+            <div style="text-align:center;margin:26px 0">
+              <a href="${link}" style="background:#1565C0;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:700;display:inline-block">${isFr ? 'Transmettre mes identifiants' : 'Submit my credentials'}</a>
+            </div>
+            <p style="font-size:13px;color:#64748b">${isFr ? 'Votre mot de passe est chiffre cote serveur, accessible uniquement a l equipe d activation, puis supprime apres activation.' : 'Your password is encrypted server-side, available only to the activation team, then deleted after activation.'}</p>
+          </div>
+        </div>
+      `
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Credential email error:', error.message);
+    return false;
+  }
+}
 
 async function rewardReferrerIfNeeded(order) {
   if (!order.usedReferralCode || order.referrerRewardedAt || !order.customerEmail) return;

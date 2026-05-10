@@ -14,8 +14,8 @@ document.getElementById('btn').addEventListener('click', function() {
     addLog('URL: ' + window.location.href);
     addLog('Origin: ' + window.location.origin);
     
-    addLog('Envoi fetch POST /api/auth...');
-    fetch('/api/auth', {
+    addLog('Envoi fetch POST /api/config-check...');
+    fetch('/api/config-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: 'admin123' })

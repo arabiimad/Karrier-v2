@@ -448,10 +448,10 @@ function copyText(text, successMessage) {
 
 async function sendCredentialLink(sessionId) {
     try {
-        var res = await fetch(API_BASE + '/credential-links', {
+        var res = await fetch(API_BASE + '/update-order', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({ action: 'credential_link', session_id: sessionId })
         });
         if (res.status === 401) return logout401();
         var data = await res.json();
@@ -473,10 +473,10 @@ async function sendCredentialLink(sessionId) {
 async function revealCredentials(sessionId) {
     if (!confirm('Reveler et copier le mot de passe LinkedIn pour cette commande ?')) return;
     try {
-        var res = await fetch(API_BASE + '/order-credentials', {
+        var res = await fetch(API_BASE + '/update-order', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ session_id: sessionId })
+            body: JSON.stringify({ action: 'reveal_credentials', session_id: sessionId })
         });
         if (res.status === 401) return logout401();
         var data = await res.json();
