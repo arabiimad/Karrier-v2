@@ -79,7 +79,8 @@ module.exports = async (req, res) => {
     webhook: !!process.env.STRIPE_WEBHOOK_SECRET,
     resend: !!process.env.RESEND_API_KEY,
     telegram: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
-    kv: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+    kv: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN),
+    credentialsEncryption: !!process.env.CREDENTIALS_ENCRYPTION_KEY
   };
 
   res.status(200).json(config);

@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
       for (const order of allOrders) {
         totalRevenue += order.amount || 0;
 
-        if (order.status === 'pending') pendingCount++;
+        if (['pending', 'pending_payment', 'awaiting_credentials'].includes(order.status)) pendingCount++;
         else if (order.status === 'activating') activatingCount++;
         else if (order.status === 'done') doneCount++;
 

@@ -67,7 +67,6 @@ async function handleCheckoutCompleted(session) {
 
   const customFields = session.custom_fields || [];
   const linkedinEmail = customFields.find(f => f.key === 'linkedin_email')?.text?.value || '';
-  const linkedinPassword = customFields.find(f => f.key === 'linkedin_password')?.text?.value || '';
 
   const order = {
     sessionId: session.id,
@@ -76,14 +75,14 @@ async function handleCheckoutCompleted(session) {
     customerId: session.customer || null,
     customerEmail: session.customer_details?.email || '',
     linkedinEmail,
-    linkedinPassword,
     plan: session.metadata?.plan || '',
     audience: session.metadata?.audience || '',
     language: session.metadata?.language || 'fr',
     mode: session.mode || 'payment',
     amount: (session.amount_total || 0) / 100,
     currency: session.currency || 'eur',
-    status: 'pending',
+    status: 'awaiting_credentials',
+    hasCredentials: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -300,7 +299,6 @@ async function sendEmailNotification(order) {
           <tr><td style="padding:8px;border:1px solid #ddd"><strong>Montant</strong></td><td style="padding:8px;border:1px solid #ddd">${order.amount}€</td></tr>
           <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email client</strong></td><td style="padding:8px;border:1px solid #ddd">${order.customerEmail}</td></tr>
           <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email LinkedIn</strong></td><td style="padding:8px;border:1px solid #ddd">${order.linkedinEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Mot de passe</strong></td><td style="padding:8px;border:1px solid #ddd">****</td></tr>
         </table>
         <br>
         <a href="https://kareer.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px">Ouvrir le Dashboard</a>

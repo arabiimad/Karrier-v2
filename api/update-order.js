@@ -1,9 +1,10 @@
 require('./_env');
+const crypto = require('crypto');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { Resend } = require('resend');
 
-const VALID_STATUSES = ['pending', 'activating', 'done', 'refunded'];
+const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -26,6 +27,10 @@ module.exports = async (req, res) => {
       const data = await kvStore.get(`order:${session_id}`);
       if (!data) {
         return res.status(404).json({ error: 'Order not found' });
+      }
+      const order = typeof data === 'string' ? JSON.parse(data) : data;
+      if (order.credentialLink && order.credentialLink.tokenHash) {
+        await kvStore.del(`credential-token:${order.credentialLink.tokenHash}`);
       }
 
       await kvStore.del(`order:${session_id}`);
@@ -90,6 +95,7 @@ module.exports = async (req, res) => {
       order.activatedAt = new Date().toISOString();
       order.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
       order.referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      order.customerReferralCode = order.referralCode;
 
       // Store referral in KV with correct structure
       await kvStore.set('referral:' + order.referralCode, JSON.stringify({
@@ -140,6 +146,8 @@ module.exports = async (req, res) => {
           console.error('[Referral] Error sending referrer notification:', err);
         }
       }
+      await rewardReferrerIfNeeded(order);
+      deleteCredentials(order);
     }
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
@@ -156,13 +164,106 @@ module.exports = async (req, res) => {
       await sendStatusEmail(order, previousStatus, status);
     }
 
-    res.status(200).json({ success: true, order });
+    res.status(200).json({ success: true, order: sanitizeOrder(order) });
 
   } catch (error) {
     console.error('Update order error:', error.message);
     res.status(500).json({ error: 'Failed to update order' });
   }
 };
+
+async function rewardReferrerIfNeeded(order) {
+  if (!order.usedReferralCode || order.referrerRewardedAt || !order.customerEmail) return;
+
+  try {
+    const usedCode = String(order.usedReferralCode).toUpperCase();
+    const referralData = await kvStore.get(`referral:${usedCode}`);
+    if (!referralData) return;
+
+    const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
+    const customerEmail = order.customerEmail.toLowerCase();
+    if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === customerEmail) return;
+
+    referral.referrals = referral.referrals || [];
+    const alreadyRecorded = referral.referrals.some(r => String(r.email || '').toLowerCase() === customerEmail);
+    let referrerPromoCode = null;
+
+    if (!alreadyRecorded) {
+      if (referral.rewardMode === 'transfer') {
+        referral.pendingBalance = (referral.pendingBalance || 0) + 10;
+      } else {
+        referrerPromoCode = 'PARRAIN' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        await kvStore.set(`promo:${referrerPromoCode}`, JSON.stringify({
+          type: 'fixed',
+          value: 10,
+          description: `Recompense parrainage de ${customerEmail}`,
+          maxUses: 1,
+          expiresAt: null,
+          minAmount: 0,
+          applicablePlans: 'all',
+          active: true,
+          usedCount: 0,
+          createdAt: new Date().toISOString(),
+          usageHistory: [],
+          referralCode: usedCode,
+          referralType: 'referrer'
+        }));
+      }
+
+      referral.referrals.push({
+        email: customerEmail,
+        name: customerEmail.split('@')[0],
+        usedAt: new Date().toISOString(),
+        orderId: order.sessionId,
+        referrerPromoCode
+      });
+      referral.referralCount = (referral.referralCount || 0) + 1;
+      referral.lastReferralAt = new Date().toISOString();
+      await kvStore.set(`referral:${usedCode}`, JSON.stringify(referral));
+    }
+
+    const latestReferee = referral.referrals.find(r => String(r.email || '').toLowerCase() === customerEmail);
+    if (latestReferee && latestReferee.referrerPromoCode) {
+      await sendReferrerEmail({
+        referrerEmail: referral.referrerEmail,
+        referrerName: referral.referrerName,
+        referrerPromoCode: latestReferee.referrerPromoCode,
+        referrerMode: referral.rewardMode,
+        referrerBalance: referral.pendingBalance,
+        refereeName: latestReferee.name || customerEmail.split('@')[0],
+        referralCode: usedCode
+      });
+    }
+
+    order.referrerRewardedAt = new Date().toISOString();
+  } catch (err) {
+    console.error('[Referral] Error rewarding referrer:', err.message);
+  }
+}
+
+function deleteCredentials(order) {
+  if (order.credentials || order.linkedinPassword || order.hasCredentials) {
+    delete order.credentials;
+    delete order.linkedinPassword;
+    order.hasCredentials = false;
+    order.credentialsDeletedAt = new Date().toISOString();
+  }
+}
+
+function sanitizeOrder(order) {
+  const copy = { ...order };
+  copy.hasCredentials = !!(order.credentials && order.credentials.linkedinPassword) || !!order.linkedinPassword || !!order.hasCredentials;
+  delete copy.credentials;
+  delete copy.linkedinPassword;
+  if (copy.credentialLink) {
+    copy.credentialLink = {
+      sentAt: copy.credentialLink.sentAt,
+      expiresAt: copy.credentialLink.expiresAt,
+      usedAt: copy.credentialLink.usedAt || null
+    };
+  }
+  return copy;
+}
 
 async function sendStatusEmail(order, fromStatus, toStatus) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
@@ -199,6 +300,23 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
         pending: { subject: 'Zahlungsüberprüfung läuft', title: 'Zahlung ausstehend', body: 'Wir haben Ihre Zahlungsanfrage erhalten. Unser Team überprüft Ihre Zahlung. Sie erhalten eine Bestätigung, sobald sie validiert ist.' }
       }
     };
+
+    messages.fr.pending_payment = messages.fr.pending;
+    messages.fr.awaiting_credentials = {
+      subject: 'Paiement valide - identifiants demandes',
+      title: 'Paiement valide',
+      body: 'Votre paiement est valide. Vous allez recevoir un lien securise pour transmettre votre mot de passe LinkedIn.'
+    };
+    messages.en.pending_payment = messages.en.pending;
+    messages.en.awaiting_credentials = {
+      subject: 'Payment confirmed - credentials requested',
+      title: 'Payment confirmed',
+      body: 'Your payment is confirmed. You will receive a secure link to submit your LinkedIn password.'
+    };
+    messages.es.pending_payment = messages.es.pending;
+    messages.es.awaiting_credentials = messages.en.awaiting_credentials;
+    messages.de.pending_payment = messages.de.pending;
+    messages.de.awaiting_credentials = messages.en.awaiting_credentials;
 
     const t = (messages[lang] || messages.fr)[toStatus];
     if (!t) return;

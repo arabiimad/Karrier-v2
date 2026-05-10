@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // Allow Vercel cron (GET with ?action=...) or admin POST
-  const isCron = req.method === 'GET' && ['renewal_reminders', 'monthly_report', 'process_pending'].includes(req.query.action);
+  const isCron = req.method === 'GET' && ['renewal_reminders', 'monthly_report', 'process_pending', 'cleanup_credentials'].includes(req.query.action);
 
   if (!isCron && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -54,6 +54,9 @@ module.exports = async (req, res) => {
       case 'cleanup_old':
         result = await cleanupOldOrders(req.body.days || 90);
         break;
+      case 'cleanup_credentials':
+        result = await cleanupExpiredCredentials();
+        break;
       case 'renewal_reminders':
         result = await sendRenewalReminders((req.body && req.body.days_before) || 30);
         break;
@@ -73,6 +76,7 @@ module.exports = async (req, res) => {
 };
 
 async function processPendingOrders() {
+  const credentialsCleanup = await cleanupExpiredCredentials();
   const indexData = await kvStore.get('orders:index');
   const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
   
@@ -85,7 +89,7 @@ async function processPendingOrders() {
     
     const order = typeof data === 'string' ? JSON.parse(data) : data;
     
-    if (order.status === 'pending') {
+    if (order.status === 'pending' && (order.hasCredentials || order.linkedinPassword || (order.credentials && order.credentials.linkedinPassword))) {
       const hoursSinceCreation = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60);
       
       if (hoursSinceCreation > 24) {
@@ -98,7 +102,7 @@ async function processPendingOrders() {
     }
   }
 
-  return { processed, results };
+  return { processed, credentialsCleaned: credentialsCleanup.cleaned, results };
 }
 
 async function sendReminder(sessionId) {
@@ -120,12 +124,16 @@ async function sendReminder(sessionId) {
     const statusMessages = {
       fr: {
         pending: 'Votre commande est en attente de traitement.',
+        pending_payment: 'Votre paiement est en attente de validation.',
+        awaiting_credentials: 'Votre paiement est valide. Nous attendons vos identifiants via le lien securise.',
         activating: 'Votre compte LinkedIn est en cours d\'activation.',
         done: 'Votre compte LinkedIn Premium est activé !',
         refunded: 'Votre commande a été remboursée.'
       },
       en: {
         pending: 'Your order is pending processing.',
+        pending_payment: 'Your payment is waiting for validation.',
+        awaiting_credentials: 'Your payment is confirmed. We are waiting for your credentials through the secure link.',
         activating: 'Your LinkedIn account is being activated.',
         done: 'Your LinkedIn Premium account is activated!',
         refunded: 'Your order has been refunded.'
@@ -166,7 +174,7 @@ async function bulkUpdateStatus(fromStatus, toStatus) {
     throw new Error('from_status and to_status required');
   }
 
-  const validStatuses = ['pending', 'activating', 'done', 'refunded'];
+  const validStatuses = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
   if (!validStatuses.includes(fromStatus) || !validStatuses.includes(toStatus)) {
     throw new Error('Invalid status');
   }
@@ -185,12 +193,44 @@ async function bulkUpdateStatus(fromStatus, toStatus) {
     if (order.status === fromStatus) {
       order.status = toStatus;
       order.updatedAt = new Date().toISOString();
+      if (toStatus === 'done') {
+        deleteCredentials(order);
+      }
       await kvStore.set(`order:${id}`, JSON.stringify(order));
       updated++;
     }
   }
 
   return { updated, fromStatus, toStatus };
+}
+
+async function cleanupExpiredCredentials() {
+  const indexData = await kvStore.get('orders:index');
+  const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
+  let cleaned = 0;
+
+  for (const id of allIds) {
+    const data = await kvStore.get(`order:${id}`);
+    if (!data) continue;
+
+    const order = typeof data === 'string' ? JSON.parse(data) : data;
+    const expiresAt = order.credentials && order.credentials.expiresAt;
+    if (expiresAt && new Date(expiresAt).getTime() <= Date.now()) {
+      deleteCredentials(order);
+      order.updatedAt = new Date().toISOString();
+      await kvStore.set(`order:${id}`, JSON.stringify(order));
+      cleaned++;
+    }
+  }
+
+  return { cleaned };
+}
+
+function deleteCredentials(order) {
+  delete order.credentials;
+  delete order.linkedinPassword;
+  order.hasCredentials = false;
+  order.credentialsDeletedAt = new Date().toISOString();
 }
 
 async function cleanupOldOrders(days) {

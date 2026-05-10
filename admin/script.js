@@ -43,6 +43,53 @@ function authHeaders() {
 function $(id) { return document.getElementById(id); }
 function on(id, evt, fn) { var el = $(id); if (el) el.addEventListener(evt, fn); }
 
+function escapeHTML(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function jsArg(value) {
+    return escapeHTML(JSON.stringify(String(value || '')));
+}
+function getStatusLabel(status) {
+    var labels = {
+        pending: 'En attente',
+        pending_payment: 'Paiement en attente',
+        awaiting_credentials: 'Identifiants demandes',
+        activating: 'En activation',
+        done: 'Termine',
+        refunded: 'Rembourse'
+    };
+    return labels[status] || status || 'pending';
+}
+function getCredentialLabel(order) {
+    if (order.hasCredentials) return 'Identifiants recus';
+    if (order.credentialLinkSentAt) return 'Lien envoye';
+    return 'Aucun identifiant';
+}
+function safeDate(value) {
+    return value ? new Date(value).toLocaleString('fr-FR') : '-';
+}
+function renderStatusOptions(selected) {
+    var options = [
+        ['', 'Changer...'],
+        ['pending_payment', 'Paiement en attente'],
+        ['awaiting_credentials', 'Identifiants demandes'],
+        ['activating', 'En activation'],
+        ['done', 'Termine'],
+        ['refunded', 'Rembourse']
+    ];
+    return options.map(function(option) {
+        return '<option value="' + option[0] + '"' + (option[0] === selected ? ' selected' : '') + '>' + option[1] + '</option>';
+    }).join('');
+}
+function canSendCredentialLink(order) {
+    return order && (order.status === 'pending' || order.status === 'pending_payment' || order.status === 'awaiting_credentials');
+}
+
 // ===== Toast =====
 function showToast(message, type) {
     type = type || 'info';
@@ -210,7 +257,7 @@ async function loadOrders(page, status) {
             return;
         }
 
-        renderOrders(data.orders);
+        renderOrdersV2(data.orders);
         renderPagination(data.page, data.totalPages);
 
     } catch (err) {
@@ -220,6 +267,7 @@ async function loadOrders(page, status) {
 }
 
 function renderOrders(orders) {
+    return renderOrdersV2(orders);
     var tbody = $('ordersBody');
     if (!tbody) return;
     var statusLabel = { pending: 'En attente', activating: 'En activation', done: 'Terminé', refunded: 'Remboursé' };
@@ -236,7 +284,7 @@ function renderOrders(orders) {
             '<td><span class="status-badge status-' + (order.status || 'pending') + '">' + (statusLabel[order.status] || order.status) + '</span></td>' +
             '<td class="actions-cell">' +
                 '<button class="action-btn view-btn" onclick="viewOrder(\'' + order.sessionId + '\')">👁️</button>' +
-                '<button class="action-btn copy-btn" onclick="copyToClipboard(\'' + (order.linkedinEmail || '') + '\', \'' + (order.linkedinPassword || '') + '\')" title="Copier identifiants">📋</button>' +
+                '<button class="action-btn copy-btn" onclick="revealCredentials(\'' + order.sessionId + '\')" title="Reveler / copier">Reveler</button>' +
                 '<button class="action-btn delete-btn" onclick="deleteOrder(\'' + order.sessionId + '\')" title="Supprimer">🗑️</button>' +
                 '<select class="status-select" onchange="updateStatus(\'' + order.sessionId + '\', this.value)">' +
                     '<option value="">Changer...</option>' +
@@ -246,6 +294,45 @@ function renderOrders(orders) {
                     '<option value="refunded">Remboursé</option>' +
                 '</select>' +
             '</td>' +
+        '</tr>';
+    }).join('');
+}
+
+function renderOrdersV2(orders) {
+    var tbody = $('ordersBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = orders.map(function(order) {
+        var date = order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : '-';
+        var status = order.status || 'pending_payment';
+        var plan = order.plan || order.planLabel || '-';
+        var actions = '';
+
+        actions += '<button class="action-btn view-btn" onclick="viewOrderSafe(' + jsArg(order.sessionId) + ')" title="Voir">Voir</button>';
+        if (canSendCredentialLink(order)) {
+            actions += '<button class="action-btn copy-btn" onclick="sendCredentialLink(' + jsArg(order.sessionId) + ')" title="Paiement recu / envoyer lien">Lien</button>';
+        }
+        if (order.hasCredentials) {
+            actions += '<button class="action-btn copy-btn" onclick="revealCredentials(' + jsArg(order.sessionId) + ')" title="Reveler / copier">Reveler</button>';
+        }
+        actions += '<button class="action-btn delete-btn" onclick="deleteOrder(' + jsArg(order.sessionId) + ')" title="Supprimer">Suppr.</button>';
+        actions += '<select class="status-select" onchange="updateStatus(' + jsArg(order.sessionId) + ', this.value)">' + renderStatusOptions('') + '</select>';
+
+        return '<tr>' +
+            '<td>' + escapeHTML(date) + '</td>' +
+            '<td><span class="plan-badge plan-' + escapeHTML(order.plan || '') + '">' + escapeHTML(plan) + '</span></td>' +
+            '<td>' + escapeHTML(order.audience || '-') + '</td>' +
+            '<td><strong>' + escapeHTML(order.amount || 0) + ' EUR</strong></td>' +
+            '<td class="email-cell">' + escapeHTML(order.customerEmail || '-') + '</td>' +
+            '<td class="email-cell">' + escapeHTML(order.linkedinEmail || '-') + '</td>' +
+            '<td><span class="status-badge status-' + escapeHTML(status) + '">' + escapeHTML(getStatusLabel(status)) + '</span><br><small>' + escapeHTML(getCredentialLabel(order)) + '</small></td>' +
+            '<td class="actions-cell">' + actions + '</td>' +
         '</tr>';
     }).join('');
 }
@@ -291,6 +378,7 @@ function copyToClipboard(email, password) {
 
 // ===== View Order Modal =====
 async function viewOrder(sessionId) {
+    return viewOrderSafe(sessionId);
     var modal = $('modalOverlay');
     var content = $('modalContent');
     var actions = $('modalActions');
@@ -319,7 +407,7 @@ async function viewOrder(sessionId) {
             ['Montant', '<strong>' + (order.amount || 0) + ' ' + (order.currency || 'EUR').toUpperCase() + '</strong>'],
             ['Statut', '<span class="status-badge status-' + order.status + '">' + (statusLabel[order.status] || order.status) + '</span>'],
             ['Email LinkedIn', order.linkedinEmail || '—'],
-            ['Mot de passe LinkedIn', '<code>' + (order.linkedinPassword || '—') + '</code>'],
+            ['Identifiants LinkedIn', order.hasCredentials ? 'Disponibles via Reveler / copier' : 'Non recus'],
             ['Email client', order.customerEmail || '—'],
             ['Langue', order.language || 'fr'],
             ['Créé le', order.createdAt ? new Date(order.createdAt).toLocaleString('fr-FR') : '—'],
@@ -335,9 +423,136 @@ async function viewOrder(sessionId) {
 
         if (actions) {
             actions.innerHTML =
-                '<button class="auto-btn" onclick="copyToClipboard(\'' + (order.linkedinEmail || '') + '\', \'' + (order.linkedinPassword || '') + '\')">📋 Copier identifiants</button>' +
+                '<button class="auto-btn" onclick="revealCredentials(\'' + order.sessionId + '\')">Reveler / copier</button>' +
                 '<button class="auto-btn" onclick="sendReminderFromModal(\'' + order.sessionId + '\')">📧 Envoyer rappel</button>' +
                 (order.status !== 'refunded' ? '<button class="auto-btn auto-btn-danger" onclick="refundFromModal(\'' + order.sessionId + '\')">💸 Rembourser</button>' : '');
+        }
+    } catch (err) {
+        content.innerHTML = '<p>Erreur de chargement</p>';
+    }
+}
+
+function copyText(text, successMessage) {
+    if (!navigator.clipboard) {
+        showToast('Copie indisponible dans ce navigateur', 'error');
+        return Promise.resolve(false);
+    }
+    return navigator.clipboard.writeText(text).then(function() {
+        showToast(successMessage || 'Copie effectuee', 'success');
+        return true;
+    }).catch(function() {
+        showToast('Erreur de copie', 'error');
+        return false;
+    });
+}
+
+async function sendCredentialLink(sessionId) {
+    try {
+        var res = await fetch(API_BASE + '/credential-links', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ session_id: sessionId })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) {
+            return showToast('Erreur: ' + (data.error || 'Echec'), 'error');
+        }
+        if (data.link) {
+            await copyText(data.link, data.emailSent ? 'Lien envoye par email et copie' : 'Lien copie');
+        } else {
+            showToast(data.emailSent ? 'Lien envoye par email' : 'Lien genere', 'success');
+        }
+        loadStats();
+        loadOrders();
+    } catch (err) {
+        showToast('Erreur reseau', 'error');
+    }
+}
+
+async function revealCredentials(sessionId) {
+    if (!confirm('Reveler et copier le mot de passe LinkedIn pour cette commande ?')) return;
+    try {
+        var res = await fetch(API_BASE + '/order-credentials', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ session_id: sessionId })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) {
+            return showToast('Erreur: ' + (data.error || 'Echec'), 'error');
+        }
+        var text = 'Email LinkedIn: ' + (data.linkedinEmail || '') + '\nMot de passe: ' + data.linkedinPassword;
+        await copyText(text, 'Identifiants copies');
+    } catch (err) {
+        showToast('Erreur reseau', 'error');
+    }
+}
+
+async function viewOrderSafe(sessionId) {
+    var modal = $('modalOverlay');
+    var content = $('modalContent');
+    var actions = $('modalActions');
+    if (!modal || !content) return;
+    content.innerHTML = '<p><div class="loading-spinner"></div> Chargement...</p>';
+    if (actions) actions.innerHTML = '';
+    modal.style.display = 'flex';
+
+    try {
+        var order = allOrdersCache.find(function(o) { return o.sessionId === sessionId; });
+        if (!order) {
+            var res = await fetch(API_BASE + '/orders?search=' + encodeURIComponent(sessionId) + '&limit=1', { headers: authHeaders() });
+            if (res.status === 401) return logout401();
+            var data = await res.json();
+            order = data.orders && data.orders[0];
+        }
+
+        if (!order) {
+            content.innerHTML = '<p>Commande non trouvee</p>';
+            return;
+        }
+
+        var status = order.status || 'pending_payment';
+        var credentialStatus = getCredentialLabel(order);
+        var fields = [
+            ['Session ID', '<code>' + escapeHTML(order.sessionId) + '</code>'],
+            ['Plan', '<span class="plan-badge plan-' + escapeHTML(order.plan || '') + '">' + escapeHTML(order.planLabel || order.plan || '-') + '</span>'],
+            ['Audience', escapeHTML(order.audience || '-')],
+            ['Montant', '<strong>' + escapeHTML(order.amount || 0) + ' ' + escapeHTML((order.currency || 'EUR').toUpperCase()) + '</strong>'],
+            ['Statut', '<span class="status-badge status-' + escapeHTML(status) + '">' + escapeHTML(getStatusLabel(status)) + '</span>'],
+            ['Email LinkedIn', escapeHTML(order.linkedinEmail || '-')],
+            ['Identifiants', escapeHTML(credentialStatus)],
+            ['Lien envoye le', escapeHTML(safeDate(order.credentialLinkSentAt))],
+            ['Lien expire le', escapeHTML(safeDate(order.credentialLinkExpiresAt))],
+            ['Identifiants recus le', escapeHTML(safeDate(order.credentialsSubmittedAt))],
+            ['Credentials supprimes le', escapeHTML(safeDate(order.credentialsDeletedAt))],
+            ['Email client', escapeHTML(order.customerEmail || '-')],
+            ['Langue', escapeHTML(order.language || 'fr')],
+            ['Cree le', escapeHTML(safeDate(order.createdAt))],
+            ['Mis a jour', escapeHTML(safeDate(order.updatedAt))]
+        ];
+        if (order.refundId) {
+            fields.push(['Remboursement ID', '<code>' + escapeHTML(order.refundId) + '</code>']);
+            fields.push(['Rembourse le', escapeHTML(safeDate(order.refundedAt))]);
+        }
+        content.innerHTML = fields.map(function(f) {
+            return '<div class="detail-row"><span class="detail-label">' + f[0] + '</span><span class="detail-value">' + f[1] + '</span></div>';
+        }).join('');
+
+        if (actions) {
+            var html = '';
+            if (canSendCredentialLink(order)) {
+                html += '<button class="auto-btn" onclick="sendCredentialLink(' + jsArg(order.sessionId) + ')">Paiement recu / envoyer lien</button>';
+            }
+            if (order.hasCredentials) {
+                html += '<button class="auto-btn" onclick="revealCredentials(' + jsArg(order.sessionId) + ')">Reveler / copier</button>';
+            }
+            html += '<button class="auto-btn" onclick="sendReminderFromModal(' + jsArg(order.sessionId) + ')">Envoyer rappel</button>';
+            if (order.status !== 'refunded') {
+                html += '<button class="auto-btn auto-btn-danger" onclick="refundFromModal(' + jsArg(order.sessionId) + ')">Rembourser</button>';
+            }
+            actions.innerHTML = html;
         }
     } catch (err) {
         content.innerHTML = '<p>Erreur de chargement</p>';
@@ -589,7 +804,7 @@ async function loadConfigCheck() {
         var res = await fetch(API_BASE + '/config-check', { headers: authHeaders() });
         if (res.status === 401) return;
         var data = await res.json();
-        [{ id: 'cfgStripe', ok: data.stripe }, { id: 'cfgWebhook', ok: data.webhook }, { id: 'cfgResend', ok: data.resend }, { id: 'cfgTelegram', ok: data.telegram }, { id: 'cfgKV', ok: data.kv }].forEach(function(item) {
+        [{ id: 'cfgStripe', ok: data.stripe }, { id: 'cfgWebhook', ok: data.webhook }, { id: 'cfgResend', ok: data.resend }, { id: 'cfgTelegram', ok: data.telegram }, { id: 'cfgKV', ok: data.kv }, { id: 'cfgCredentials', ok: data.credentialsEncryption }].forEach(function(item) {
             var el = $(item.id); if (!el) return;
             el.textContent = item.ok ? 'Actif' : 'Non configuré';
             el.style.background = item.ok ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
@@ -737,49 +952,49 @@ async function loadPromos() {
 
             html += '<div class="promo-card">';
             html += '<div class="promo-card-header">';
-            html += '<div class="promo-code-badge">' + promo.code + '</div>';
-            html += '<div class="promo-status-badge ' + statusClass + '">' + statusText + '</div>';
+            html += '<div class="promo-code-badge">' + escapeHTML(promo.code) + '</div>';
+            html += '<div class="promo-status-badge ' + escapeHTML(statusClass) + '">' + escapeHTML(statusText) + '</div>';
             html += '</div>';
             
             if (promo.description) {
-                html += '<div class="promo-description">' + promo.description + '</div>';
+                html += '<div class="promo-description">' + escapeHTML(promo.description) + '</div>';
             }
             
             html += '<div class="promo-card-body">';
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Réduction</div>';
             html += '<div class="promo-info-value highlight">';
-            html += (promo.type === 'percentage' ? '-' + promo.value + '%' : '-' + promo.value + '€');
+            html += escapeHTML(promo.type === 'percentage' ? '-' + promo.value + '%' : '-' + promo.value + ' EUR');
             html += '</div></div>';
             
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Utilisations</div>';
-            html += '<div class="promo-info-value">' + (promo.usedCount || 0) + (promo.maxUses ? '/' + promo.maxUses : '/∞') + '</div>';
+            html += '<div class="promo-info-value">' + escapeHTML((promo.usedCount || 0) + (promo.maxUses ? '/' + promo.maxUses : '/inf')) + '</div>';
             html += '</div>';
             
             if (promo.minAmount > 0) {
                 html += '<div class="promo-info-item">';
                 html += '<div class="promo-info-label">Montant min.</div>';
-                html += '<div class="promo-info-value">' + promo.minAmount + '€</div>';
+                html += '<div class="promo-info-value">' + escapeHTML(promo.minAmount) + ' EUR</div>';
                 html += '</div>';
             }
             
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Expiration</div>';
-            html += '<div class="promo-info-value">' + (promo.expiresAt ? new Date(promo.expiresAt).toLocaleDateString('fr-FR') : 'Jamais') + '</div>';
+            html += '<div class="promo-info-value">' + escapeHTML(promo.expiresAt ? new Date(promo.expiresAt).toLocaleDateString('fr-FR') : 'Jamais') + '</div>';
             html += '</div>';
             
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Plans</div>';
-            html += '<div class="promo-info-value" style="font-size:12px">' + (promo.applicablePlans === 'all' ? 'Tous' : 'Spécifiques') + '</div>';
+            html += '<div class="promo-info-value" style="font-size:12px">' + escapeHTML(promo.applicablePlans === 'all' ? 'Tous' : 'Specifiques') + '</div>';
             html += '</div>';
             html += '</div>';
             
             html += '<div class="promo-card-actions">';
-            html += '<button onclick="togglePromoStatus(\'' + promo.code + '\', ' + !promo.active + ')" class="promo-action-btn ' + (promo.active ? '' : 'success') + '">';
+            html += '<button onclick="togglePromoStatus(' + jsArg(promo.code) + ', ' + !promo.active + ')" class="promo-action-btn ' + (promo.active ? '' : 'success') + '">';
             html += (promo.active ? '⏸️ Désactiver' : '▶️ Activer');
             html += '</button>';
-            html += '<button onclick="deletePromo(\'' + promo.code + '\')" class="promo-action-btn danger">🗑️ Supprimer</button>';
+            html += '<button onclick="deletePromo(' + jsArg(promo.code) + ')" class="promo-action-btn danger">Supprimer</button>';
             html += '</div>';
             html += '</div>';
         });
@@ -790,7 +1005,7 @@ async function loadPromos() {
         list.innerHTML = '<div class="promo-empty-state">' +
             '<div class="promo-empty-icon">❌</div>' +
             '<div class="promo-empty-text">Erreur de chargement</div>' +
-            '<div class="promo-empty-hint">' + err.message + '</div>' +
+            '<div class="promo-empty-hint">' + escapeHTML(err.message) + '</div>' +
             '</div>';
     }
 }
@@ -868,7 +1083,7 @@ async function loadReferrals() {
             
             html += '<div class="promo-card">';
             html += '<div class="promo-card-header">';
-            html += '<div class="promo-code-badge">' + referrer.code + '</div>';
+            html += '<div class="promo-code-badge">' + escapeHTML(referrer.code) + '</div>';
             html += '<div class="promo-status-badge active" style="font-size:16px;font-weight:700">';
             html += '👥 ' + referralCount + ' filleul' + (referralCount > 1 ? 's' : '');
             html += ' • 💰 ' + totalEarned + '€';
@@ -878,12 +1093,12 @@ async function loadReferrals() {
             html += '<div class="promo-card-body">';
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Parrain</div>';
-            html += '<div class="promo-info-value">' + (referrer.referrerName || referrer.referrerEmail) + '</div>';
+            html += '<div class="promo-info-value">' + escapeHTML(referrer.referrerName || referrer.referrerEmail) + '</div>';
             html += '</div>';
             
             html += '<div class="promo-info-item">';
             html += '<div class="promo-info-label">Email</div>';
-            html += '<div class="promo-info-value" style="font-size:13px">' + referrer.referrerEmail + '</div>';
+            html += '<div class="promo-info-value" style="font-size:13px">' + escapeHTML(referrer.referrerEmail) + '</div>';
             html += '</div>';
             
             html += '<div class="promo-info-item">';
@@ -923,8 +1138,8 @@ async function loadReferrals() {
                     html += '</div>';
                     html += '<div style="font-size:12px;color:var(--text-muted)">Demandé le ' + new Date(req.requestedAt).toLocaleDateString('fr-FR') + '</div>';
                     if (req.paymentInfo) {
-                        html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">IBAN: ' + req.paymentInfo.iban.substring(0, 10) + '...</div>';
-                        html += '<div style="font-size:12px;color:var(--text-muted)">Titulaire: ' + req.paymentInfo.accountName + '</div>';
+                        html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">IBAN: ' + escapeHTML(req.paymentInfo.iban.substring(0, 10)) + '...</div>';
+                        html += '<div style="font-size:12px;color:var(--text-muted)">Titulaire: ' + escapeHTML(req.paymentInfo.accountName) + '</div>';
                     }
                     html += '</div>';
                 });
@@ -938,7 +1153,7 @@ async function loadReferrals() {
                 referrer.referrals.forEach(function(ref) {
                     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(21,101,192,0.05);border-radius:6px;margin-bottom:6px">';
                     html += '<div>';
-                    html += '<div style="font-weight:600;font-size:14px">' + (ref.name || ref.email) + '</div>';
+                    html += '<div style="font-weight:600;font-size:14px">' + escapeHTML(ref.name || ref.email) + '</div>';
                     html += '<div style="font-size:12px;color:var(--text-muted)">' + new Date(ref.usedAt).toLocaleDateString('fr-FR') + '</div>';
                     html += '</div>';
                     html += '<div style="font-weight:700;color:var(--success)">+10€</div>';
@@ -957,7 +1172,7 @@ async function loadReferrals() {
         list.innerHTML = '<div class="promo-empty-state">' +
             '<div class="promo-empty-icon">❌</div>' +
             '<div class="promo-empty-text">Erreur de chargement</div>' +
-            '<div class="promo-empty-hint">' + err.message + '</div>' +
+            '<div class="promo-empty-hint">' + escapeHTML(err.message) + '</div>' +
             '</div>';
     }
 }

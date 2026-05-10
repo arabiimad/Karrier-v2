@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
 
     // Paginate
     const start = (pageNum - 1) * limitNum;
-    const paginated = orders.slice(start, start + limitNum);
+    const paginated = orders.slice(start, start + limitNum).map(sanitizeOrder);
 
     res.status(200).json({
       orders: paginated,
@@ -46,3 +46,24 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };
+
+function sanitizeOrder(order) {
+  const copy = { ...order };
+  const hasEncryptedCredentials = !!(order.credentials && order.credentials.linkedinPassword);
+  const hasLegacyCredentials = !!order.linkedinPassword;
+  copy.hasCredentials = hasEncryptedCredentials || hasLegacyCredentials || !!order.hasCredentials;
+  copy.credentialsSubmittedAt = order.credentialsSubmittedAt || (order.credentials && order.credentials.submittedAt) || null;
+  copy.credentialsExpiresAt = order.credentials && order.credentials.expiresAt ? order.credentials.expiresAt : null;
+  copy.credentialLinkSentAt = order.credentialLinkSentAt || (order.credentialLink && order.credentialLink.sentAt) || null;
+  copy.credentialLinkExpiresAt = order.credentialLink && order.credentialLink.expiresAt ? order.credentialLink.expiresAt : null;
+  delete copy.linkedinPassword;
+  delete copy.credentials;
+  if (copy.credentialLink) {
+    copy.credentialLink = {
+      sentAt: copy.credentialLink.sentAt,
+      expiresAt: copy.credentialLink.expiresAt,
+      usedAt: copy.credentialLink.usedAt || null
+    };
+  }
+  return copy;
+}

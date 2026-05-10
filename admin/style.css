@@ -467,6 +467,16 @@ body {
     color: var(--warning);
 }
 
+.status-pending_payment {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.status-awaiting_credentials {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--purple);
+}
+
 .status-activating {
     background: rgba(59, 130, 246, 0.15);
     color: var(--info);

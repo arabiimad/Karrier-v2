@@ -48,11 +48,11 @@ const server = http.createServer(async (req, res) => {
                 amount: data.amount,
                 currency: data.currency || 'EUR',
                 linkedinEmail: data.linkedinEmail,
-                linkedinPassword: data.linkedinPassword,
                 customerEmail: data.customerEmail,
                 language: data.language || 'fr',
-                status: 'pending',
+                status: 'pending_payment',
                 source: 'checkout-whatsapp',
+                hasCredentials: false,
                 createdAt: new Date().toISOString(),
             };
             orders.unshift(order);
@@ -79,7 +79,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             totalRevenue, totalOrders: orders.length,
-            pendingCount: orders.filter(o => o.status === 'pending').length,
+            pendingCount: orders.filter(o => ['pending', 'pending_payment', 'awaiting_credentials'].includes(o.status)).length,
             activatingCount: orders.filter(o => o.status === 'activating').length,
             doneCount: orders.filter(o => o.status === 'done').length,
             todayOrders: orders.length, todayRevenue: totalRevenue

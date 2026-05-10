@@ -1,6 +1,7 @@
 require('./_env');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
+const { getPlan } = require('./_plans');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -16,35 +17,64 @@ module.exports = async (req, res) => {
     const {
       orderId,
       planId,
-      plan,
-      audience,
-      amount,
-      currency = 'EUR',
       linkedinEmail,
-      linkedinPassword,
       customerEmail,
       language = 'fr',
+      referralCode,
+      promoCode,
     } = req.body;
 
-    if (!orderId || !planId || !linkedinEmail || !linkedinPassword) {
+    if (!orderId || !planId || !linkedinEmail) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const planInfo = getPlan(planId);
+    if (!planInfo) {
+      return res.status(400).json({ error: 'Invalid plan' });
+    }
+
     const sessionId = orderId || `kareer_${planId}_${Date.now()}`;
+    let amount = planInfo.amount;
+    const discounts = [];
+    let normalizedPromoCode = null;
+    let normalizedReferralCode = null;
+
+    if (referralCode) {
+      const referralResult = await validateReferralCode(referralCode, customerEmail || linkedinEmail);
+      amount = Math.max(0, amount - 10);
+      normalizedReferralCode = referralResult.code;
+      discounts.push({ type: 'referral', code: referralResult.code, amount: 10 });
+    }
+
+    if (promoCode) {
+      const promoResult = await applyPromoCode({
+        code: promoCode,
+        plan: planInfo,
+        orderId: sessionId,
+        amount
+      });
+      amount -= promoResult.discount;
+      normalizedPromoCode = promoResult.code;
+      discounts.push({ type: 'promo', code: promoResult.code, amount: promoResult.discount });
+    }
 
     const order = {
       sessionId,
       plan: planId,
-      planLabel: plan || planId,
-      audience: audience || 'unknown',
-      amount: amount || 0,
-      currency: (currency || 'EUR').toUpperCase(),
+      planLabel: planInfo.planLabel,
+      audience: planInfo.audience,
+      originalAmount: planInfo.amount,
+      amount: Math.max(0, amount),
+      currency: planInfo.currency,
+      discounts,
+      promoCode: normalizedPromoCode,
+      usedReferralCode: normalizedReferralCode,
       linkedinEmail,
-      linkedinPassword,
       customerEmail: customerEmail || linkedinEmail,
       language,
-      status: 'pending',
+      status: 'pending_payment',
       source: 'checkout-whatsapp',
+      hasCredentials: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -55,22 +85,122 @@ module.exports = async (req, res) => {
     // Update index
     const indexData = await kvStore.get('orders:index');
     const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
-    allIds.unshift(sessionId);
-    await kvStore.set('orders:index', JSON.stringify(allIds));
+    if (!allIds.includes(sessionId)) {
+      allIds.unshift(sessionId);
+      await kvStore.set('orders:index', JSON.stringify(allIds));
+    }
 
-    console.log(`[Order] Created: ${sessionId} — ${planId} ${amount}${currency} (${linkedinEmail})`);
+    console.log(`[Order] Created: ${sessionId} - ${planId} ${order.amount}${order.currency} (${linkedinEmail})`);
 
     // Send emails in background (don't block response)
     sendWelcomeEmail(order).catch(e => console.error('Welcome email error:', e.message));
     sendAdminNotification(order).catch(e => console.error('Admin notif error:', e.message));
 
-    res.status(200).json({ success: true, orderId: sessionId });
+    res.status(200).json({
+      success: true,
+      orderId: sessionId,
+      amount: order.amount,
+      currency: order.currency,
+      status: order.status
+    });
 
   } catch (error) {
     console.error('Create order error:', error.message);
-    res.status(500).json({ error: 'Failed to create order' });
+    res.status(error.statusCode || 500).json({ error: error.statusCode ? error.message : 'Failed to create order' });
   }
 };
+
+async function applyPromoCode({ code, plan, orderId, amount }) {
+  const promoCode = String(code || '').toUpperCase().trim();
+  if (!promoCode) {
+    const error = new Error('Invalid promo code');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const promoData = await kvStore.get(`promo:${promoCode}`);
+  if (!promoData) {
+    const error = new Error('Invalid promo code');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const promo = typeof promoData === 'string' ? JSON.parse(promoData) : promoData;
+  if (!promo.active) {
+    const error = new Error('Promo code disabled');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) {
+    const error = new Error('Promo code expired');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (promo.maxUses && promo.usedCount >= promo.maxUses) {
+    const error = new Error('Promo code exhausted');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (promo.minAmount && amount < promo.minAmount) {
+    const error = new Error(`Minimum amount required: ${promo.minAmount}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const applicablePlans = promo.applicablePlans || 'all';
+  if (applicablePlans !== 'all') {
+    const allowedPlans = String(applicablePlans).split(',').map(p => p.trim());
+    if (!allowedPlans.includes(plan.plan)) {
+      const error = new Error('Promo code not applicable to this plan');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  let discount = 0;
+  if (promo.type === 'percentage') {
+    discount = Math.round((amount * Number(promo.value || promo.discount || 0)) / 100);
+  } else if (promo.type === 'fixed') {
+    discount = Number(promo.value || promo.discount || 0);
+  } else {
+    discount = Number(promo.discount || 0);
+  }
+  discount = Math.max(0, Math.min(discount, amount));
+
+  promo.usedCount = (promo.usedCount || 0) + 1;
+  promo.lastUsedAt = new Date().toISOString();
+  promo.usageHistory = promo.usageHistory || [];
+  promo.usageHistory.push({ orderId, amount, discount, usedAt: new Date().toISOString() });
+  await kvStore.set(`promo:${promoCode}`, JSON.stringify(promo));
+
+  return { code: promoCode, discount };
+}
+
+async function validateReferralCode(code, customerEmail) {
+  const referralCode = String(code || '').toUpperCase().trim();
+  const referralData = await kvStore.get(`referral:${referralCode}`);
+  if (!referralData) {
+    const error = new Error('Invalid referral code');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
+  const email = String(customerEmail || '').toLowerCase();
+  if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === email) {
+    const error = new Error('Self-referral is not allowed');
+    error.statusCode = 400;
+    throw error;
+  }
+  const alreadyUsed = (referral.referrals || []).some(r => String(r.email || '').toLowerCase() === email);
+  if (alreadyUsed) {
+    const error = new Error('Referral code already used by this email');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { code: referralCode };
+}
 
 async function sendWelcomeEmail(order) {
   if (!process.env.RESEND_API_KEY) {
@@ -133,6 +263,26 @@ async function sendWelcomeEmail(order) {
     delay: 'Estimated time: 24 to 48 hours',
     contact: 'Any questions? Contact us on WhatsApp'
   };
+
+    if (lang === 'fr') {
+      t.body = 'Votre commande a ete enregistree. Payez via WhatsApp, puis apres validation vous recevrez un lien securise pour transmettre votre mot de passe LinkedIn.';
+      t.step1 = 'Contactez-nous sur WhatsApp pour le paiement';
+      t.step2 = 'Nous validons votre paiement et envoyons le lien securise';
+      t.step3 = 'Vous transmettez vos identifiants, puis nous activons le compte';
+      t.delay = 'Delai estime : 24 a 48 heures apres reception des identifiants';
+    } else if (lang === 'de') {
+      t.body = 'Ihre Bestellung wurde registriert. Zahlen Sie per WhatsApp. Nach der Bestatigung erhalten Sie einen sicheren Link fur Ihr LinkedIn-Passwort.';
+      t.step2 = 'Wir bestatigen Ihre Zahlung und senden den sicheren Link';
+      t.step3 = 'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung';
+    } else if (lang === 'es') {
+      t.body = 'Tu pedido esta registrado. Paga por WhatsApp; despues de la validacion recibiras un enlace seguro para enviar tu contrasena de LinkedIn.';
+      t.step2 = 'Validamos el pago y enviamos el enlace seguro';
+      t.step3 = 'Envias tus credenciales y activamos la cuenta';
+    } else {
+      t.body = 'Your order is registered. Pay through WhatsApp; after validation you will receive a secure link to submit your LinkedIn password.';
+      t.step2 = 'We validate your payment and send the secure link';
+      t.step3 = 'You submit your credentials, then we activate the account';
+    }
 
     console.log('[Email] Calling resend.emails.send...');
     const emailResult = await resend.emails.send({

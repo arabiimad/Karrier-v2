@@ -15,9 +15,9 @@ module.exports = async (req, res) => {
   try {
     const { format = 'csv', status } = req.query;
 
-    const orders = await kvStore.getAllOrders(order => {
+    const orders = (await kvStore.getAllOrders(order => {
       return !status || order.status === status;
-    });
+    })).map(sanitizeOrder);
 
     if (format === 'csv') {
       const csv = generateCSV(orders);
@@ -71,4 +71,20 @@ function generateCSV(orders) {
   ].join('\n');
 
   return csvContent;
+}
+
+function sanitizeOrder(order) {
+  const copy = { ...order };
+  copy.hasCredentials = !!(order.credentials && order.credentials.linkedinPassword) || !!order.linkedinPassword || !!order.hasCredentials;
+  copy.credentialsSubmittedAt = order.credentialsSubmittedAt || (order.credentials && order.credentials.submittedAt) || '';
+  delete copy.linkedinPassword;
+  delete copy.credentials;
+  if (copy.credentialLink) {
+    copy.credentialLink = {
+      sentAt: copy.credentialLink.sentAt,
+      expiresAt: copy.credentialLink.expiresAt,
+      usedAt: copy.credentialLink.usedAt || null
+    };
+  }
+  return copy;
 }

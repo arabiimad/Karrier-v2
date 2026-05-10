@@ -63,9 +63,7 @@
                 </div>
 
                 <div class="field">
-                    <label>Mot de passe LinkedIn</label>
-                    <input type="password" id="linkedinPassword" placeholder="••••••••" required>
-                    <div class="hint">Nécessaire pour l'activation de votre compte Premium</div>
+                    <div class="hint">Apres validation du paiement, un lien securise permettra de transmettre le mot de passe LinkedIn.</div>
                 </div>
 
                 <hr class="divider">
@@ -126,7 +124,6 @@
     function simulatePayment() {
         var email = document.getElementById('customerEmail').value.trim();
         var liEmail = document.getElementById('linkedinEmail').value.trim();
-        var liPass = document.getElementById('linkedinPassword').value.trim();
         var errEl = document.getElementById('errorMsg');
 
         // Validate
@@ -140,12 +137,6 @@
             errEl.style.display = 'block';
             return;
         }
-        if (!liPass || liPass.length < 3) {
-            errEl.textContent = 'Veuillez entrer un mot de passe LinkedIn';
-            errEl.style.display = 'block';
-            return;
-        }
-
         errEl.style.display = 'none';
         var btn = document.getElementById('payBtn');
         btn.disabled = true;
@@ -163,8 +154,7 @@
                 currency: currency,
                 language: language,
                 customer_email: email,
-                linkedin_email: liEmail,
-                linkedin_password: liPass
+                linkedin_email: liEmail
             })
         })
         .then(function(r) { return r.json(); })

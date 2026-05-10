@@ -288,7 +288,7 @@
     </div>
 
     <div class="step-indicator">
-        <div class="step active"><span class="step-num">1</span> Vos identifiants</div>
+        <div class="step active"><span class="step-num">1</span> Votre compte</div>
         <div class="step-line"></div>
         <div class="step"><span class="step-num">2</span> Paiement WhatsApp</div>
         <div class="step-line"></div>
@@ -297,7 +297,7 @@
 
     <div class="secure-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Données chiffrées · Confidentiel
+        Lien securise apres paiement
     </div>
 
     <div class="checkout-card">
@@ -352,18 +352,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="linkedinPassword">Mot de passe LinkedIn</label>
-                <div class="password-wrapper">
-                    <input type="password" id="linkedinPassword" class="form-input" placeholder="••••••••" required autocomplete="off">
-                    <button type="button" class="toggle-pw" onclick="togglePassword()" id="togglePwBtn">👁️</button>
-                </div>
-                <div class="form-hint warning">⚠️ Nécessaire pour activer le Premium sur votre compte. Vos identifiants sont chiffrés et supprimés après activation.</div>
-            </div>
-
-            <div class="form-group">
                 <label class="form-label" for="contactEmail">Email de contact (optionnel)</label>
                 <input type="email" id="contactEmail" class="form-input" placeholder="contact@email.com" autocomplete="email">
-                <div class="form-hint">Pour recevoir la confirmation d'activation (si différent du LinkedIn)</div>
+                <div class="form-hint">Pour recevoir la confirmation et le lien securise apres paiement.</div>
             </div>
 
             <div class="form-group">
@@ -463,8 +454,8 @@ const WA_NUMBER = '212651064637';
 const checkoutTranslations = {
   fr: {
     backToOffers: 'Retour aux offres',
-    step1: 'Vos identifiants', step2: 'Paiement WhatsApp', step3: 'Activation',
-    secureData: 'Données chiffrées · Confidentiel',
+    step1: 'Votre compte', step2: 'Paiement WhatsApp', step3: 'Activation',
+    secureData: 'Lien securise apres paiement',
     orderSummary: 'Récapitulatif de commande',
     subscription1y: 'Abonnement 1 an',
     officialPrice: 'Prix officiel LinkedIn',
@@ -475,18 +466,16 @@ const checkoutTranslations = {
     emailLinkedin: 'Email LinkedIn à activer',
     emailPlaceholder: 'votre@email.com',
     emailHint: 'L\'email de votre compte LinkedIn sur lequel activer le Premium',
-    passwordLinkedin: 'Mot de passe LinkedIn',
-    passwordHint: '⚠️ Nécessaire pour activer le Premium sur votre compte. Vos identifiants sont chiffrés et supprimés après activation.',
     contactEmail: 'Email de contact (optionnel)',
-    contactHint: 'Pour recevoir la confirmation d\'activation (si différent du LinkedIn)',
+    contactHint: 'Pour recevoir la confirmation et le lien securise apres paiement',
     referralCode: 'Code de parrainage (optionnel)',
     referralHint: '👥 Vous avez été parrainé ? Entrez le code pour recevoir 10€ de réduction !',
     promoCode: 'Code promo (optionnel)',
     promoPlaceholder: 'Ex: BIENVENUE10',
     applyBtn: 'Appliquer',
     submitBtn: '📩 Valider et continuer vers WhatsApp',
-    orderSaved: 'Commande enregistrée !',
-    redirectMsg: 'Vous allez être redirigé vers WhatsApp pour finaliser le paiement.',
+    orderSaved: 'Commande enregistree !',
+    redirectMsg: 'Vous allez etre redirige vers WhatsApp pour finaliser le paiement. Apres validation, vous recevrez un lien securise pour transmettre vos identifiants.',
     clickHere: 'cliquez ici',
     sslEncrypted: 'Chiffré SSL',
     refund30d: 'Remboursé 30j',
@@ -497,8 +486,8 @@ const checkoutTranslations = {
   },
   en: {
     backToOffers: 'Back to offers',
-    step1: 'Your credentials', step2: 'WhatsApp Payment', step3: 'Activation',
-    secureData: 'Encrypted data · Confidential',
+    step1: 'Your account', step2: 'WhatsApp Payment', step3: 'Activation',
+    secureData: 'Secure link after payment',
     orderSummary: 'Order summary',
     subscription1y: '1-year subscription',
     officialPrice: 'Official LinkedIn price',
@@ -509,10 +498,8 @@ const checkoutTranslations = {
     emailLinkedin: 'LinkedIn email to activate',
     emailPlaceholder: 'your@email.com',
     emailHint: 'The email of your LinkedIn account to activate Premium on',
-    passwordLinkedin: 'LinkedIn password',
-    passwordHint: '⚠️ Required to activate Premium on your account. Your credentials are encrypted and deleted after activation.',
     contactEmail: 'Contact email (optional)',
-    contactHint: 'To receive activation confirmation (if different from LinkedIn)',
+    contactHint: 'To receive confirmation and the secure credential link after payment',
     referralCode: 'Referral code (optional)',
     referralHint: '👥 Been referred? Enter the code to get €10 off!',
     promoCode: 'Promo code (optional)',
@@ -520,7 +507,7 @@ const checkoutTranslations = {
     applyBtn: 'Apply',
     submitBtn: '📩 Validate and continue to WhatsApp',
     orderSaved: 'Order saved!',
-    redirectMsg: 'You will be redirected to WhatsApp to complete payment.',
+    redirectMsg: 'You will be redirected to WhatsApp to complete payment. After validation, you will receive a secure link for your credentials.',
     clickHere: 'click here',
     sslEncrypted: 'SSL Encrypted',
     refund30d: 'Refunded 30d',
@@ -531,8 +518,8 @@ const checkoutTranslations = {
   },
   es: {
     backToOffers: 'Volver a las ofertas',
-    step1: 'Tus credenciales', step2: 'Pago WhatsApp', step3: 'Activación',
-    secureData: 'Datos cifrados · Confidencial',
+    step1: 'Tu cuenta', step2: 'Pago WhatsApp', step3: 'Activación',
+    secureData: 'Enlace seguro despues del pago',
     orderSummary: 'Resumen del pedido',
     subscription1y: 'Suscripción 1 año',
     officialPrice: 'Precio oficial LinkedIn',
@@ -543,10 +530,8 @@ const checkoutTranslations = {
     emailLinkedin: 'Email LinkedIn a activar',
     emailPlaceholder: 'tu@email.com',
     emailHint: 'El email de tu cuenta LinkedIn para activar Premium',
-    passwordLinkedin: 'Contraseña LinkedIn',
-    passwordHint: '⚠️ Necesario para activar Premium en tu cuenta. Tus credenciales están cifradas y se eliminan después de la activación.',
     contactEmail: 'Email de contacto (opcional)',
-    contactHint: 'Para recibir confirmación de activación (si es diferente del LinkedIn)',
+    contactHint: 'Para recibir confirmacion y el enlace seguro despues del pago',
     referralCode: 'Código de referido (opcional)',
     referralHint: '👥 ¿Te han referido? ¡Ingresa el código para obtener 10€ de descuento!',
     promoCode: 'Código promocional (opcional)',
@@ -554,7 +539,7 @@ const checkoutTranslations = {
     applyBtn: 'Aplicar',
     submitBtn: '📩 Validar y continuar a WhatsApp',
     orderSaved: '¡Pedido guardado!',
-    redirectMsg: 'Serás redirigido a WhatsApp para completar el pago.',
+    redirectMsg: 'Seras redirigido a WhatsApp para completar el pago. Tras la validacion, recibiras un enlace seguro para tus credenciales.',
     clickHere: 'haz clic aquí',
     sslEncrypted: 'Cifrado SSL',
     refund30d: 'Reembolso 30d',
@@ -565,8 +550,8 @@ const checkoutTranslations = {
   },
   de: {
     backToOffers: 'Zurück zu Angeboten',
-    step1: 'Ihre Anmeldedaten', step2: 'WhatsApp Zahlung', step3: 'Aktivierung',
-    secureData: 'Verschlüsselte Daten · Vertraulich',
+    step1: 'Ihr Konto', step2: 'WhatsApp Zahlung', step3: 'Aktivierung',
+    secureData: 'Sicherer Link nach Zahlung',
     orderSummary: 'Bestellübersicht',
     subscription1y: '1-Jahres-Abonnement',
     officialPrice: 'Offizieller LinkedIn-Preis',
@@ -577,10 +562,8 @@ const checkoutTranslations = {
     emailLinkedin: 'LinkedIn-E-Mail zu aktivieren',
     emailPlaceholder: 'ihre@email.com',
     emailHint: 'Die E-Mail Ihres LinkedIn-Kontos, auf dem Premium aktiviert werden soll',
-    passwordLinkedin: 'LinkedIn-Passwort',
-    passwordHint: '⚠️ Erforderlich, um Premium auf Ihrem Konto zu aktivieren. Ihre Anmeldedaten werden verschlüsselt und nach der Aktivierung gelöscht.',
     contactEmail: 'Kontakt-E-Mail (optional)',
-    contactHint: 'Um Aktivierungsbestätigung zu erhalten (falls anders als LinkedIn)',
+    contactHint: 'Fuer Bestaetigung und sicheren Link nach Zahlung',
     referralCode: 'Empfehlungscode (optional)',
     referralHint: '👥 Wurden Sie empfohlen? Geben Sie den Code ein, um 10€ Rabatt zu erhalten!',
     promoCode: 'Aktionscode (optional)',
@@ -588,7 +571,7 @@ const checkoutTranslations = {
     applyBtn: 'Anwenden',
     submitBtn: '📩 Bestätigen und zu WhatsApp fortfahren',
     orderSaved: 'Bestellung gespeichert!',
-    redirectMsg: 'Sie werden zu WhatsApp weitergeleitet, um die Zahlung abzuschließen.',
+    redirectMsg: 'Sie werden zu WhatsApp weitergeleitet, um die Zahlung abzuschliessen. Nach Validierung erhalten Sie einen sicheren Link.',
     clickHere: 'hier klicken',
     sslEncrypted: 'SSL-verschlüsselt',
     refund30d: 'Rückerstattung 30T',
@@ -628,12 +611,10 @@ function applyTranslations() {
     document.querySelectorAll('.form-label')[0].textContent = t.emailLinkedin;
     document.querySelectorAll('.form-hint')[0].textContent = t.emailHint;
     document.getElementById('linkedinEmail').placeholder = t.emailPlaceholder;
-    document.querySelectorAll('.form-label')[1].textContent = t.passwordLinkedin;
-    document.querySelectorAll('.form-hint')[1].textContent = t.passwordHint;
-    document.querySelectorAll('.form-label')[2].textContent = t.contactEmail;
-    document.querySelectorAll('.form-hint')[2].textContent = t.contactHint;
-    document.querySelectorAll('.form-label')[3].textContent = t.referralCode;
-    document.querySelectorAll('.form-hint')[3].textContent = t.referralHint;
+    document.querySelectorAll('.form-label')[1].textContent = t.contactEmail;
+    document.querySelectorAll('.form-hint')[1].textContent = t.contactHint;
+    document.querySelectorAll('.form-label')[2].textContent = t.referralCode;
+    document.querySelectorAll('.form-hint')[2].textContent = t.referralHint;
     document.querySelector('.promo-section > label').textContent = t.promoCode;
     document.getElementById('promoCodeInput').placeholder = t.promoPlaceholder;
     document.getElementById('promoBtn').textContent = t.applyBtn;
@@ -671,12 +652,11 @@ features.forEach(f => {
 // Appliquer les traductions au chargement
 applyTranslations();
 
-// Toggle password visibility
-function togglePassword() {
-    const input = document.getElementById('linkedinPassword');
-    const btn = document.getElementById('togglePwBtn');
-    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-    else { input.type = 'password'; btn.textContent = '👁️'; }
+function buildWhatsAppMessage(plan, amount, linkedinEmail, orderId) {
+    return `Plan : ${plan.name} - ${plan.type}\n` +
+        `Montant : ${amount} EUR\n` +
+        `Email LinkedIn : ${linkedinEmail}\n` +
+        `Commande : ${orderId}`;
 }
 
 // Apply promo code
@@ -716,13 +696,17 @@ async function applyPromoCode() {
         }
 
         // Calculer la réduction du code promo
+        const promoReferralInput = document.getElementById('referralCodeInput');
+        const promoReferralDiscount = promoReferralInput && promoReferralInput.value.trim() ? 10 : 0;
+        const promoBaseAmount = Math.max(0, plan.price - promoReferralDiscount);
+
         let discount = 0;
         if (data.type === 'percentage') {
-            discount = Math.round((plan.price * data.value) / 100);
+            discount = Math.round((promoBaseAmount * data.value) / 100);
         } else if (data.type === 'fixed') {
             discount = data.value;
         }
-        discount = Math.min(discount, plan.price);
+        discount = Math.min(discount, promoBaseAmount);
 
         // Appliquer le code
         appliedPromo = { code, discount, type: data.type, value: data.value };
@@ -730,8 +714,7 @@ async function applyPromoCode() {
         // Calculer le total avec réduction parrainage (10€) + code promo
         const referralInput = document.getElementById('referralCodeInput');
         const referralDiscount = referralInput && referralInput.value.trim() ? 10 : 0;
-        const totalDiscount = discount + referralDiscount;
-        const newTotal = Math.max(0, plan.price - totalDiscount);
+        const newTotal = Math.max(0, promoBaseAmount - discount);
         
         document.getElementById('totalPrice').textContent = newTotal.toFixed(2).replace('.', ',') + '€';
         
@@ -758,14 +741,10 @@ async function applyPromoCode() {
 // Submit order
 async function submitOrder() {
     const linkedinEmail = document.getElementById('linkedinEmail').value.trim();
-    const linkedinPassword = document.getElementById('linkedinPassword').value;
     const contactEmail = document.getElementById('contactEmail').value.trim();
 
     if (!linkedinEmail || !linkedinEmail.includes('@')) {
         return showError(userLang === 'fr' ? 'Veuillez entrer votre email LinkedIn.' : userLang === 'es' ? 'Por favor ingresa tu email de LinkedIn.' : userLang === 'de' ? 'Bitte geben Sie Ihre LinkedIn-E-Mail ein.' : 'Please enter your LinkedIn email.');
-    }
-    if (!linkedinPassword || linkedinPassword.length < 4) {
-        return showError(userLang === 'fr' ? 'Veuillez entrer votre mot de passe LinkedIn.' : userLang === 'es' ? 'Por favor ingresa tu contraseña de LinkedIn.' : userLang === 'de' ? 'Bitte geben Sie Ihr LinkedIn-Passwort ein.' : 'Please enter your LinkedIn password.');
     }
 
     const btn = document.getElementById('submitBtn');
@@ -789,12 +768,7 @@ async function submitOrder() {
     const orderData = {
         orderId,
         planId,
-        plan: plan.name,
-        audience: plan.type,
-        amount: finalAmount,
-        currency: 'EUR',
         linkedinEmail,
-        linkedinPassword,
         customerEmail: contactEmail || linkedinEmail,
         language: userLang,
         referralCode: referralCode || null,
@@ -802,78 +776,28 @@ async function submitOrder() {
         discount: appliedPromo ? appliedPromo.discount : 0,
     };
     
-    // Enregistrer le parrainage si un code est fourni
-    if (referralCode) {
-        try {
-            console.log('[Parrainage] Tentative avec code:', referralCode);
-            const refRes = await fetch('/api/rewards?type=referral&action=use', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    code: referralCode,
-                    refereeEmail: linkedinEmail,
-                    refereeName: linkedinEmail.split('@')[0],
-                    orderId: orderId,
-                    amount: finalAmount
-                })
-            });
-            console.log('[Parrainage] Statut réponse:', refRes.status);
-            const refData = await refRes.json();
-            console.log('[Parrainage] Données reçues:', refData);
-            if (refData.success) {
-                console.log('[Parrainage] ✅ Enregistré avec succès');
-            } else if (refData.error) {
-                console.error('[Parrainage] ❌ Erreur:', refData.error);
-            }
-        } catch (e) {
-            console.error('[Parrainage] ❌ Exception:', e.message);
-        }
-    }
-
-    // Enregistrer l'utilisation du code promo si appliqué
-    if (appliedPromo) {
-        try {
-            await fetch('/api/rewards?type=promo&action=use', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    code: appliedPromo.code,
-                    orderId: orderId,
-                    amount: finalAmount
-                })
-            });
-        } catch (e) {
-            console.log('Promo usage tracking (non-blocking):', e.message);
-        }
-    }
-
     // Save order to admin dashboard
+    let createdOrder = null;
     try {
-        await fetch('/api/create-order', {
+        const response = await fetch('/api/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData),
         });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erreur lors de la creation de commande');
+        createdOrder = data;
     } catch (e) {
-        console.log('Order save info:', e.message);
+        btn.disabled = false;
+        btnText.style.display = 'inline';
+        spinner.style.display = 'none';
+        return showError(e.message);
     }
 
     // Build WhatsApp message
-    const referralLine = referralCode ? `\n👥 Code parrainage : ${referralCode} (-10€)` : '';
-    const promoLine = appliedPromo ? `\n🏷️ Code promo : ${appliedPromo.code} (-${appliedPromo.discount}€)` : '';
-    const discountInfo = (referralLine || promoLine) ? `${referralLine}${promoLine}` : '';
-    
-    const msg = `Bonjour ! 👋\n\n` +
-        `📋 *Nouvelle commande Kareer*\n` +
-        `━━━━━━━━━━━━━━━━━━━━\n` +
-        `📦 Plan : ${plan.name} — ${plan.type}\n` +
-        `💰 Prix initial : ${plan.price}€${discountInfo}\n` +
-        `💵 Total à payer : ${finalAmount}€\n` +
-        `📧 Email LinkedIn : ${linkedinEmail}\n` +
-        `🆔 Commande : ${orderId}\n` +
-        `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `J'ai rempli mes identifiants sur le site. Merci de m'envoyer le lien de paiement pour finaliser ma commande ! 🙏`;
-
+    const serverOrderId = createdOrder.orderId || orderId;
+    const serverAmount = createdOrder.amount != null ? createdOrder.amount : finalAmount;
+    const msg = buildWhatsAppMessage(plan, serverAmount, linkedinEmail, serverOrderId);
     const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 
     // Show success + redirect

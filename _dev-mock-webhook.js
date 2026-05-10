@@ -1,1 +1,68 @@
-{"data":"cmVxdWlyZSgnLi9fZW52Jyk7DQpjb25zdCBrdlN0b3JlID0gcmVxdWlyZSgnLi9fa3YnKTsNCg0KbW9kdWxlLmV4cG9ydHMgPSBhc3luYyAocmVxLCByZXMpID0+IHsNCiAgaWYgKHJlcS5tZXRob2QgPT09ICdPUFRJT05TJykgcmV0dXJuIHJlcy5zdGF0dXMoMjAwKS5lbmQoKTsNCiAgaWYgKHJlcS5tZXRob2QgIT09ICdQT1NUJykgcmV0dXJuIHJlcy5zdGF0dXMoNDA1KS5qc29uKHsgZXJyb3I6ICdNZXRob2Qgbm90IGFsbG93ZWQnIH0pOw0KDQogIC8vIE9ubHkgYWxsb3cgaW4gZGV2IG1vZGUgKG5vIFN0cmlwZSBrZXkpDQogIGlmIChwcm9jZXNzLmVudi5TVFJJUEVfU0VDUkVUX0tFWSkgew0KICAgIHJldHVybiByZXMuc3RhdHVzKDQwMykuanNvbih7IGVycm9yOiAnTW9jayB3ZWJob29rIGRpc2FibGVkIGluIHByb2R1Y3Rpb24nIH0pOw0KICB9DQoNCiAgdHJ5IHsNCiAgICBjb25zdCB7DQogICAgICBzZXNzaW9uX2lkLA0KICAgICAgcGxhbiwNCiAgICAgIGF1ZGllbmNlLA0KICAgICAgYW1vdW50LA0KICAgICAgY3VycmVuY3kgPSAnZXVyJywNCiAgICAgIGxhbmd1YWdlID0gJ2ZyJywNCiAgICAgIGN1c3RvbWVyX2VtYWlsLA0KICAgICAgbGlua2VkaW5fZW1haWwsDQogICAgICBsaW5rZWRpbl9wYXNzd29yZA0KICAgIH0gPSByZXEuYm9keTsNCg0KICAgIGlmICghc2Vzc2lvbl9pZCB8fCAhcGxhbiB8fCAhY3VzdG9tZXJfZW1haWwgfHwgIWxpbmtlZGluX2VtYWlsIHx8ICFsaW5rZWRpbl9wYXNzd29yZCkgew0KICAgICAgcmV0dXJuIHJlcy5zdGF0dXMoNDAwKS5qc29uKHsgZXJyb3I6ICdNaXNzaW5nIHJlcXVpcmVkIGZpZWxkcycgfSk7DQogICAgfQ0KDQogICAgLy8gSWRlbXBvdGVuY3kgY2hlY2sNCiAgICBjb25zdCBleGlzdGluZyA9IGF3YWl0IGt2U3RvcmUuZ2V0KGBvcmRlcjoke3Nlc3Npb25faWR9YCk7DQogICAgaWYgKGV4aXN0aW5nKSB7DQogICAgICBjb25zb2xlLmxvZyhgW01PQ0tdIE9yZGVyICR7c2Vzc2lvbl9pZH0gYWxyZWFkeSBleGlzdHMsIHNraXBwaW5nYCk7DQogICAgICByZXR1cm4gcmVzLnN0YXR1cygyMDApLmpzb24oeyBzdWNjZXNzOiB0cnVlLCBkdXBsaWNhdGU6IHRydWUgfSk7DQogICAgfQ0KDQogICAgY29uc3Qgb3JkZXIgPSB7DQogICAgICBzZXNzaW9uSWQ6IHNlc3Npb25faWQsDQogICAgICBwYXltZW50SW50ZW50SWQ6ICdwaV9tb2NrXycgKyBEYXRlLm5vdygpLA0KICAgICAgc3Vic2NyaXB0aW9uSWQ6IG51bGwsDQogICAgICBjdXN0b21lcklkOiAnY3VzX21vY2tfJyArIERhdGUubm93KCksDQogICAgICBjdXN0b21lckVtYWlsOiBjdXN0b21lcl9lbWFpbCwNCiAgICAgIGxpbmtlZGluRW1haWw6IGxpbmtlZGluX2VtYWlsLA0KICAgICAgbGlua2VkaW5QYXNzd29yZDogbGlua2VkaW5fcGFzc3dvcmQsDQogICAgICBwbGFuOiBwbGFuLA0KICAgICAgYXVkaWVuY2U6IGF1ZGllbmNlIHx8ICdzdHVkZW50JywNCiAgICAgIGxhbmd1YWdlOiBsYW5ndWFnZSwNCiAgICAgIG1vZGU6ICdwYXltZW50JywNCiAgICAgIGFtb3VudDogYW1vdW50IHx8IDAsDQogICAgICBjdXJyZW5jeTogY3VycmVuY3ksDQogICAgICBzdGF0dXM6ICdwZW5kaW5nJywNCiAgICAgIGNyZWF0ZWRBdDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpLA0KICAgICAgdXBkYXRlZEF0OiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkNCiAgICB9Ow0KDQogICAgLy8gU3RvcmUgb3JkZXINCiAgICBhd2FpdCBrdlN0b3JlLnNldChgb3JkZXI6JHtzZXNzaW9uX2lkfWAsIEpTT04uc3RyaW5naWZ5KG9yZGVyKSk7DQoNCiAgICAvLyBVcGRhdGUgaW5kZXgNCiAgICBjb25zdCBpbmRleEtleSA9ICdvcmRlcnM6aW5kZXgnOw0KICAgIGNvbnN0IGV4aXN0aW5nSW5kZXggPSBhd2FpdCBrdlN0b3JlLmdldChpbmRleEtleSk7DQogICAgY29uc3Qgb3JkZXJJZHMgPSBleGlzdGluZ0luZGV4ID8gKHR5cGVvZiBleGlzdGluZ0luZGV4ID09PSAnc3RyaW5nJyA/IEpTT04ucGFyc2UoZXhpc3RpbmdJbmRleCkgOiBleGlzdGluZ0luZGV4KSA6IFtdOw0KICAgIGlmICghb3JkZXJJZHMuaW5jbHVkZXMoc2Vzc2lvbl9pZCkpIHsNCiAgICAgIG9yZGVySWRzLnVuc2hpZnQoc2Vzc2lvbl9pZCk7DQogICAgICBhd2FpdCBrdlN0b3JlLnNldChpbmRleEtleSwgSlNPTi5zdHJpbmdpZnkob3JkZXJJZHMpKTsNCiAgICB9DQoNCiAgICBjb25zb2xlLmxvZyhgW01PQ0tdIE9yZGVyIGNyZWF0ZWQ6ICR7c2Vzc2lvbl9pZH0g4oCUICR7cGxhbn0vJHthdWRpZW5jZX0gJHthbW91bnR9JHtjdXJyZW5jeX0g4oCUICR7Y3VzdG9tZXJfZW1haWx9YCk7DQoNCiAgICByZXMuc3RhdHVzKDIwMCkuanNvbih7IHN1Y2Nlc3M6IHRydWUsIG9yZGVyOiB7IHNlc3Npb25JZDogc2Vzc2lvbl9pZCwgcGxhbiwgYW1vdW50IH0gfSk7DQoNCiAgfSBjYXRjaCAoZXJyb3IpIHsNCiAgICBjb25zb2xlLmVycm9yKCdbTU9DS10gV2ViaG9vayBlcnJvcjonLCBlcnJvci5tZXNzYWdlKTsNCiAgICByZXMuc3RhdHVzKDUwMCkuanNvbih7IGVycm9yOiAnTW9jayB3ZWJob29rIGZhaWxlZCcgfSk7DQogIH0NCn07DQo="}
+require('./api/_env');
+const kvStore = require('./api/_kv');
+
+module.exports = async (req, res) => {
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (process.env.STRIPE_SECRET_KEY) {
+    return res.status(403).json({ error: 'Mock webhook disabled in production' });
+  }
+
+  try {
+    const {
+      session_id,
+      plan,
+      audience,
+      amount,
+      currency = 'eur',
+      language = 'fr',
+      customer_email,
+      linkedin_email
+    } = req.body || {};
+
+    if (!session_id || !plan || !customer_email || !linkedin_email) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const existing = await kvStore.get(`order:${session_id}`);
+    if (existing) {
+      return res.status(200).json({ success: true, duplicate: true });
+    }
+
+    const order = {
+      sessionId: session_id,
+      paymentIntentId: 'pi_mock_' + Date.now(),
+      subscriptionId: null,
+      customerId: 'cus_mock_' + Date.now(),
+      customerEmail: customer_email,
+      linkedinEmail: linkedin_email,
+      plan,
+      audience: audience || 'student',
+      language,
+      mode: 'payment',
+      amount: amount || 0,
+      currency,
+      status: 'pending_payment',
+      source: 'mock-checkout',
+      hasCredentials: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await kvStore.set(`order:${session_id}`, JSON.stringify(order));
+
+    const indexKey = 'orders:index';
+    const existingIndex = await kvStore.get(indexKey);
+    const orderIds = existingIndex ? (typeof existingIndex === 'string' ? JSON.parse(existingIndex) : existingIndex) : [];
+    if (!orderIds.includes(session_id)) {
+      orderIds.unshift(session_id);
+      await kvStore.set(indexKey, JSON.stringify(orderIds));
+    }
+
+    res.status(200).json({ success: true, order: { sessionId: session_id, plan, amount } });
+  } catch (error) {
+    console.error('[MOCK] Webhook error:', error.message);
+    res.status(500).json({ error: 'Mock webhook failed' });
+  }
+};

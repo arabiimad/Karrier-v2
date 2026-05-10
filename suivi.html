@@ -91,7 +91,9 @@
             margin-bottom: 24px;
             border: 1px solid;
         }
-        .eta-badge.pending  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warning); }
+        .eta-badge.pending,
+        .eta-badge.pending_payment { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warning); }
+        .eta-badge.awaiting_credentials { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.3); color: #a78bfa; }
         .eta-badge.activating { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--info); }
         .eta-badge.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--success); }
         .eta-badge.refunded { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--danger); }
@@ -298,13 +300,15 @@
         function render(order, isRefresh) {
             if (!isRefresh) orderCreatedAt = order.createdAt;
 
-            var statusProgressMap = { pending: 10, activating: 55, done: 100, refunded: 100 };
+            var statusProgressMap = { pending: 10, pending_payment: 10, awaiting_credentials: 35, activating: 70, done: 100, refunded: 100 };
             var pct = statusProgressMap[order.status] || 0;
 
             var etaText = '';
             var etaCls = order.status;
-            if (order.status === 'pending') {
-                etaText = '⏳ Livraison estimée sous 24–48h';
+            if (order.status === 'pending' || order.status === 'pending_payment') {
+                etaText = 'Paiement en attente de validation';
+            } else if (order.status === 'awaiting_credentials') {
+                etaText = 'Paiement valide, identifiants demandes';
             } else if (order.status === 'activating') {
                 etaText = '⚡ Activation en cours — sous 24h';
             } else if (order.status === 'done') {
@@ -325,19 +329,29 @@
                     { key: 'done',       icon: '✅', title: 'Activé !',             desc: 'Votre LinkedIn Premium est opérationnel' }
                   ];
 
-            var statusOrder = { pending: 0, activating: 1, done: 2, refunded: 1 };
+            if (order.status !== 'refunded') {
+                steps = [
+                    { key: 'pending_payment', icon: '1', title: 'Paiement en attente', desc: 'Votre commande est creee, le paiement est en verification' },
+                    { key: 'awaiting_credentials', icon: '2', title: 'Identifiants demandes', desc: 'Un lien securise vous permet de transmettre votre mot de passe LinkedIn' },
+                    { key: 'activating', icon: '3', title: 'Activation en cours', desc: 'Votre compte LinkedIn est en cours d activation' },
+                    { key: 'done', icon: '4', title: 'Active', desc: 'Votre LinkedIn Premium est operationnel' }
+                ];
+            }
+
+            var statusOrder = { pending: 0, pending_payment: 0, awaiting_credentials: 1, activating: 2, done: 3, refunded: 1 };
             var currentIdx = statusOrder[order.status] !== undefined ? statusOrder[order.status] : 0;
 
-            var progressLabelCls = order.status === 'done' ? 'done-label' : (order.status === 'activating' ? 'active-label' : '');
+            var progressLabelCls = (order.status === 'activating' || order.status === 'awaiting_credentials') ? 'active-label' : '';
 
             var html = '';
 
             // Progress bar
             html += '<div class="progress-container">';
             html += '<div class="progress-labels">';
-            html += '<span>Reçue</span>';
-            html += '<span class="' + progressLabelCls + '">Activation</span>';
-            html += '<span class="' + (order.status === 'done' ? 'done-label' : '') + '">Activé</span>';
+            html += '<span class="' + (currentIdx > 0 ? 'done-label' : '') + '">Paiement</span>';
+            html += '<span class="' + (order.status === 'awaiting_credentials' ? progressLabelCls : (currentIdx > 1 ? 'done-label' : '')) + '">Identifiants</span>';
+            html += '<span class="' + (order.status === 'activating' ? progressLabelCls : (currentIdx > 2 ? 'done-label' : '')) + '">Activation</span>';
+            html += '<span class="' + (order.status === 'done' ? 'done-label' : '') + '">Active</span>';
             html += '</div>';
             html += '<div class="progress-track"><div class="progress-fill' + (order.status === 'done' ? ' done' : '') + '" id="progressFill" style="width:0%"></div></div>';
             html += '</div>';
@@ -396,7 +410,7 @@
 
             // WhatsApp support (show after 48h of pending/activating)
             var showWaSupport = false;
-            if ((order.status === 'pending' || order.status === 'activating') && orderCreatedAt) {
+            if ((order.status === 'pending' || order.status === 'pending_payment' || order.status === 'awaiting_credentials' || order.status === 'activating') && orderCreatedAt) {
                 var hoursElapsed = (Date.now() - new Date(orderCreatedAt).getTime()) / (1000 * 60 * 60);
                 if (hoursElapsed >= 48) showWaSupport = true;
             }

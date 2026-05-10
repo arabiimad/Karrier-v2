@@ -92,7 +92,8 @@
             <section class="filters-row">
                 <select id="filterStatus">
                     <option value="">Tous les statuts</option>
-                    <option value="pending">En attente</option>
+                    <option value="pending_payment">Paiement en attente</option>
+                    <option value="awaiting_credentials">Identifiants demandes</option>
                     <option value="activating">En activation</option>
                     <option value="done">Terminé</option>
                     <option value="refunded">Remboursé</option>
@@ -168,7 +169,7 @@
                 <div class="auto-card">
                     <div class="auto-icon">⚡</div>
                     <h3>Traiter les commandes en attente</h3>
-                    <p>Passe automatiquement les commandes en attente depuis +24h en statut "En activation".</p>
+                    <p>Traite uniquement les anciennes commandes en attente qui ont deja des identifiants.</p>
                     <button class="auto-btn" id="btnProcessPending">Exécuter</button>
                     <div class="auto-result" id="resultProcessPending"></div>
                 </div>
@@ -188,7 +189,8 @@
                     <p>Change le statut de toutes les commandes d'un statut à un autre.</p>
                     <div class="auto-row">
                         <select id="bulkFrom" class="auto-select">
-                            <option value="pending">En attente</option>
+                            <option value="pending_payment">Paiement en attente</option>
+                            <option value="awaiting_credentials">Identifiants demandes</option>
                             <option value="activating">En activation</option>
                             <option value="done">Terminé</option>
                         </select>
@@ -242,7 +244,8 @@
                         </select>
                         <select id="exportStatus">
                             <option value="">Tous les statuts</option>
-                            <option value="pending">En attente</option>
+                            <option value="pending_payment">Paiement en attente</option>
+                            <option value="awaiting_credentials">Identifiants demandes</option>
                             <option value="activating">En activation</option>
                             <option value="done">Terminé</option>
                             <option value="refunded">Remboursé</option>
@@ -269,6 +272,7 @@
                         <div class="config-row"><span>Resend (Email)</span><span class="config-badge" id="cfgResend">—</span></div>
                         <div class="config-row"><span>Telegram</span><span class="config-badge" id="cfgTelegram">—</span></div>
                         <div class="config-row"><span>Vercel KV</span><span class="config-badge" id="cfgKV">—</span></div>
+                        <div class="config-row"><span>Chiffrement credentials</span><span class="config-badge" id="cfgCredentials">—</span></div>
                     </div>
                 </div>
             </div>

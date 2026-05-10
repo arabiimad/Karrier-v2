@@ -10,6 +10,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/automation?action=cleanup_credentials",
+      "schedule": "30 3 * * *"
+    },
+    {
       "path": "/api/automation?action=monthly_report",
       "schedule": "0 7 1 * *"
     }
