@@ -80,6 +80,7 @@
         <!-- Tabs Navigation -->
         <nav class="tabs-nav">
             <button class="tab-btn active" data-tab="orders">📋 Commandes</button>
+            <button class="tab-btn" data-tab="inbox">✉️ Inbox</button>
             <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
             <button class="tab-btn" data-tab="automation">🤖 Automatisations</button>
             <button class="tab-btn" data-tab="settings">⚙️ Outils</button>
@@ -125,6 +126,26 @@
                 </div>
                 <div class="pagination" id="pagination"></div>
             </section>
+        </div>
+
+        <!-- TAB: Inbox -->
+        <div class="tab-content" id="tab-inbox">
+            <section class="filters-row">
+                <button class="refresh-btn" id="refreshInbox">Actualiser</button>
+                <span class="orders-count" id="inboxCount"></span>
+            </section>
+            <div class="inbox-layout">
+                <section class="inbox-list-panel">
+                    <div id="inboxList" class="inbox-list">
+                        <div class="empty-state">Chargement...</div>
+                    </div>
+                </section>
+                <section class="inbox-detail-panel">
+                    <div id="inboxDetail" class="inbox-detail-empty">
+                        Sélectionnez un message pour lire et répondre.
+                    </div>
+                </section>
+            </div>
         </div>
 
         <!-- TAB: Analytics -->

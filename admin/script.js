@@ -193,6 +193,9 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
         if (btn.dataset.tab === 'referrals') {
             loadReferrals();
         }
+        if (btn.dataset.tab === 'inbox') {
+            loadInbox();
+        }
         if (btn.dataset.tab === 'analytics') loadAnalytics();
     });
 });
@@ -685,6 +688,182 @@ function renderKPIs(data) {
 
 on('refreshAnalytics', 'click', loadAnalytics);
 on('analyticsPeriod', 'change', loadAnalytics);
+
+// ===== Inbox =====
+var inboxCache = [];
+var currentInboxId = null;
+
+async function loadInbox() {
+    var list = $('inboxList');
+    var count = $('inboxCount');
+    if (!list) return;
+    list.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> Chargement...</div>';
+
+    try {
+        var res = await fetch(API_BASE + '/inbox?limit=80', { headers: authHeaders() });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Erreur inbox');
+
+        inboxCache = data.items || [];
+        if (count) count.textContent = data.total + ' message(s)';
+        renderInboxList();
+
+        if (currentInboxId) {
+            viewInboxMessage(currentInboxId);
+        }
+    } catch (err) {
+        list.innerHTML = '<div class="empty-state">Erreur de chargement inbox</div>';
+        showToast('Erreur inbox: ' + err.message, 'error');
+    }
+}
+
+function renderInboxList() {
+    var list = $('inboxList');
+    if (!list) return;
+
+    if (!inboxCache.length) {
+        list.innerHTML = '<div class="empty-state">Aucun message reçu</div>';
+        return;
+    }
+
+    list.innerHTML = inboxCache.map(function(item) {
+        var classes = 'inbox-item' + (item.read ? '' : ' unread') + (item.id === currentInboxId ? ' active' : '');
+        var orderBadge = item.orderMatches && item.orderMatches.length ? '<span class="inbox-badge">Commande ' + escapeHTML(item.orderMatches[0].sessionId) + '</span>' : '';
+        return '<div class="' + classes + '" onclick="viewInboxMessage(' + jsArg(item.id) + ')">' +
+            '<div class="inbox-item-top">' +
+                '<div class="inbox-from">' + escapeHTML(item.fromEmail || item.from || '-') + '</div>' +
+                '<div class="inbox-date">' + escapeHTML(safeDate(item.receivedAt)) + '</div>' +
+            '</div>' +
+            '<div class="inbox-subject">' + escapeHTML(item.subject || '(sans objet)') + '</div>' +
+            '<div class="inbox-preview">' + escapeHTML(item.preview || '') + '</div>' +
+            orderBadge +
+        '</div>';
+    }).join('');
+}
+
+async function viewInboxMessage(id) {
+    currentInboxId = id;
+    renderInboxList();
+    var detail = $('inboxDetail');
+    if (!detail) return;
+    detail.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> Chargement...</div>';
+
+    try {
+        var res = await fetch(API_BASE + '/inbox?id=' + encodeURIComponent(id), { headers: authHeaders() });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Message introuvable');
+
+        renderInboxDetail(data.item);
+        if (!data.item.read) markInboxRead(id, true);
+    } catch (err) {
+        detail.innerHTML = '<div class="empty-state">Erreur de chargement du message</div>';
+        showToast('Erreur message: ' + err.message, 'error');
+    }
+}
+
+function renderInboxDetail(item) {
+    var detail = $('inboxDetail');
+    if (!detail) return;
+    var orders = item.orderMatches && item.orderMatches.length
+        ? item.orderMatches.map(function(order) {
+            return '<div class="inbox-badge">Commande ' + escapeHTML(order.sessionId) + ' · ' + escapeHTML(getStatusLabel(order.status)) + '</div>';
+        }).join(' ')
+        : '<span class="inbox-meta">Aucune commande liée automatiquement</span>';
+
+    var thread = (item.messages || []).map(function(message) {
+        var label = message.direction === 'outgoing' ? 'Réponse envoyée · ' + safeDate(message.createdAt) : 'Message reçu · ' + safeDate(message.createdAt);
+        return '<div class="inbox-message ' + escapeHTML(message.direction || 'incoming') + '">' +
+            '<div class="inbox-message-label">' + escapeHTML(label) + '</div>' +
+            '<div class="inbox-message-body">' + escapeHTML(message.text || '') + '</div>' +
+        '</div>';
+    }).join('');
+
+    detail.innerHTML =
+        '<div class="inbox-thread-header">' +
+            '<h2>' + escapeHTML(item.subject || '(sans objet)') + '</h2>' +
+            '<div class="inbox-meta">' +
+                '<div><strong>De :</strong> ' + escapeHTML(item.from || '-') + '</div>' +
+                '<div><strong>À :</strong> ' + escapeHTML((item.to || []).join(', ')) + '</div>' +
+                '<div><strong>Boîte :</strong> ' + escapeHTML(item.mailbox || '-') + '</div>' +
+                '<div><strong>Reçu :</strong> ' + escapeHTML(safeDate(item.receivedAt)) + '</div>' +
+            '</div>' +
+            '<div style="margin-top:12px">' + orders + '</div>' +
+        '</div>' +
+        '<div class="inbox-thread">' + thread + '</div>' +
+        '<div class="inbox-reply-box">' +
+            '<textarea id="inboxReplyBody" class="auto-input" placeholder="Votre réponse..."></textarea>' +
+            '<div class="auto-row">' +
+                '<select id="inboxReplyFrom" class="auto-select">' +
+                    '<option value="' + escapeHTML(item.mailbox || 'contact@kareer.pro') + '">' + escapeHTML(item.mailbox || 'contact@kareer.pro') + '</option>' +
+                    '<option value="contact@kareer.pro">contact@kareer.pro</option>' +
+                    '<option value="notifications@kareer.pro">notifications@kareer.pro</option>' +
+                '</select>' +
+                '<button class="auto-btn" onclick="replyInboxMessage(' + jsArg(item.id) + ')">Répondre</button>' +
+                '<button class="auto-btn auto-btn-warning" onclick="markInboxRead(' + jsArg(item.id) + ', false)">Marquer lu</button>' +
+            '</div>' +
+            '<div class="auto-result" id="resultInboxReply"></div>' +
+        '</div>';
+}
+
+async function markInboxRead(id, silent) {
+    try {
+        var res = await fetch(API_BASE + '/inbox', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ action: 'mark_read', id: id })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (data.success) {
+            inboxCache = inboxCache.map(function(item) {
+                if (item.id === id) item.read = true;
+                return item;
+            });
+            renderInboxList();
+            if (!silent) showToast('Message marqué comme lu', 'success');
+        }
+    } catch (err) {
+        if (!silent) showToast('Erreur inbox', 'error');
+    }
+}
+
+async function replyInboxMessage(id) {
+    var bodyEl = $('inboxReplyBody');
+    var fromEl = $('inboxReplyFrom');
+    var result = $('resultInboxReply');
+    var message = bodyEl ? bodyEl.value.trim() : '';
+    if (!message) return showToast('Écrivez une réponse', 'error');
+    if (result) result.textContent = 'Envoi...';
+
+    try {
+        var res = await fetch(API_BASE + '/inbox', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                action: 'reply',
+                id: id,
+                message: message,
+                fromAddress: fromEl ? fromEl.value : undefined
+            })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Réponse non envoyée');
+
+        if (result) { result.textContent = 'Réponse envoyée'; result.className = 'auto-result auto-result-success'; }
+        if (bodyEl) bodyEl.value = '';
+        showToast('Réponse envoyée', 'success');
+        renderInboxDetail(data.item);
+        loadInbox();
+    } catch (err) {
+        if (result) { result.textContent = err.message; result.className = 'auto-result auto-result-error'; }
+        showToast('Erreur réponse: ' + err.message, 'error');
+    }
+}
+
+on('refreshInbox', 'click', loadInbox);
 
 // ===== Automation Buttons =====
 on('btnProcessPending', 'click', async function() {
