@@ -57,6 +57,9 @@ module.exports = async (req, res) => {
       case 'send_reminder':
         result = await sendReminder(session_id);
         break;
+      case 'send_legacy_customer_offer':
+        result = await sendLegacyCustomerOffer(req.body.email, req.body.firstName || req.body.first_name || req.body.prenom);
+        break;
       case 'bulk_update':
         result = await bulkUpdateStatus(req.body.from_status, req.body.to_status);
         break;
@@ -80,7 +83,7 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('Automation error:', error.message);
-    res.status(500).json({ error: 'Automation failed' });
+    res.status(error.statusCode || 500).json({ error: error.message || 'Automation failed' });
   }
 };
 
@@ -185,6 +188,104 @@ async function sendReminder(sessionId) {
   }
 
   return { sent: false, reason: 'No email configured' };
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+async function ensureLegacyCustomerPromoCode() {
+  const code = 'ANCIENCLIENT10';
+  const key = `promo:${code}`;
+  const existingData = await kvStore.get(key);
+  const existing = existingData ? (typeof existingData === 'string' ? JSON.parse(existingData) : existingData) : {};
+  const now = new Date().toISOString();
+  const promo = {
+    ...existing,
+    type: 'fixed',
+    value: 10,
+    description: 'Offre anciens clients Kareer - 10 euros sur tous les abonnements Premium',
+    maxUses: null,
+    expiresAt: existing.expiresAt || null,
+    minAmount: 0,
+    applicablePlans: 'all',
+    active: true,
+    usedCount: existing.usedCount || 0,
+    createdAt: existing.createdAt || now,
+    updatedAt: now,
+    usageHistory: existing.usageHistory || []
+  };
+  await kvStore.set(key, JSON.stringify(promo));
+  return { code, created: !existingData };
+}
+
+async function sendLegacyCustomerOffer(email, firstName) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedFirstName = String(firstName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+
+  if (!isValidEmail(normalizedEmail)) {
+    const error = new Error('Adresse email invalide');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!normalizedFirstName) {
+    const error = new Error('Prénom requis');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const promo = await ensureLegacyCustomerPromoCode();
+
+  if (!process.env.RESEND_API_KEY) {
+    return { sent: false, reason: 'RESEND_API_KEY not configured', email: normalizedEmail, promoCode: promo.code, promoCreated: promo.created };
+  }
+
+  const { Resend } = require('resend');
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const siteUrl = getSiteUrl();
+  const offerUrl = `${siteUrl}/#pricing`;
+  const subject = 'Une offre pour continuer avec LinkedIn Premium — Kareer';
+  const title = `Bonjour ${normalizedFirstName}`;
+  const preheader = '10€ de réduction avec le code ANCIENCLIENT10.';
+  const body = [
+    `On espère que vous avez bien profité de votre abonnement LinkedIn Premium l’année dernière.`,
+    `Depuis, Kareer a évolué : nous avons créé notre propre solution, plus pratique pour vous et pour nous.`,
+    `On a pensé à vous pour continuer à évoluer dans votre carrière professionnelle : profitez de 10€ de réduction sur n’importe quel abonnement Premium avec le code promo ci-dessous.`
+  ];
+  const content = `
+    ${body.map(paragraph => `<p style="margin:0 0 16px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(paragraph)}</p>`).join('')}
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:22px;margin:24px 0;text-align:center">
+      <div style="color:#166534;font-size:13px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">Votre code promo</div>
+      <div style="background:#ffffff;border:2px dashed #86efac;border-radius:10px;padding:16px;color:#15803d;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:900;letter-spacing:2px">${promo.code}</div>
+      <div style="color:#166534;font-size:13px;margin-top:10px">10€ de réduction sur n’importe quel abonnement Premium.</div>
+    </div>
+    ${emailButton('Voir les abonnements Premium', offerUrl)}
+    <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6">Si vous avez une question, répondez simplement à cet email. On vous accompagne comme avant, avec un parcours plus simple.</p>
+  `;
+
+  await resend.emails.send({
+    from: 'Kareer <notifications@kareer.pro>',
+    to: normalizedEmail,
+    subject,
+    html: buildEmailHtml({
+      siteUrl,
+      headerColor: '#15803d',
+      title,
+      preheader,
+      content,
+      footer: 'Vous recevez cet email car vous avez déjà été client Kareer.',
+      lang: 'fr'
+    }),
+    text: `${title}\n\n${body.join('\n\n')}\n\nCode promo: ${promo.code}\nVoir les offres: ${offerUrl}`
+  });
+
+  const logData = await kvStore.get('legacy-customer-offer:log');
+  const logs = logData ? (typeof logData === 'string' ? JSON.parse(logData) : logData) : [];
+  logs.unshift({ email: normalizedEmail, firstName: normalizedFirstName, promoCode: promo.code, sentAt: new Date().toISOString() });
+  if (logs.length > 500) logs.length = 500;
+  await kvStore.set('legacy-customer-offer:log', JSON.stringify(logs));
+
+  return { sent: true, email: normalizedEmail, firstName: normalizedFirstName, promoCode: promo.code, promoCreated: promo.created };
 }
 
 async function bulkUpdateStatus(fromStatus, toStatus) {

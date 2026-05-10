@@ -713,6 +713,50 @@ on('btnSendReminder', 'click', async function() {
     this.disabled = false;
 });
 
+on('btnSendLegacyClientOffer', 'click', async function() {
+    var emailEl = $('legacyClientEmail');
+    var firstNameEl = $('legacyClientFirstName');
+    var email = emailEl ? emailEl.value.trim() : '';
+    var firstName = firstNameEl ? firstNameEl.value.trim() : '';
+    if (!email) return showToast('Entrez une adresse email', 'error');
+    if (!firstName) return showToast('Entrez le prénom', 'error');
+    if (!confirm('Envoyer l’offre ancien client à ' + firstName + ' <' + email + '> ?')) return;
+
+    this.disabled = true;
+    var result = $('resultLegacyClientOffer');
+    if (result) result.textContent = 'Envoi...';
+    try {
+        var res = await fetch(API_BASE + '/automation', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                action: 'send_legacy_customer_offer',
+                email: email,
+                firstName: firstName
+            })
+        });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (data.success && data.result && data.result.sent) {
+            if (result) {
+                result.textContent = 'Email envoyé à ' + data.result.email + ' avec le code ' + data.result.promoCode;
+                result.className = 'auto-result auto-result-success';
+            }
+            showToast('Offre envoyée !', 'success');
+            if (emailEl) emailEl.value = '';
+            if (firstNameEl) firstNameEl.value = '';
+        } else {
+            var message = data.error || (data.result && data.result.reason) || 'Non envoyé';
+            if (result) { result.textContent = message; result.className = 'auto-result auto-result-error'; }
+            showToast(message, 'error');
+        }
+    } catch (err) {
+        if (result) { result.textContent = 'Erreur réseau'; result.className = 'auto-result auto-result-error'; }
+        showToast('Erreur réseau', 'error');
+    }
+    this.disabled = false;
+});
+
 on('btnBulkUpdate', 'click', async function() {
     var fromEl = $('bulkFrom'), toEl = $('bulkTo');
     if (!fromEl || !toEl) return;
