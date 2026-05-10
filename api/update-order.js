@@ -269,6 +269,15 @@ async function revealCredentials(sessionId, res) {
   });
 }
 
+function escapeEmailHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function sendCredentialLinkEmail(order, link, expiresAt) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return false;
 
@@ -276,30 +285,82 @@ async function sendCredentialLinkEmail(order, link, expiresAt) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
     const isFr = lang === 'fr';
+    const siteUrl = (process.env.SITE_URL || 'https://kareer.pro').replace(/\/$/, '');
+    const logoUrl = `${siteUrl}/kareer-logo.png`;
+    const expiresLabel = new Date(expiresAt).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     const subject = isFr
-      ? 'Lien securise pour votre activation Kareer'
+      ? 'Lien sécurisé pour votre activation Kareer'
       : 'Secure link for your Kareer activation';
+    const title = isFr ? 'Paiement validé' : 'Payment confirmed';
+    const intro = isFr
+      ? 'Votre paiement est validé. Pour démarrer l’activation, transmettez votre mot de passe LinkedIn via notre page sécurisée.'
+      : 'Your payment is confirmed. To start activation, submit your LinkedIn password through our secure page.';
+    const securityNote = isFr
+      ? 'Votre mot de passe est chiffré côté serveur, accessible uniquement ponctuellement par l’équipe d’activation, puis supprimé après activation.'
+      : 'Your password is encrypted server-side, only available temporarily to the activation team, then deleted after activation.';
+    const buttonLabel = isFr ? 'Transmettre mes identifiants' : 'Submit my credentials';
+    const fallbackLabel = isFr ? 'Si le bouton ne fonctionne pas, copiez ce lien :' : 'If the button does not work, copy this link:';
+    const preheader = isFr
+      ? 'Votre paiement est validé. Utilisez ce lien sécurisé pour transmettre vos identifiants LinkedIn.'
+      : 'Your payment is confirmed. Use this secure link to submit your LinkedIn credentials.';
+    const safeSessionId = escapeEmailHtml(order.sessionId);
+    const safeLinkedinEmail = escapeEmailHtml(order.linkedinEmail || '-');
+    const safeLink = escapeEmailHtml(link);
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject,
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
-          <div style="background:#1565C0;padding:28px;text-align:center">
-            <img src="${process.env.SITE_URL || 'https://kareer.pro'}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:10px">
-            <h1 style="margin:0;color:#fff;font-size:22px">${isFr ? 'Paiement valide' : 'Payment confirmed'}</h1>
-          </div>
-          <div style="padding:28px;color:#1f2937">
-            <p>${isFr ? 'Votre paiement a ete valide. Pour demarrer l activation, transmettez votre mot de passe LinkedIn via le lien securise ci-dessous.' : 'Your payment has been confirmed. To start activation, submit your LinkedIn password through the secure link below.'}</p>
-            <p style="font-size:14px;color:#64748b">${isFr ? 'Le lien expire le' : 'The link expires on'} ${new Date(expiresAt).toLocaleString('fr-FR')}.</p>
-            <div style="text-align:center;margin:26px 0">
-              <a href="${link}" style="background:#1565C0;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:700;display:inline-block">${isFr ? 'Transmettre mes identifiants' : 'Submit my credentials'}</a>
-            </div>
-            <p style="font-size:13px;color:#64748b">${isFr ? 'Votre mot de passe est chiffre cote serveur, accessible uniquement a l equipe d activation, puis supprime apres activation.' : 'Your password is encrypted server-side, available only to the activation team, then deleted after activation.'}</p>
-          </div>
-        </div>
-      `
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheader}</div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f7fb;margin:0;padding:28px 12px;font-family:Arial,Helvetica,sans-serif;color:#111827">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
+                <tr>
+                  <td align="center" style="background:#1565C0;padding:30px 28px">
+                    <img src="${logoUrl}" width="56" height="56" alt="Kareer" style="display:block;width:56px;height:56px;border:0;margin:0 auto 14px">
+                    <h1 style="margin:0;color:#ffffff;font-size:24px;line-height:1.3;font-weight:800">${title}</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:30px 32px">
+                    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${intro}</p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:22px 0;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px">
+                      <tr>
+                        <td style="padding:12px 14px;color:#64748b;font-size:13px;border-bottom:1px solid #e5e7eb">${isFr ? 'Commande' : 'Order'}</td>
+                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700;border-bottom:1px solid #e5e7eb">${safeSessionId}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:12px 14px;color:#64748b;font-size:13px;border-bottom:1px solid #e5e7eb">${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}</td>
+                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700;border-bottom:1px solid #e5e7eb">${safeLinkedinEmail}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:12px 14px;color:#64748b;font-size:13px">${isFr ? 'Expiration du lien' : 'Link expires'}</td>
+                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700">${expiresLabel}</td>
+                      </tr>
+                    </table>
+                    <div style="text-align:center;margin:28px 0">
+                      <a href="${link}" style="background:#1565C0;color:#ffffff;text-decoration:none;padding:15px 30px;border-radius:9px;font-size:15px;font-weight:800;display:inline-block">${buttonLabel}</a>
+                    </div>
+                    <p style="margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.6">${securityNote}</p>
+                    <p style="margin:18px 0 0;color:#64748b;font-size:12px;line-height:1.5">${fallbackLabel}<br>
+                      <a href="${link}" style="color:#1565C0;word-break:break-all">${safeLink}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      `,
+      text: `${title}\n\n${intro}\n\n${isFr ? 'Commande' : 'Order'}: ${order.sessionId}\n${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}: ${order.linkedinEmail || '-'}\n${isFr ? 'Expiration du lien' : 'Link expires'}: ${expiresLabel}\n\n${buttonLabel}: ${link}\n\n${securityNote}`
     });
 
     return true;
