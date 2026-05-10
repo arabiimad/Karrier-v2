@@ -4,6 +4,15 @@ const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { Resend } = require('resend');
 const { generateToken, hashToken, decryptSecret } = require('./_credentials');
+const {
+  buildEmailHtml,
+  detailTable,
+  emailButton,
+  escapeHtml,
+  formatCurrency,
+  formatPlan,
+  getSiteUrl
+} = require('./_email');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
 const LINK_TTL_MS = 72 * 60 * 60 * 1000;
@@ -269,15 +278,6 @@ async function revealCredentials(sessionId, res) {
   });
 }
 
-function escapeEmailHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 async function sendCredentialLinkEmail(order, link, expiresAt) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return false;
 
@@ -285,8 +285,7 @@ async function sendCredentialLinkEmail(order, link, expiresAt) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
     const isFr = lang === 'fr';
-    const siteUrl = (process.env.SITE_URL || 'https://kareer.pro').replace(/\/$/, '');
-    const logoUrl = `${siteUrl}/kareer-logo.png`;
+    const siteUrl = getSiteUrl();
     const expiresLabel = new Date(expiresAt).toLocaleString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
@@ -309,57 +308,34 @@ async function sendCredentialLinkEmail(order, link, expiresAt) {
     const preheader = isFr
       ? 'Votre paiement est validé. Utilisez ce lien sécurisé pour transmettre vos identifiants LinkedIn.'
       : 'Your payment is confirmed. Use this secure link to submit your LinkedIn credentials.';
-    const safeSessionId = escapeEmailHtml(order.sessionId);
-    const safeLinkedinEmail = escapeEmailHtml(order.linkedinEmail || '-');
-    const safeLink = escapeEmailHtml(link);
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(intro)}</p>
+      ${detailTable([
+        { label: isFr ? 'Commande' : 'Order', value: order.sessionId },
+        { label: isFr ? 'Compte LinkedIn' : 'LinkedIn account', value: order.linkedinEmail || '-' },
+        { label: isFr ? 'Expiration du lien' : 'Link expires', value: expiresLabel }
+      ])}
+      ${emailButton(buttonLabel, link)}
+      <p style="margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.6">${escapeHtml(securityNote)}</p>
+      <p style="margin:18px 0 0;color:#64748b;font-size:12px;line-height:1.5">${escapeHtml(fallbackLabel)}<br>
+        <a href="${escapeHtml(link)}" style="color:#1565C0;word-break:break-all">${escapeHtml(link)}</a>
+      </p>
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject,
-      html: `
-        <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheader}</div>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f7fb;margin:0;padding:28px 12px;font-family:Arial,Helvetica,sans-serif;color:#111827">
-          <tr>
-            <td align="center">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
-                <tr>
-                  <td align="center" style="background:#1565C0;padding:30px 28px">
-                    <img src="${logoUrl}" width="56" height="56" alt="Kareer" style="display:block;width:56px;height:56px;border:0;margin:0 auto 14px">
-                    <h1 style="margin:0;color:#ffffff;font-size:24px;line-height:1.3;font-weight:800">${title}</h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:30px 32px">
-                    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${intro}</p>
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:22px 0;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px">
-                      <tr>
-                        <td style="padding:12px 14px;color:#64748b;font-size:13px;border-bottom:1px solid #e5e7eb">${isFr ? 'Commande' : 'Order'}</td>
-                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700;border-bottom:1px solid #e5e7eb">${safeSessionId}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:12px 14px;color:#64748b;font-size:13px;border-bottom:1px solid #e5e7eb">${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}</td>
-                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700;border-bottom:1px solid #e5e7eb">${safeLinkedinEmail}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:12px 14px;color:#64748b;font-size:13px">${isFr ? 'Expiration du lien' : 'Link expires'}</td>
-                        <td align="right" style="padding:12px 14px;color:#111827;font-size:13px;font-weight:700">${expiresLabel}</td>
-                      </tr>
-                    </table>
-                    <div style="text-align:center;margin:28px 0">
-                      <a href="${link}" style="background:#1565C0;color:#ffffff;text-decoration:none;padding:15px 30px;border-radius:9px;font-size:15px;font-weight:800;display:inline-block">${buttonLabel}</a>
-                    </div>
-                    <p style="margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.6">${securityNote}</p>
-                    <p style="margin:18px 0 0;color:#64748b;font-size:12px;line-height:1.5">${fallbackLabel}<br>
-                      <a href="${link}" style="color:#1565C0;word-break:break-all">${safeLink}</a>
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      `,
+      html: buildEmailHtml({
+        siteUrl,
+        title,
+        preheader,
+        content,
+        footer: isFr
+          ? 'Lien sécurisé envoyé après validation manuelle du paiement.'
+          : 'Secure link sent after manual payment confirmation.',
+        lang
+      }),
       text: `${title}\n\n${intro}\n\n${isFr ? 'Commande' : 'Order'}: ${order.sessionId}\n${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}: ${order.linkedinEmail || '-'}\n${isFr ? 'Expiration du lien' : 'Link expires'}: ${expiresLabel}\n\n${buttonLabel}: ${link}\n\n${securityNote}`
     });
 
@@ -470,7 +446,7 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const siteUrl = getSiteUrl();
 
     const messages = {
       fr: {
@@ -501,9 +477,9 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
 
     messages.fr.pending_payment = messages.fr.pending;
     messages.fr.awaiting_credentials = {
-      subject: 'Paiement valide - identifiants demandes',
-      title: 'Paiement valide',
-      body: 'Votre paiement est valide. Vous allez recevoir un lien securise pour transmettre votre mot de passe LinkedIn.'
+      subject: 'Paiement validé — identifiants demandés',
+      title: 'Paiement validé',
+      body: 'Votre paiement est validé. Vous allez recevoir un lien sécurisé pour transmettre votre mot de passe LinkedIn.'
     };
     messages.en.pending_payment = messages.en.pending;
     messages.en.awaiting_credentials = {
@@ -520,41 +496,40 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
     if (!t) return;
 
     const referralSection = (toStatus === 'done' && order.referralCode) ? `
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin-top:24px">
-              <h3 style="color:#15803d;margin:0 0 8px;font-size:15px">${lang === 'fr' ? '🎁 Parrainez vos amis et gagnez !' : lang === 'es' ? '🎁 ¡Refiere amigos y gana!' : lang === 'de' ? '🎁 Freunde werben und verdienen!' : '🎁 Refer friends and earn!'}</h3>
-              <p style="color:#166534;font-size:13px;margin:0 0 12px">${lang === 'fr' ? 'Partagez votre code de parrainage et obtenez des avantages exclusifs.' : lang === 'es' ? 'Comparte tu código de referido y obtén beneficios exclusivos.' : lang === 'de' ? 'Teilen Sie Ihren Empfehlungscode und erhalten Sie exklusive Vorteile.' : 'Share your referral code and get exclusive benefits.'}</p>
-              <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;font-size:20px;font-weight:800;letter-spacing:4px;color:#15803d">${order.referralCode}</div>
-              <p style="text-align:center;margin:10px 0 0;font-size:12px;color:#166534">
-                <a href="${siteUrl}/?ref=${order.referralCode}" style="color:#15803d">${siteUrl}/?ref=${order.referralCode}</a>
-              </p>
-            </div>` : '';
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin-top:24px">
+        <h3 style="color:#15803d;margin:0 0 8px;font-size:15px">${escapeHtml(lang === 'fr' ? 'Parrainez vos amis et gagnez' : lang === 'es' ? 'Refiere amigos y gana' : lang === 'de' ? 'Freunde werben und verdienen' : 'Refer friends and earn')}</h3>
+        <p style="color:#166534;font-size:13px;margin:0 0 12px;line-height:1.5">${escapeHtml(lang === 'fr' ? 'Partagez votre code de parrainage et obtenez des avantages exclusifs.' : lang === 'es' ? 'Comparte tu código de referido y obtén beneficios exclusivos.' : lang === 'de' ? 'Teilen Sie Ihren Empfehlungscode und erhalten Sie exklusive Vorteile.' : 'Share your referral code and get exclusive benefits.')}</p>
+        <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;font-size:20px;font-weight:800;letter-spacing:4px;color:#15803d">${escapeHtml(order.referralCode)}</div>
+        <p style="text-align:center;margin:10px 0 0;font-size:12px;color:#166534">
+          <a href="${siteUrl}/?ref=${encodeURIComponent(order.referralCode)}" style="color:#15803d">${escapeHtml(`${siteUrl}/?ref=${order.referralCode}`)}</a>
+        </p>
+      </div>` : '';
+
+    const trackLabel = lang === 'fr' ? 'Suivre ma commande' : lang === 'es' ? 'Seguir mi pedido' : lang === 'de' ? 'Meine Bestellung verfolgen' : 'Track my order';
+    const amountLabel = lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount';
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
+      ${detailTable([
+        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
+        { label: amountLabel, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
+        { label: lang === 'fr' ? 'Commande' : 'Order', value: order.sessionId }
+      ])}
+      ${referralSection}
+      ${emailButton(trackLabel, `${siteUrl}/suivi?id=${encodeURIComponent(order.sessionId)}`)}
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject: t.subject,
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
-          <div style="background:#1565C0;padding:32px;text-align:center">
-            <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:12px">
-            <h1 style="color:#ffffff;margin:0;font-size:22px">${t.title}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.plan} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-            </table>
-            ${referralSection}
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${lang === 'fr' ? 'Suivre ma commande' : lang === 'es' ? 'Seguir mi pedido' : lang === 'de' ? 'Meine Bestellung verfolgen' : 'Track my order'}</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Kareer — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : lang === 'es' ? 'a precio reducido' : lang === 'de' ? 'zum reduzierten Preis' : 'at reduced price'}
-          </div>
-        </div>
-      `
+      html: buildEmailHtml({
+        siteUrl,
+        title: t.title,
+        preheader: t.body,
+        content,
+        lang
+      }),
+      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${amountLabel}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${trackLabel}: ${siteUrl}/suivi?id=${order.sessionId}`
     });
   } catch (error) {
     console.error('Status email error:', error.message);

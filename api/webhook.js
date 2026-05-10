@@ -1,6 +1,16 @@
 require('./_env');
 const Stripe = require('stripe');
 const kvStore = require('./_kv');
+const {
+  buildEmailHtml,
+  detailTable,
+  emailButton,
+  escapeHtml,
+  formatCurrency,
+  formatPlan,
+  getSiteUrl,
+  stepsBox
+} = require('./_email');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -122,29 +132,36 @@ async function handlePaymentFailed(paymentIntent) {
   try {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const siteUrl = getSiteUrl();
+    const amount = formatCurrency((paymentIntent.amount || 0) / 100, String(paymentIntent.currency || 'eur').toUpperCase(), 'fr');
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">
+        Votre paiement n’a pas pu être traité. Cela peut venir d’un solde insuffisant, d’une carte expirée ou d’une validation bancaire non terminée.
+      </p>
+      ${detailTable([
+        { label: 'Email', value: email },
+        { label: 'Montant', value: amount }
+      ])}
+      <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6">
+        Si le problème persiste, contactez-nous et nous vous aiderons à finaliser la commande.
+      </p>
+      ${emailButton('Réessayer le paiement', `${siteUrl}/#pricing`)}
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: email,
-      subject: 'Problème avec votre paiement — Karrier',
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
-          <div style="background:#EF4444;padding:32px;text-align:center">
-            <h1 style="color:#fff;margin:0;font-size:22px">Paiement échoué</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">Votre paiement n'a pas pu être traité. Cela peut être dû à un solde insuffisant ou une carte expirée.</p>
-            <p style="color:#333;font-size:16px;line-height:1.6">Vous pouvez réessayer en cliquant ci-dessous :</p>
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/#pricing" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">Réessayer le paiement</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Si le problème persiste, contactez-nous à <a href="mailto:contact@kareer.pro" style="color:#1565C0">contact@kareer.pro</a>
-          </div>
-        </div>
-      `
+      subject: 'Problème avec votre paiement — Kareer',
+      html: buildEmailHtml({
+        siteUrl,
+        headerColor: '#dc2626',
+        title: 'Paiement échoué',
+        preheader: 'Votre paiement n’a pas pu être traité.',
+        content,
+        footer: 'Besoin d’aide ? Répondez à cet email ou contactez-nous sur WhatsApp.',
+        lang: 'fr'
+      }),
+      text: `Paiement échoué\n\nVotre paiement n’a pas pu être traité.\nMontant: ${amount}\nRéessayer: ${siteUrl}/#pricing`
     });
 
     if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
@@ -170,62 +187,57 @@ async function sendWelcomeEmail(order) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const siteUrl = getSiteUrl();
 
     const t = lang === 'fr' ? {
-      subject: 'Bienvenue chez Karrier ! Votre commande est confirmée',
-      title: 'Merci pour votre commande !',
-      body: 'Nous avons bien reçu votre paiement. Notre équipe va procéder à l\'activation de votre compte LinkedIn Premium dans les prochaines heures.',
-      steps_title: 'Prochaines étapes',
-      step1: 'Nous vérifions vos informations LinkedIn',
-      step2: 'Activation de votre compte Premium (24-48h)',
-      step3: 'Vous recevrez un email de confirmation',
+      subject: 'Commande confirmée — Kareer',
+      title: 'Commande confirmée',
+      body: 'Nous avons bien reçu votre paiement. Pour démarrer l’activation, vous recevrez un lien sécurisé si vos identifiants LinkedIn sont nécessaires.',
+      stepsTitle: 'Prochaines étapes',
+      steps: [
+        'Nous validons les informations de commande.',
+        'Vous transmettez vos identifiants via le lien sécurisé si besoin.',
+        'Notre équipe lance l’activation LinkedIn Premium.'
+      ],
       track: 'Suivre ma commande',
-      delay: 'Délai estimé : 24 à 48 heures'
+      delay: 'Délai estimé : 24 à 48 heures.'
     } : {
-      subject: 'Welcome to Karrier! Your order is confirmed',
-      title: 'Thank you for your order!',
-      body: 'We have received your payment. Our team will activate your LinkedIn Premium account within the next few hours.',
-      steps_title: 'Next steps',
-      step1: 'We verify your LinkedIn information',
-      step2: 'Premium account activation (24-48h)',
-      step3: 'You will receive a confirmation email',
+      subject: 'Order confirmed — Kareer',
+      title: 'Order confirmed',
+      body: 'We have received your payment. To start activation, you will receive a secure link if your LinkedIn credentials are required.',
+      stepsTitle: 'Next steps',
+      steps: [
+        'We validate the order details.',
+        'You submit credentials through the secure link if needed.',
+        'Our team starts the LinkedIn Premium activation.'
+      ],
       track: 'Track my order',
-      delay: 'Estimated time: 24 to 48 hours'
+      delay: 'Estimated time: 24 to 48 hours.'
     };
+    const amountLabel = lang === 'fr' ? 'Montant' : 'Amount';
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
+      ${detailTable([
+        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
+        { label: amountLabel, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
+        { label: lang === 'fr' ? 'Commande' : 'Order', value: order.sessionId }
+      ])}
+      ${stepsBox(t.stepsTitle, t.steps, t.delay)}
+      ${emailButton(t.track, `${siteUrl}/suivi?id=${encodeURIComponent(order.sessionId)}`)}
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject: t.subject,
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
-            <img src="${siteUrl}/kareer-logo.png" alt="Karrier" style="width:48px;height:48px;margin-bottom:16px">
-            <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.plan} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-            </table>
-            <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
-              <h3 style="color:#1565C0;margin:0 0 12px;font-size:15px">${t.steps_title}</h3>
-              <p style="margin:6px 0;color:#333;font-size:14px">1️⃣ ${t.step1}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">2️⃣ ${t.step2}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">3️⃣ ${t.step3}</p>
-              <p style="margin:12px 0 0;color:#666;font-size:13px;font-style:italic">⏱️ ${t.delay}</p>
-            </div>
-            <div style="text-align:center;margin-top:24px">
-              <a href="${siteUrl}/suivi?id=${order.sessionId}" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${t.track}</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Karrier — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : 'at reduced price'}
-          </div>
-        </div>
-      `
+      html: buildEmailHtml({
+        siteUrl,
+        title: t.title,
+        preheader: t.body,
+        content,
+        lang
+      }),
+      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${amountLabel}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${t.track}: ${siteUrl}/suivi?id=${order.sessionId}`
     });
   } catch (error) {
     console.error('Welcome email error:', error.message);
@@ -287,22 +299,34 @@ async function sendEmailNotification(order) {
   try {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const siteUrl = getSiteUrl();
+    const plan = formatPlan(order.plan, order.audience, 'fr');
+    const amount = formatCurrency(order.amount, order.currency || 'EUR', 'fr');
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Une nouvelle commande Stripe vient d’être confirmée.</p>
+      ${detailTable([
+        { label: 'Plan', value: plan },
+        { label: 'Montant', value: amount },
+        { label: 'Email client', value: order.customerEmail },
+        { label: 'Email LinkedIn', value: order.linkedinEmail },
+        { label: 'Commande', value: order.sessionId }
+      ])}
+      ${emailButton('Ouvrir le dashboard', `${siteUrl}/admin`)}
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com',
-      subject: `Nouvelle commande — ${order.plan} — ${order.amount}€`,
-      html: `
-        <h2>Nouvelle commande Karrier</h2>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Plan</strong></td><td style="padding:8px;border:1px solid #ddd">${order.plan} (${order.audience})</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Montant</strong></td><td style="padding:8px;border:1px solid #ddd">${order.amount}€</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email client</strong></td><td style="padding:8px;border:1px solid #ddd">${order.customerEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email LinkedIn</strong></td><td style="padding:8px;border:1px solid #ddd">${order.linkedinEmail}</td></tr>
-        </table>
-        <br>
-        <a href="https://kareer.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px">Ouvrir le Dashboard</a>
-      `
+      subject: `Nouvelle commande — ${plan} — ${amount}`,
+      html: buildEmailHtml({
+        siteUrl,
+        title: 'Nouvelle commande Stripe',
+        preheader: `${plan} — ${amount}`,
+        content,
+        footer: 'Notification interne Kareer.',
+        lang: 'fr'
+      }),
+      text: `Nouvelle commande Stripe\n\nPlan: ${plan}\nMontant: ${amount}\nEmail client: ${order.customerEmail}\nEmail LinkedIn: ${order.linkedinEmail}\nCommande: ${order.sessionId}\nAdmin: ${siteUrl}/admin`
     });
   } catch (error) {
     console.error('Email error:', error.message);

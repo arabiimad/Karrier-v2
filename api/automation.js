@@ -2,6 +2,15 @@ require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
+const {
+  buildEmailHtml,
+  detailTable,
+  emailButton,
+  escapeHtml,
+  formatCurrency,
+  formatPlan,
+  getSiteUrl
+} = require('./_email');
 const checkRate = rateLimit({ windowMs: 60000, max: 10 });
 
 module.exports = async (req, res) => {
@@ -120,12 +129,13 @@ async function sendReminder(sessionId) {
   if (process.env.RESEND_API_KEY && order.customerEmail) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const siteUrl = getSiteUrl();
 
     const statusMessages = {
       fr: {
         pending: 'Votre commande est en attente de traitement.',
         pending_payment: 'Votre paiement est en attente de validation.',
-        awaiting_credentials: 'Votre paiement est valide. Nous attendons vos identifiants via le lien securise.',
+        awaiting_credentials: 'Votre paiement est validé. Nous attendons vos identifiants via le lien sécurisé.',
         activating: 'Votre compte LinkedIn est en cours d\'activation.',
         done: 'Votre compte LinkedIn Premium est activé !',
         refunded: 'Votre commande a été remboursée.'
@@ -142,25 +152,33 @@ async function sendReminder(sessionId) {
 
     const lang = order.language || 'fr';
     const messages = statusMessages[lang] || statusMessages.fr;
+    const title = lang === 'fr' ? 'Mise à jour de votre commande' : 'Order update';
+    const statusLabel = lang === 'fr' ? 'Statut' : 'Status';
+    const amountLabel = lang === 'fr' ? 'Montant' : 'Amount';
+    const cta = lang === 'fr' ? 'Voir le statut' : 'View status';
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(messages[order.status] || '')}</p>
+      ${detailTable([
+        { label: statusLabel, value: messages[order.status] || order.status },
+        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
+        { label: amountLabel, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
+        { label: lang === 'fr' ? 'Commande' : 'Order', value: order.sessionId }
+      ])}
+      ${emailButton(cta, `${siteUrl}/suivi?id=${encodeURIComponent(sessionId)}`)}
+    `;
 
     await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
-      subject: lang === 'fr' ? 'Mise à jour de votre commande Karrier' : 'Karrier Order Update',
-      html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
-          <img src="https://kareer.pro/kareer-logo.png" alt="Karrier" style="width:60px;margin-bottom:20px">
-          <h2>${lang === 'fr' ? 'Mise à jour de votre commande' : 'Order Update'}</h2>
-          <p><strong>${lang === 'fr' ? 'Statut' : 'Status'}:</strong> ${messages[order.status]}</p>
-          <p><strong>${lang === 'fr' ? 'Plan' : 'Plan'}:</strong> ${order.plan} (${order.audience})</p>
-          <p><strong>${lang === 'fr' ? 'Montant' : 'Amount'}:</strong> ${order.amount}€</p>
-          <br>
-          <a href="https://kareer.pro/api/order-status?session_id=${sessionId}" 
-             style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block">
-            ${lang === 'fr' ? 'Voir le statut' : 'View Status'}
-          </a>
-        </div>
-      `
+      subject: lang === 'fr' ? 'Mise à jour de votre commande Kareer' : 'Kareer order update',
+      html: buildEmailHtml({
+        siteUrl,
+        title,
+        preheader: messages[order.status] || '',
+        content,
+        lang
+      }),
+      text: `${title}\n\n${messages[order.status] || ''}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${amountLabel}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${cta}: ${siteUrl}/suivi?id=${sessionId}`
     });
 
     return { sent: true, email: order.customerEmail };
@@ -408,7 +426,7 @@ async function sendRenewalReminders(daysBefore) {
 
   const { Resend } = require('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+  const siteUrl = getSiteUrl();
 
   const indexData = await kvStore.get('orders:index');
   const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
@@ -479,32 +497,30 @@ async function sendRenewalReminders(daysBefore) {
       };
 
       try {
+        const renewalContent = `
+          <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px;margin:24px 0">
+            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>1.</strong> ${escapeHtml(t.benefit1)}</p>
+            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>2.</strong> ${escapeHtml(t.benefit2)}</p>
+            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>3.</strong> ${escapeHtml(t.benefit3)}</p>
+          </div>
+          ${emailButton(t.cta, `${siteUrl}/#pricing`)}
+        `;
+
         await resend.emails.send({
           from: 'Kareer <notifications@kareer.pro>',
           to: order.customerEmail,
           subject: t.subject,
-          html: `
-            <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-              <div style="background:linear-gradient(135deg,#F59E0B,#EF4444);padding:40px 32px;text-align:center">
-                <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
-                <h1 style="color:#fff;margin:0;font-size:24px">⏰ ${t.title}</h1>
-              </div>
-              <div style="padding:32px">
-                <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-                <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
-                  <p style="margin:6px 0;color:#333;font-size:14px">✅ ${t.benefit1}</p>
-                  <p style="margin:6px 0;color:#333;font-size:14px">⚡ ${t.benefit2}</p>
-                  <p style="margin:6px 0;color:#333;font-size:14px">💬 ${t.benefit3}</p>
-                </div>
-                <div style="text-align:center;margin-top:24px">
-                  <a href="${siteUrl}/#pricing" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:16px">${t.cta}</a>
-                </div>
-              </div>
-              <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-                ${t.footer}
-              </div>
-            </div>
-          `
+          html: buildEmailHtml({
+            siteUrl,
+            headerColor: '#ea580c',
+            title: t.title,
+            preheader: t.body,
+            content: renewalContent,
+            footer: t.footer,
+            lang
+          }),
+          text: `${t.title}\n\n${t.body}\n\n- ${t.benefit1}\n- ${t.benefit2}\n- ${t.benefit3}\n\n${t.cta}: ${siteUrl}/#pricing`
         });
 
         // Mark as sent to avoid duplicate reminders

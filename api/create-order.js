@@ -2,6 +2,17 @@ require('./_env');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
 const { getPlan } = require('./_plans');
+const {
+  buildEmailHtml,
+  detailTable,
+  emailButton,
+  escapeHtml,
+  formatAudience,
+  formatCurrency,
+  formatPlan,
+  getSiteUrl,
+  stepsBox
+} = require('./_email');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -218,106 +229,101 @@ async function sendWelcomeEmail(order) {
     const { Resend } = require('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
     const lang = order.language || 'fr';
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
+    const siteUrl = getSiteUrl();
     
     console.log('[Email] Resend initialized, preparing email content');
 
-  const t = lang === 'fr' ? {
-    subject: 'Confirmez votre commande — Kareer',
-    title: 'Merci pour votre commande !',
-    body: 'Votre commande a été enregistrée avec succès. Pour finaliser votre achat et procéder à l\'activation de votre compte LinkedIn Premium, merci de procéder au paiement via WhatsApp.',
-    steps_title: 'Prochaines étapes',
-    step1: 'Contactez-nous sur WhatsApp pour le paiement',
-    step2: 'Nous validons votre paiement (quelques minutes)',
-    step3: 'Activation de votre compte Premium (24-48h)',
-    delay: 'Délai total estimé : 24 à 48 heures après paiement',
-    contact: 'Procéder au paiement sur WhatsApp'
-  } : lang === 'es' ? {
-    subject: 'Pedido recibido — Kareer',
-    title: '¡Gracias por tu pedido!',
-    body: 'Hemos recibido tu pedido. Nuestro equipo procederá a la activación de tu cuenta LinkedIn Premium en las próximas 24 a 48 horas.',
-    steps_title: 'Próximos pasos',
-    step1: 'Verificamos tus datos de LinkedIn',
-    step2: 'Activación de tu cuenta Premium (24-48h)',
-    step3: 'Recibirás un email de confirmación',
-    delay: 'Tiempo estimado: 24 a 48 horas',
-    contact: '¿Una pregunta? Contáctanos por WhatsApp'
-  } : lang === 'de' ? {
-    subject: 'Bestätigen Sie Ihre Bestellung — Kareer',
-    title: 'Vielen Dank für Ihre Bestellung!',
-    body: 'Ihre Bestellung wurde erfolgreich registriert. Um Ihren Kauf abzuschließen und die Aktivierung Ihres LinkedIn Premium-Kontos zu starten, zahlen Sie bitte über WhatsApp.',
-    steps_title: 'Nächste Schritte',
-    step1: 'Kontaktieren Sie uns auf WhatsApp für die Zahlung',
-    step2: 'Wir bestätigen Ihre Zahlung (wenige Minuten)',
-    step3: 'Aktivierung Ihres Premium-Kontos (24-48h)',
-    delay: 'Geschätzte Gesamtzeit: 24 bis 48 Stunden nach Zahlung',
-    contact: 'Zur Zahlung auf WhatsApp'
-  } : {
-    subject: 'Order received — Kareer',
-    title: 'Thank you for your order!',
-    body: 'We have received your order. Our team will activate your LinkedIn Premium account within the next 24 to 48 hours.',
-    steps_title: 'Next steps',
-    step1: 'We verify your LinkedIn information',
-    step2: 'Premium account activation (24-48h)',
-    step3: 'You will receive a confirmation email',
-    delay: 'Estimated time: 24 to 48 hours',
-    contact: 'Any questions? Contact us on WhatsApp'
-  };
+    const t = lang === 'fr' ? {
+      subject: 'Commande reçue — Kareer',
+      title: 'Commande enregistrée',
+      preheader: 'Votre commande est enregistrée. Le paiement se fait maintenant via WhatsApp.',
+      body: 'Votre commande est bien enregistrée. Payez via WhatsApp ; après validation du paiement, vous recevrez un lien sécurisé pour transmettre votre mot de passe LinkedIn.',
+      stepsTitle: 'Prochaines étapes',
+      steps: [
+        'Vous finalisez le paiement avec notre équipe sur WhatsApp.',
+        'Nous validons le paiement et vous envoyons un lien sécurisé.',
+        'Vous transmettez vos identifiants, puis nous lançons l’activation.'
+      ],
+      delay: 'Délai estimé : 24 à 48 heures après réception des identifiants.',
+      amount: 'Montant',
+      order: 'Commande',
+      contact: 'Procéder au paiement sur WhatsApp',
+      footer: 'Vous recevez cet email car vous avez commencé une commande sur kareer.pro.'
+    } : lang === 'es' ? {
+      subject: 'Pedido recibido — Kareer',
+      title: 'Pedido registrado',
+      preheader: 'Tu pedido está registrado. El pago se finaliza por WhatsApp.',
+      body: 'Tu pedido está registrado. Paga por WhatsApp; después de la validación recibirás un enlace seguro para enviar tu contraseña de LinkedIn.',
+      stepsTitle: 'Próximos pasos',
+      steps: [
+        'Finalizas el pago con nuestro equipo por WhatsApp.',
+        'Validamos el pago y enviamos el enlace seguro.',
+        'Envías tus credenciales y empezamos la activación.'
+      ],
+      delay: 'Tiempo estimado: 24 a 48 horas después de recibir tus credenciales.',
+      amount: 'Monto',
+      order: 'Pedido',
+      contact: 'Pagar por WhatsApp',
+      footer: 'Recibes este email porque has iniciado un pedido en kareer.pro.'
+    } : lang === 'de' ? {
+      subject: 'Bestellung erhalten — Kareer',
+      title: 'Bestellung registriert',
+      preheader: 'Ihre Bestellung ist registriert. Die Zahlung erfolgt über WhatsApp.',
+      body: 'Ihre Bestellung wurde registriert. Zahlen Sie über WhatsApp. Nach der Bestätigung erhalten Sie einen sicheren Link für Ihr LinkedIn-Passwort.',
+      stepsTitle: 'Nächste Schritte',
+      steps: [
+        'Sie schließen die Zahlung mit unserem Team über WhatsApp ab.',
+        'Wir bestätigen Ihre Zahlung und senden den sicheren Link.',
+        'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.'
+      ],
+      delay: 'Geschätzte Zeit: 24 bis 48 Stunden nach Erhalt der Zugangsdaten.',
+      amount: 'Betrag',
+      order: 'Bestellung',
+      contact: 'Über WhatsApp bezahlen',
+      footer: 'Sie erhalten diese E-Mail, weil Sie eine Bestellung auf kareer.pro gestartet haben.'
+    } : {
+      subject: 'Order received — Kareer',
+      title: 'Order registered',
+      preheader: 'Your order is registered. Payment is completed through WhatsApp.',
+      body: 'Your order is registered. Pay through WhatsApp; after validation you will receive a secure link to submit your LinkedIn password.',
+      stepsTitle: 'Next steps',
+      steps: [
+        'You complete payment with our team on WhatsApp.',
+        'We validate your payment and send the secure link.',
+        'You submit your credentials, then we start activation.'
+      ],
+      delay: 'Estimated time: 24 to 48 hours after receiving your credentials.',
+      amount: 'Amount',
+      order: 'Order',
+      contact: 'Pay on WhatsApp',
+      footer: 'You are receiving this email because you started an order on kareer.pro.'
+    };
 
-    if (lang === 'fr') {
-      t.body = 'Votre commande a ete enregistree. Payez via WhatsApp, puis apres validation vous recevrez un lien securise pour transmettre votre mot de passe LinkedIn.';
-      t.step1 = 'Contactez-nous sur WhatsApp pour le paiement';
-      t.step2 = 'Nous validons votre paiement et envoyons le lien securise';
-      t.step3 = 'Vous transmettez vos identifiants, puis nous activons le compte';
-      t.delay = 'Delai estime : 24 a 48 heures apres reception des identifiants';
-    } else if (lang === 'de') {
-      t.body = 'Ihre Bestellung wurde registriert. Zahlen Sie per WhatsApp. Nach der Bestatigung erhalten Sie einen sicheren Link fur Ihr LinkedIn-Passwort.';
-      t.step2 = 'Wir bestatigen Ihre Zahlung und senden den sicheren Link';
-      t.step3 = 'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung';
-    } else if (lang === 'es') {
-      t.body = 'Tu pedido esta registrado. Paga por WhatsApp; despues de la validacion recibiras un enlace seguro para enviar tu contrasena de LinkedIn.';
-      t.step2 = 'Validamos el pago y enviamos el enlace seguro';
-      t.step3 = 'Envias tus credenciales y activamos la cuenta';
-    } else {
-      t.body = 'Your order is registered. Pay through WhatsApp; after validation you will receive a secure link to submit your LinkedIn password.';
-      t.step2 = 'We validate your payment and send the secure link';
-      t.step3 = 'You submit your credentials, then we activate the account';
-    }
+    const content = `
+      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
+      ${detailTable([
+        { label: 'Plan', value: order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, lang)}` : formatPlan(order.plan, order.audience, lang) },
+        { label: t.amount, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
+        { label: t.order, value: order.sessionId }
+      ])}
+      ${stepsBox(t.stepsTitle, t.steps, t.delay)}
+      ${emailButton(t.contact, 'https://wa.me/212651064637', { color: '#22C55E' })}
+    `;
 
     console.log('[Email] Calling resend.emails.send...');
     const emailResult = await resend.emails.send({
       from: 'Kareer <notifications@kareer.pro>',
       to: order.customerEmail,
       subject: t.subject,
-      html: `
-        <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-          <div style="background:linear-gradient(135deg,#1565C0,#42A5F5);padding:40px 32px;text-align:center">
-            <img src="${siteUrl}/kareer-logo.png" alt="Kareer" style="width:48px;height:48px;margin-bottom:16px">
-            <h1 style="color:#fff;margin:0;font-size:24px">${t.title}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="color:#333;font-size:16px;line-height:1.6">${t.body}</p>
-            <table style="width:100%;border-collapse:collapse;margin:24px 0">
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">Plan</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.planLabel} (${order.audience})</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600">${order.amount}€</td></tr>
-              <tr><td style="padding:10px;border-bottom:1px solid #eee;color:#666">${lang === 'fr' ? 'Commande' : lang === 'es' ? 'Pedido' : lang === 'de' ? 'Bestellung' : 'Order'}</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:600;font-size:12px;color:#666">${order.sessionId}</td></tr>
-            </table>
-            <div style="background:#f0f7ff;border-radius:10px;padding:20px;margin:24px 0">
-              <h3 style="color:#1565C0;margin:0 0 12px;font-size:15px">${t.steps_title}</h3>
-              <p style="margin:6px 0;color:#333;font-size:14px">1️⃣ ${t.step1}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">2️⃣ ${t.step2}</p>
-              <p style="margin:6px 0;color:#333;font-size:14px">3️⃣ ${t.step3}</p>
-              <p style="margin:12px 0 0;color:#666;font-size:13px;font-style:italic">⏱️ ${t.delay}</p>
-            </div>
-            <div style="text-align:center;margin-top:24px">
-              <a href="https://wa.me/212651064637" style="background:#25D366;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">💬 ${t.contact}</a>
-            </div>
-          </div>
-          <div style="background:#f8f9fa;padding:20px;text-align:center;font-size:13px;color:#999">
-            Kareer — LinkedIn Premium ${lang === 'fr' ? 'à prix réduit' : lang === 'es' ? 'a precio reducido' : lang === 'de' ? 'zum reduzierten Preis' : 'at reduced price'}
-          </div>
-        </div>
-      `
+      html: buildEmailHtml({
+        siteUrl,
+        title: t.title,
+        preheader: t.preheader,
+        content,
+        footer: t.footer,
+        lang
+      }),
+      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${t.amount}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${t.order}: ${order.sessionId}\n\n${t.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}\n\n${t.contact}: https://wa.me/212651064637`
     });
     
     console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`, emailResult);
@@ -333,25 +339,33 @@ async function sendAdminNotification(order) {
   const { Resend } = require('resend');
   const resend = new Resend(process.env.RESEND_API_KEY);
   const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
+  const siteUrl = getSiteUrl();
+  const plan = order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, 'fr')}` : formatPlan(order.plan, order.audience, 'fr');
+  const content = `
+    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Une nouvelle commande WhatsApp vient d’être créée.</p>
+    ${detailTable([
+      { label: 'Plan', value: plan },
+      { label: 'Montant', value: formatCurrency(order.amount, order.currency || 'EUR', 'fr') },
+      { label: 'Email client', value: order.customerEmail },
+      { label: 'Email LinkedIn', value: order.linkedinEmail },
+      { label: 'Commande', value: order.sessionId },
+      { label: 'Date', value: new Date(order.createdAt).toLocaleString('fr-FR') }
+    ])}
+    ${emailButton('Ouvrir le dashboard', `${siteUrl}/admin`)}
+  `;
 
   await resend.emails.send({
     from: 'Kareer <notifications@kareer.pro>',
     to: adminEmail,
-    subject: `🛒 Nouvelle commande — ${order.planLabel} — ${order.amount}€`,
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
-        <h2 style="color:#1565C0">🛒 Nouvelle commande WhatsApp</h2>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Plan</strong></td><td style="padding:8px;border:1px solid #ddd">${order.planLabel} (${order.audience})</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Montant</strong></td><td style="padding:8px;border:1px solid #ddd">${order.amount}€</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email client</strong></td><td style="padding:8px;border:1px solid #ddd">${order.customerEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Email LinkedIn</strong></td><td style="padding:8px;border:1px solid #ddd">${order.linkedinEmail}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>ID</strong></td><td style="padding:8px;border:1px solid #ddd">${order.sessionId}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><strong>Date</strong></td><td style="padding:8px;border:1px solid #ddd">${order.createdAt}</td></tr>
-        </table>
-        <br>
-        <a href="https://kareer.pro/admin" style="background:#1565C0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block">Ouvrir le Dashboard</a>
-      </div>
-    `
+    subject: `Nouvelle commande — ${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
+    html: buildEmailHtml({
+      siteUrl,
+      title: 'Nouvelle commande WhatsApp',
+      preheader: `${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
+      content,
+      footer: 'Notification interne Kareer.',
+      lang: 'fr'
+    }),
+    text: `Nouvelle commande WhatsApp\n\nPlan: ${plan}\nMontant: ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}\nEmail client: ${order.customerEmail}\nEmail LinkedIn: ${order.linkedinEmail}\nCommande: ${order.sessionId}\nAdmin: ${siteUrl}/admin`
   });
 }
