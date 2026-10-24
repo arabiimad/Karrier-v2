@@ -194,9 +194,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="referralCodeInput">Code de parrainage (optionnel)</label>
-                <input type="text" id="referralCodeInput" class="form-input" placeholder="Ex: REF12AB34CD" style="text-transform:uppercase">
-                <div class="form-hint">Si quelqu'un vous a parrainé, son code vous donne 10 € de réduction.</div>
+                <label class="form-label" for="referralCodeInput">Code de parrainage ou ambassadeur (optionnel)</label>
+                <input type="text" id="referralCodeInput" class="form-input" placeholder="Ex: REF12AB34 ou LUCIE10" style="text-transform:uppercase" autocomplete="off" spellcheck="false">
+                <div class="form-hint">Le code d'un client Kareer ou d'un ambassadeur vous donne une réduction.</div>
                 <div class="form-hint" id="referralResult" style="display:none" role="status"></div>
             </div>
 
@@ -299,10 +299,13 @@ const checkoutTranslations = {
     emailHint: 'L\'email de votre compte LinkedIn sur lequel activer le Premium',
     contactEmail: 'Email de contact (optionnel)',
     contactHint: 'Pour recevoir la confirmation et le lien sécurisé.',
-    referralCode: 'Code de parrainage (optionnel)',
-    referralHint: 'Si quelqu\'un vous a parrainé, son code vous donne 10 € de réduction.',
-    refValid: 'Code de parrainage valide : 10 € de moins.',
-    refInvalid: 'Ce code de parrainage n\'est pas valide.',
+    referralCode: 'Code de parrainage ou ambassadeur (optionnel)',
+    referralHint: 'Le code d\'un client Kareer ou d\'un ambassadeur vous donne une réduction.',
+    referralPlaceholder: 'Ex: REF12AB34 ou LUCIE10',
+    refValid: 'Code valide : {amount} de moins.',
+    refValidNoDiscount: 'Code valide.',
+    refInvalid: 'Ce code n\'est pas valide.',
+    refMoved: 'C\'est un code de parrainage ou ambassadeur : nous l\'avons placé dans le bon champ.',
     promoCode: 'Code promo (optionnel)',
     promoPlaceholder: 'Ex: BIENVENUE10',
     applyBtn: 'Appliquer',
@@ -334,10 +337,13 @@ const checkoutTranslations = {
     emailHint: 'The email of your LinkedIn account to activate Premium on',
     contactEmail: 'Contact email (optional)',
     contactHint: 'To receive the confirmation and the secure link.',
-    referralCode: 'Referral code (optional)',
-    referralHint: 'If someone referred you, their code takes €10 off.',
-    refValid: 'Valid referral code: €10 off.',
-    refInvalid: 'This referral code is not valid.',
+    referralCode: 'Referral or ambassador code (optional)',
+    referralHint: 'A code from a Kareer customer or ambassador gives you a discount.',
+    referralPlaceholder: 'Ex: REF12AB34 or LUCIE10',
+    refValid: 'Valid code: {amount} off.',
+    refValidNoDiscount: 'Valid code.',
+    refInvalid: 'This code is not valid.',
+    refMoved: 'This is a referral or ambassador code, so we moved it to the right field.',
     promoCode: 'Promo code (optional)',
     promoPlaceholder: 'Ex: WELCOME10',
     applyBtn: 'Apply',
@@ -369,10 +375,13 @@ const checkoutTranslations = {
     emailHint: 'El email de tu cuenta LinkedIn para activar Premium',
     contactEmail: 'Email de contacto (opcional)',
     contactHint: 'Para recibir la confirmación y el enlace seguro.',
-    referralCode: 'Código de referido (opcional)',
-    referralHint: 'Si alguien te recomendó, su código te descuenta 10 €.',
-    refValid: 'Código de recomendación válido: 10 € menos.',
-    refInvalid: 'Este código de recomendación no es válido.',
+    referralCode: 'Código de recomendación o de embajador (opcional)',
+    referralHint: 'El código de un cliente de Kareer o de un embajador te da un descuento.',
+    referralPlaceholder: 'Ej: REF12AB34 o LUCIE10',
+    refValid: 'Código válido: {amount} menos.',
+    refValidNoDiscount: 'Código válido.',
+    refInvalid: 'Este código no es válido.',
+    refMoved: 'Es un código de recomendación o de embajador: lo hemos puesto en el campo correcto.',
     promoCode: 'Código promocional (opcional)',
     promoPlaceholder: 'Ej: BIENVENIDO10',
     applyBtn: 'Aplicar',
@@ -404,10 +413,13 @@ const checkoutTranslations = {
     emailHint: 'Die E-Mail Ihres LinkedIn-Kontos, auf dem Premium aktiviert werden soll',
     contactEmail: 'Kontakt-E-Mail (optional)',
     contactHint: 'Für die Bestätigung und den sicheren Link.',
-    referralCode: 'Empfehlungscode (optional)',
-    referralHint: 'Wenn Sie jemand empfohlen hat, bringt dessen Code 10 € Rabatt.',
-    refValid: 'Gültiger Empfehlungscode: 10 € Rabatt.',
-    refInvalid: 'Dieser Empfehlungscode ist ungültig.',
+    referralCode: 'Empfehlungs- oder Botschafter-Code (optional)',
+    referralHint: 'Der Code eines Kareer-Kunden oder Botschafters bringt Ihnen einen Rabatt.',
+    referralPlaceholder: 'Z.B.: REF12AB34 oder LUCIE10',
+    refValid: 'Gültiger Code: {amount} Rabatt.',
+    refValidNoDiscount: 'Gültiger Code.',
+    refInvalid: 'Dieser Code ist ungültig.',
+    refMoved: 'Das ist ein Empfehlungs- oder Botschafter-Code, wir haben ihn ins richtige Feld verschoben.',
     promoCode: 'Aktionscode (optional)',
     promoPlaceholder: 'Z.B.: WILLKOMMEN10',
     applyBtn: 'Anwenden',
@@ -457,6 +469,7 @@ function applyTranslations() {
     document.querySelectorAll('.form-hint')[1].textContent = t.contactHint;
     document.querySelectorAll('.form-label')[2].textContent = t.referralCode;
     document.querySelectorAll('.form-hint')[2].textContent = t.referralHint;
+    document.getElementById('referralCodeInput').placeholder = t.referralPlaceholder;
     document.querySelector('.promo-section > label').textContent = t.promoCode;
     document.getElementById('promoCodeInput').placeholder = t.promoPlaceholder;
     document.getElementById('promoBtn').textContent = t.applyBtn;
@@ -499,9 +512,11 @@ features.forEach(f => {
 // Appliquer les traductions au chargement
 applyTranslations();
 
-// Referral code: from the link (?ref=), from an earlier visit (saved by the home page), or typed.
+// Referral or ambassador code: from the link (?ref=), from an earlier visit (saved by the home page), or typed.
+// The server says how much it takes off: 10 € for a customer's code, the amount set for an ambassador.
 let referralOk = false;
-function referralDiscount() { return referralOk ? 10 : 0; }
+let referralAmount = 0;
+function referralDiscount() { return referralOk ? Math.min(referralAmount, plan.price) : 0; }
 function updateTotal() {
     const base = Math.max(0, plan.price - referralDiscount());
     let promo = 0;
@@ -517,16 +532,23 @@ async function checkReferral() {
     const box = document.getElementById('referralResult');
     const code = input.value.trim().toUpperCase();
     referralOk = false;
+    referralAmount = 0;
     if (!code) { box.style.display = 'none'; updateTotal(); return; }
     try {
         const res = await fetch('/api/rewards?type=referral&code=' + encodeURIComponent(code));
-        referralOk = res.ok;
+        const data = await res.json().catch(() => ({}));
+        referralOk = res.ok && data.valid === true;
+        referralAmount = referralOk ? Number(data.discount || 0) : 0;
     } catch (e) {
         referralOk = false;
     }
+    if (input.value.trim().toUpperCase() !== code) { referralOk = false; referralAmount = 0; return; } // the person kept typing
     box.style.display = 'block';
     box.style.color = referralOk ? 'var(--success)' : 'var(--error)';
-    box.textContent = referralOk ? t.refValid : t.refInvalid;
+    const off = referralDiscount();
+    const locale = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE' }[userLang] || 'fr-FR';
+    const offText = new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', minimumFractionDigits: off % 1 ? 2 : 0 }).format(off);
+    box.textContent = referralOk ? (off > 0 ? t.refValid.replace('{amount}', offText) : t.refValidNoDiscount) : t.refInvalid;
     updateTotal();
 }
 (function prefillReferral() {
@@ -538,7 +560,7 @@ async function checkReferral() {
             if (saved && saved.code && Date.now() - saved.at < 30 * 24 * 3600 * 1000) code = saved.code;
         } catch (e) {}
     }
-    if (/^REF[A-Z0-9]{4,}$/.test(code)) { input.value = code; checkReferral(); }
+    if (/^[A-Z0-9]{4,20}$/.test(code)) { input.value = code; checkReferral(); }
     let timer = null;
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(checkReferral, 500); });
     input.addEventListener('change', checkReferral);
@@ -565,6 +587,20 @@ async function applyPromoCode() {
     try {
         const response = await fetch(`/api/rewards?type=promo&code=${encodeURIComponent(code)}`);
         const data = await response.json();
+
+        // A referral or ambassador code typed here: move it to its own field.
+        if (!response.ok && data.kind) {
+            const referralInput = document.getElementById('referralCodeInput');
+            referralInput.value = code;
+            input.value = '';
+            await checkReferral();
+            result.style.display = 'block';
+            result.style.color = 'var(--ink-2)';
+            result.textContent = t.refMoved;
+            btn.disabled = false;
+            btn.textContent = t.applyBtn;
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(data.error || (userLang === 'fr' ? 'Code invalide' : userLang === 'es' ? 'Código inválido' : userLang === 'de' ? 'Ungültiger Code' : 'Invalid code'));

@@ -124,7 +124,7 @@ async function creditReferrer(order) {
     if (referral.referrerEmail) {
       await sendEmail({
         to: referral.referrerEmail,
-        ...customerEmails.referralReward({ language: referral.language, code, balance: referral.pendingBalance })
+        ...customerEmails.programReward({ program: 'referral', language: referral.language, code, amount: REWARD, balance: referral.pendingBalance })
       });
     }
     return true;

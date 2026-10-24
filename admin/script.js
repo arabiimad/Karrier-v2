@@ -313,7 +313,7 @@ function showSection(name) {
     document.querySelectorAll('.view').forEach(function(v) { v.classList.toggle('active', v.id === 'view-' + name); });
     document.querySelectorAll('.nav-item[data-section]').forEach(function(b) { b.classList.toggle('active', b.dataset.section === name); });
     var more = $('navMore');
-    if (more) more.classList.toggle('active', ['promos', 'referrals', 'tools'].indexOf(name) >= 0);
+    if (more) more.classList.toggle('active', ['promos', 'referrals', 'ambassadors', 'tools'].indexOf(name) >= 0);
     toggleMore(false);
     window.scrollTo(0, 0);
     if (name === 'home') loadHome();
@@ -322,6 +322,7 @@ function showSection(name) {
     if (name === 'analytics') loadAnalytics();
     if (name === 'promos') loadPromos();
     if (name === 'referrals') loadReferrals();
+    if (name === 'ambassadors') loadAmbassadors();
     if (name === 'tools') loadConfigCheck();
 }
 function toggleMore(open) {
@@ -407,8 +408,7 @@ async function loadStats() {
         var todo = (q.to_link || 0) + (q.to_activate || 0);
         var badge = $('navCountHome');
         if (badge) { badge.hidden = !todo; badge.textContent = todo; }
-        var refBadge = $('navCountReferrals');
-        if (refBadge) { refBadge.hidden = !data.referralApplications; refBadge.textContent = data.referralApplications || ''; }
+        setAmbassadorBadge(data.ambassadorApplications || 0);
         document.title = (todo ? '(' + todo + ') ' : '') + 'Kareer Admin';
 
         if (state.lastOrderCount >= 0 && data.totalOrders > state.lastOrderCount) {
@@ -599,8 +599,12 @@ async function runAction(action, id, btn) {
         if (action === 'copy_id') await copyText(btn.dataset.value || id, 'Numéro de commande copié');
         if (action === 'promo_toggle') { await togglePromoStatus(btn.dataset.code, btn.dataset.active === 'true'); return; }
         if (action === 'promo_delete') { await deletePromo(btn.dataset.code); return; }
-        if (action === 'ref_approve' || action === 'ref_reject') { await reviewReferral(btn.dataset.code, action === 'ref_approve' ? 'approve' : 'reject', btn.dataset.name); return; }
-        if (action === 'ref_transfer_done') { await markTransferDone(btn.dataset.code, btn.dataset.requested, btn.dataset.amount); return; }
+        if (action === 'ref_transfer_done') { await markTransferDone('referral', { code: btn.dataset.code }, btn.dataset.requested, btn.dataset.amount); return; }
+        if (action === 'amb_approve' || action === 'amb_reject') { await reviewAmbassador(btn, action === 'amb_approve' ? 'approve' : 'reject'); return; }
+        if (action === 'amb_edit') { var form = btn.closest('.promo').querySelector('.amb-form'); if (form) form.hidden = !form.hidden; return; }
+        if (action === 'amb_save') { await saveAmbassador(btn, {}); return; }
+        if (action === 'amb_pause' || action === 'amb_resume') { await saveAmbassador(btn, { status: action === 'amb_pause' ? 'paused' : 'active' }); return; }
+        if (action === 'amb_transfer_done') { await markTransferDone('ambassador', { email: btn.dataset.email }, btn.dataset.requested, btn.dataset.amount); return; }
         if (changed) afterChange(id);
     } finally {
         if (btn && document.body.contains(btn)) btn.disabled = false;
@@ -838,6 +842,7 @@ function renderDrawer(o) {
     ];
     if (o.promoCode) kv.push(['Code promo', '<span class="mono">' + escapeHTML(o.promoCode) + '</span>']);
     if (o.usedReferralCode) kv.push(['Code de parrainage', '<span class="mono">' + escapeHTML(o.usedReferralCode) + '</span>']);
+    if (o.usedAmbassadorCode) kv.push(['Code ambassadeur', '<span class="mono">' + escapeHTML(o.usedAmbassadorCode) + '</span> <span class="muted">' + escapeHTML(o.ambassadorEmail || '') + ' · gain ' + escapeHTML(formatEuro(o.ambassadorReward)) + (o.ambassadorRewardedAt ? ', crédité' : ', crédité au paiement') + '</span>']);
     if (o.referralCode) kv.push(['Son code à partager', '<span class="mono">' + escapeHTML(o.referralCode) + '</span>']);
     if (o.expiresAt) kv.push(['Abonnement jusqu\'au', escapeHTML(new Date(o.expiresAt).toLocaleDateString('fr-FR'))]);
     kv.push(['Identifiant interne', '<span class="mono muted">' + escapeHTML(o.sessionId) + '</span>']);
@@ -1268,9 +1273,7 @@ async function deletePromo(code) {
     if (data.success) loadPromos();
 }
 
-// ===== Referrals =====
-var SITUATIONS = { student: 'Étudiant·e', graduate: 'Jeune diplômé·e', creator: 'Créateur·rice de contenu', other: 'Autre' };
-
+// ===== Referrals (customers) =====
 async function loadReferrals() {
     var list = $('referralsList');
     list.innerHTML = '<p class="empty"><span class="spinner"></span>Chargement…</p>';
@@ -1278,118 +1281,247 @@ async function loadReferrals() {
         var res = await authFetch('/api/rewards?type=referral');
         if (res.status === 401) return logout401();
         var data = await res.json();
-        var refs = data.referrals || [];
-        var pending = refs.filter(function(r) { return r.status === 'pending'; });
-        var others = refs.filter(function(r) { return r.status !== 'pending'; });
-        var active = others.filter(function(r) { return !r.status || r.status === 'active'; });
-        var paidReferrals = active.reduce(function(sum, r) { return sum + (r.referrals || []).filter(function(f) { return !f.reversedAt; }).length; }, 0);
-        var balances = active.reduce(function(sum, r) { return sum + Number(r.pendingBalance || 0); }, 0);
-        var waiting = refs.reduce(function(sum, r) { return sum + (r.transferRequests || []).filter(function(t) { return t.status !== 'completed'; }).length; }, 0);
-        setText('totalReferrers', active.length);
-        setText('totalReferrals', paidReferrals);
-        setText('totalReferralEarnings', formatEuro(balances));
-        setText('totalReferralTransfers', waiting ? waiting + ' virement' + (waiting > 1 ? 's' : '') + ' à faire' : '');
-        var badge = $('navCountReferrals');
-        if (badge) { badge.hidden = !pending.length; badge.textContent = pending.length || ''; }
+        var refs = (data.referrals || []).filter(function(r) { return !r.status || r.status === 'active'; });
+        setProgramKpis(refs, 'totalReferrers', 'totalReferrals', 'totalReferralEarnings', 'totalReferralTransfers');
 
-        $('applicationsBox').hidden = !pending.length;
-        $('applicationsList').innerHTML = pending.map(applicationCard).join('');
-
-        if (!others.length) { list.innerHTML = '<p class="empty">Aucun parrain pour l\'instant. Chaque client activé reçoit un code, et les autres peuvent faire une demande sur la page parrainage.</p>'; return; }
-        // Transfers to make first, then the biggest balances.
-        others.sort(function(a, b) {
-            var wa = (a.transferRequests || []).some(function(t) { return t.status !== 'completed'; }) ? 1 : 0;
-            var wb = (b.transferRequests || []).some(function(t) { return t.status !== 'completed'; }) ? 1 : 0;
-            return (wb - wa) || (Number(b.pendingBalance || 0) - Number(a.pendingBalance || 0)) || ((b.referralCount || 0) - (a.referralCount || 0));
-        });
-        list.innerHTML = others.map(referralCard).join('');
+        if (!refs.length) { list.innerHTML = '<p class="empty">Aucun parrain pour l\'instant. Chaque client reçoit un code à l\'activation de sa commande.</p>'; return; }
+        list.innerHTML = sortForPayout(refs).map(referralCard).join('');
     } catch (err) {
         list.innerHTML = '<p class="empty">Impossible de charger les parrainages.</p>';
     }
 }
 
-function applicationCard(r) {
-    var a = r.application || {};
-    var link = a.link ? (/^https?:\/\//.test(a.link) ? '<a href="' + escapeHTML(a.link) + '" target="_blank" rel="noopener">' + escapeHTML(a.link) + '</a>' : escapeHTML(a.link)) : '-';
-    return '<div class="promo">' +
-        '<div class="promo-head"><strong>' + escapeHTML(a.name || r.referrerName || r.referrerEmail) + '</strong><span class="pill pill-warn">À valider</span></div>' +
-        '<dl class="promo-meta">' +
-            '<div><dt>E-mail</dt><dd>' + escapeHTML(r.referrerEmail) + '</dd></div>' +
-            '<div><dt>Situation</dt><dd>' + escapeHTML(SITUATIONS[a.situation] || '-') + '</dd></div>' +
-            '<div><dt>École ou activité</dt><dd>' + escapeHTML(a.organisation || '-') + '</dd></div>' +
-            '<div><dt>Lien</dt><dd>' + link + '</dd></div>' +
-            '<div><dt>Demande du</dt><dd>' + escapeHTML(a.submittedAt ? shortDate(a.submittedAt) : '-') + '</dd></div>' +
-            '<div><dt>Code prévu</dt><dd>' + escapeHTML(r.code) + '</dd></div>' +
-        '</dl>' +
-        (a.message ? '<p class="card-text">« ' + escapeHTML(a.message) + ' »</p>' : '') +
-        '<div class="row"><button type="button" class="btn btn-primary btn-small" data-action="ref_approve" data-code="' + escapeHTML(r.code) + '" data-name="' + escapeHTML(a.name || '') + '">Accepter</button>' +
-        '<button type="button" class="btn btn-small" data-action="ref_reject" data-code="' + escapeHTML(r.code) + '" data-name="' + escapeHTML(a.name || '') + '">Refuser</button></div>' +
-    '</div>';
+function waitingTransfers(account) {
+    return (account.transferRequests || []).filter(function(t) { return t.status !== 'completed'; }).length;
+}
+function paidOrders(account) {
+    return (account.referrals || []).filter(function(f) { return !f.reversedAt; }).length;
+}
+// Transfers to make first, then the biggest balances.
+function sortForPayout(accounts) {
+    return accounts.slice().sort(function(a, b) {
+        return ((waitingTransfers(b) ? 1 : 0) - (waitingTransfers(a) ? 1 : 0)) || (Number(b.pendingBalance || 0) - Number(a.pendingBalance || 0)) || (paidOrders(b) - paidOrders(a));
+    });
+}
+function setProgramKpis(accounts, countId, ordersId, balanceId, transfersId) {
+    var waiting = accounts.reduce(function(sum, a) { return sum + waitingTransfers(a); }, 0);
+    setText(countId, accounts.length);
+    setText(ordersId, accounts.reduce(function(sum, a) { return sum + paidOrders(a); }, 0));
+    setText(balanceId, formatEuro(accounts.reduce(function(sum, a) { return sum + Number(a.pendingBalance || 0); }, 0)));
+    setText(transfersId, waiting ? waiting + ' virement' + (waiting > 1 ? 's' : '') + ' à faire' : '');
 }
 
-function referralCard(r) {
-    var refs = r.referrals || [];
-    var paid = refs.filter(function(f) { return !f.reversedAt; }).length;
-    var status = r.status === 'rejected' ? '<span class="pill pill-bad">Refusé</span>' : '<span class="pill pill-ok">Actif</span>';
-    var source = r.source === 'application' ? 'Candidature' : 'Client';
-    var name = r.application && r.application.name ? r.application.name : (r.referrerName || '');
-    var html = '<div class="promo">' +
-        '<div class="promo-head"><span class="promo-code">' + escapeHTML(r.code) + '</span><span class="row">' + status +
-            '<span class="pill pill-info">' + paid + ' réglée' + (paid > 1 ? 's' : '') + '</span></span></div>' +
-        '<dl class="promo-meta">' +
-            '<div><dt>Parrain</dt><dd>' + escapeHTML(r.referrerEmail || '-') + (name && name !== String(r.referrerEmail || '').split('@')[0] ? '<br>' + escapeHTML(name) : '') + '</dd></div>' +
-            '<div><dt>Origine</dt><dd>' + source + (r.application && r.application.situation ? ' · ' + escapeHTML(SITUATIONS[r.application.situation] || '') : '') + '</dd></div>' +
-            '<div><dt>Solde</dt><dd>' + escapeHTML(formatEuro(r.pendingBalance)) + '</dd></div>' +
-            '<div><dt>Depuis</dt><dd>' + escapeHTML(r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '-') + '</dd></div>' +
-        '</dl>';
-    var transfers = r.transferRequests || [];
+// Transfers, balance codes and orders: the same blocks for a referrer and an ambassador.
+function walletBlocks(account, transferAttrs, ordersTitle) {
+    var html = '';
+    var transfers = account.transferRequests || [];
     if (transfers.length) {
         html += '<div class="sublist"><p class="sublist-title">Virements</p>' + transfers.slice().reverse().map(function(t) {
             var info = t.paymentInfo ? escapeHTML(t.paymentInfo.accountName || '') + ' · <span class="mono">' + escapeHTML(t.paymentInfo.iban || '') + '</span>' : '';
             var right = t.status === 'completed'
                 ? '<span class="pill pill-ok">Viré le ' + escapeHTML(t.completedAt ? new Date(t.completedAt).toLocaleDateString('fr-FR') : '') + '</span>'
-                : '<button type="button" class="btn btn-primary btn-small" data-action="ref_transfer_done" data-code="' + escapeHTML(r.code) + '" data-requested="' + escapeHTML(t.requestedAt) + '" data-amount="' + escapeHTML(t.amount) + '">Marquer comme viré</button>';
+                : '<button type="button" class="btn btn-primary btn-small" ' + transferAttrs + ' data-requested="' + escapeHTML(t.requestedAt) + '" data-amount="' + escapeHTML(t.amount) + '">Marquer comme viré</button>';
             return '<div class="subitem"><span><strong>' + escapeHTML(formatEuro(t.amount)) + '</strong> · demandé le ' + escapeHTML(t.requestedAt ? new Date(t.requestedAt).toLocaleDateString('fr-FR') : '') + (info ? '<br>' + info : '') + '</span>' + right + '</div>';
         }).join('') + '</div>';
     }
-    var codes = r.balanceCodes || [];
+    var codes = account.balanceCodes || [];
     if (codes.length) {
         html += '<div class="sublist"><p class="sublist-title">Solde transformé en code</p>' + codes.map(function(c) {
             return '<div class="subitem"><span class="mono">' + escapeHTML(c.code) + '</span><span>' + escapeHTML(formatEuro(c.amount)) + ' · ' + escapeHTML(new Date(c.createdAt).toLocaleDateString('fr-FR')) + '</span></div>';
         }).join('') + '</div>';
     }
+    var refs = account.referrals || [];
     if (refs.length) {
-        html += '<div class="sublist"><p class="sublist-title">Commandes parrainées</p>' + refs.slice().reverse().map(function(f) {
+        html += '<div class="sublist"><p class="sublist-title">' + ordersTitle + '</p>' + refs.slice().reverse().map(function(f) {
             var when = f.paidAt ? 'réglée le ' + new Date(f.paidAt).toLocaleDateString('fr-FR') : (f.usedAt ? new Date(f.usedAt).toLocaleDateString('fr-FR') : '');
-            return '<div class="subitem"><span>' + escapeHTML(f.email || f.name || '') + '</span><span>' + (f.reversedAt ? '<span class="pill pill-bad">Remboursée</span>' : escapeHTML(when)) + '</span></div>';
+            var gain = f.reward != null ? ' · +' + formatEuro(f.reward) : '';
+            return '<div class="subitem"><span>' + escapeHTML(f.email || f.name || '') + '</span><span>' + (f.reversedAt ? '<span class="pill pill-bad">Remboursée</span>' : escapeHTML(when + gain)) + '</span></div>';
         }).join('') + '</div>';
     }
-    return html + '</div>';
+    return html;
 }
 
-async function reviewReferral(code, decision, name) {
-    var who = name || code;
-    var question = decision === 'approve'
-        ? 'Accepter ' + who + ' comme parrain ?\n\nSon code ' + code + ' fonctionne tout de suite et la personne reçoit un e-mail de bienvenue.'
-        : 'Refuser la demande de ' + who + ' ?\n\nLa personne reçoit un e-mail poli, sans raison détaillée.';
-    if (!confirm(question)) return;
-    var res = await authFetch('/api/rewards?type=referral&action=review', { method: 'PUT', body: JSON.stringify({ code: code, decision: decision }) });
+function referralCard(r) {
+    var paid = paidOrders(r);
+    return '<div class="promo">' +
+        '<div class="promo-head"><span class="promo-code">' + escapeHTML(r.code) + '</span><span class="row"><span class="pill pill-ok">Actif</span>' +
+            '<span class="pill pill-info">' + paid + ' réglée' + (paid > 1 ? 's' : '') + '</span></span></div>' +
+        '<dl class="promo-meta">' +
+            '<div><dt>Client</dt><dd>' + escapeHTML(r.referrerEmail || '-') + '</dd></div>' +
+            '<div><dt>Solde</dt><dd>' + escapeHTML(formatEuro(r.pendingBalance)) + '</dd></div>' +
+            '<div><dt>Depuis</dt><dd>' + escapeHTML(r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '-') + '</dd></div>' +
+        '</dl>' +
+        walletBlocks(r, 'data-action="ref_transfer_done" data-code="' + escapeHTML(r.code) + '"', 'Commandes parrainées') +
+    '</div>';
+}
+
+async function markTransferDone(program, who, requestedAt, amount) {
+    var person = program === 'ambassador' ? "L'ambassadeur" : 'Le parrain';
+    if (!confirm('Le virement de ' + formatEuro(amount) + ' est fait ?\n\n' + person + ' reçoit un e-mail de confirmation.')) return;
+    var res = await authFetch('/api/rewards?type=' + program + '&action=transfer_done', { method: 'PUT', body: JSON.stringify(Object.assign({ requestedAt: requestedAt }, who)) });
     if (res.status === 401) return logout401();
     var data = await res.json();
     if (!data.success) { showToast(data.error || 'Échec', 'error'); return; }
-    showToast(decision === 'approve' ? 'Parrain accepté, e-mail envoyé' : 'Demande refusée, e-mail envoyé', 'success');
-    loadReferrals();
+    showToast('Virement noté, ' + person.toLowerCase() + ' prévenu', 'success');
+    if (program === 'ambassador') loadAmbassadors(); else loadReferrals();
+}
+
+// ===== Ambassadors =====
+var SITUATIONS = { student: 'Étudiant·e', graduate: 'Jeune diplômé·e', creator: 'Créateur·rice de contenu', professional: 'Salarié·e (collègues)', other: 'Autre' };
+var AMB_ERRORS = {
+    code_format: 'Le code doit faire 4 à 20 lettres ou chiffres.',
+    code_reserved: 'Ce code commence par un préfixe réservé (REF, KR, SOLDE, KAREER, PARRAIN).',
+    code_taken: 'Ce code est déjà pris par un autre code (ambassadeur, parrainage ou promo).',
+    invalid_amount: 'Montant invalide : entre 0 et 500 €.',
+    already_reviewed: 'Cette demande a déjà été traitée.'
+};
+
+function setAmbassadorBadge(count) {
+    ['navCountAmbassadors', 'navCountAmbassadorsMobile', 'navCountMore'].forEach(function(id) {
+        var el = $(id);
+        if (el) { el.hidden = !count; el.textContent = count || ''; }
+    });
+}
+
+async function loadAmbassadors() {
+    var list = $('ambassadorsList');
+    list.innerHTML = '<p class="empty"><span class="spinner"></span>Chargement…</p>';
+    try {
+        var res = await authFetch('/api/rewards?type=ambassador');
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        var all = data.ambassadors || [];
+        var pending = all.filter(function(a) { return a.status === 'pending'; });
+        var accepted = all.filter(function(a) { return a.status === 'active' || a.status === 'paused'; });
+        var rejected = all.filter(function(a) { return a.status === 'rejected'; });
+        setProgramKpis(accepted.filter(function(a) { return a.status === 'active'; }), 'totalAmbassadors', 'totalAmbassadorOrders', 'totalAmbassadorBalances', 'totalAmbassadorTransfers');
+        // Paused ambassadors keep their balance: count it in what is owed.
+        setText('totalAmbassadorBalances', formatEuro(accepted.reduce(function(sum, a) { return sum + Number(a.pendingBalance || 0); }, 0)));
+        setAmbassadorBadge(pending.length);
+
+        $('ambApplicationsBox').hidden = !pending.length;
+        $('ambApplicationsList').innerHTML = pending.map(ambassadorApplicationCard).join('');
+
+        if (!accepted.length && !rejected.length) { list.innerHTML = '<p class="empty">Aucun ambassadeur pour l\'instant. Les demandes arrivent depuis la page kareer.pro/ambassadeur.</p>'; return; }
+        list.innerHTML = sortForPayout(accepted).map(ambassadorCard).join('') +
+            (rejected.length ? '<h2 class="promo-group-title">Demandes refusées (' + rejected.length + ')</h2>' + rejected.map(ambassadorApplicationCard).join('') : '');
+    } catch (err) {
+        list.innerHTML = '<p class="empty">Impossible de charger les ambassadeurs.</p>';
+    }
+}
+
+function linkHTML(link) {
+    if (!link) return '-';
+    return /^https?:\/\//.test(link) ? '<a href="' + escapeHTML(link) + '" target="_blank" rel="noopener">' + escapeHTML(link) + '</a>' : escapeHTML(link);
+}
+
+// Code, discount and reward, editable before accepting or later on.
+function ambassadorForm(a, opts) {
+    return '<div class="amb-form"' + (opts.hidden ? ' hidden' : '') + '>' +
+        '<label class="field field-code">Code<input type="text" class="input mono-input" data-field="code" value="' + escapeHTML(opts.code) + '" maxlength="20" autocomplete="off" spellcheck="false"></label>' +
+        '<label class="field">Réduction client (€)<input type="number" class="input" data-field="discount" value="' + escapeHTML(a.discount) + '" min="0" max="500" step="0.5"></label>' +
+        '<label class="field">Gain ambassadeur (€)<input type="number" class="input" data-field="reward" value="' + escapeHTML(a.reward) + '" min="0" max="500" step="0.5"></label>' +
+        (opts.notify ? '<label class="check field-wide"><input type="checkbox" data-field="notify" checked><span>Prévenir l\'ambassadeur par e-mail<small>Nouveau code ou nouveaux montants. Les commandes déjà passées gardent le gain prévu au moment de la commande.</small></span></label>' : '') +
+        '<div class="row field-wide">' + opts.buttons + '</div>' +
+    '</div>';
+}
+
+function ambassadorApplicationCard(a) {
+    var app = a.application || {};
+    var rejected = a.status === 'rejected';
+    var attrs = 'data-email="' + escapeHTML(a.email) + '" data-name="' + escapeHTML(a.name || '') + '"';
+    return '<div class="promo' + (rejected ? ' off' : '') + '">' +
+        '<div class="promo-head"><strong>' + escapeHTML(a.name || a.email) + '</strong>' + (rejected ? '<span class="pill pill-bad">Refusée</span>' : '<span class="pill pill-warn">À valider</span>') + '</div>' +
+        '<dl class="promo-meta">' +
+            '<div><dt>E-mail</dt><dd>' + escapeHTML(a.email) + '</dd></div>' +
+            '<div><dt>Situation</dt><dd>' + escapeHTML(SITUATIONS[app.situation] || '-') + '</dd></div>' +
+            '<div><dt>École, entreprise ou activité</dt><dd>' + escapeHTML(app.organisation || '-') + '</dd></div>' +
+            '<div><dt>Lien</dt><dd>' + linkHTML(app.link) + '</dd></div>' +
+            '<div><dt>Demande du</dt><dd>' + escapeHTML(app.submittedAt ? shortDate(app.submittedAt) : '-') + '</dd></div>' +
+            '<div><dt>Code proposé</dt><dd>' + escapeHTML(app.requestedCode || '-') + '</dd></div>' +
+        '</dl>' +
+        (app.message ? '<p class="card-text">« ' + escapeHTML(app.message) + ' »</p>' : '') +
+        ambassadorForm(a, {
+            code: a.code || app.requestedCode || '',
+            buttons: '<button type="button" class="btn btn-primary btn-small" data-action="amb_approve" ' + attrs + '>Accepter</button>' +
+                (rejected ? '' : '<button type="button" class="btn btn-small" data-action="amb_reject" ' + attrs + '>Refuser</button>')
+        }) +
+    '</div>';
+}
+
+function ambassadorCard(a) {
+    var paid = paidOrders(a);
+    var paused = a.status === 'paused';
+    var app = a.application || {};
+    var attrs = 'data-email="' + escapeHTML(a.email) + '" data-name="' + escapeHTML(a.name || '') + '"';
+    return '<div class="promo">' +
+        '<div class="promo-head"><span class="promo-code">' + escapeHTML(a.code) + '</span><span class="row">' +
+            (paused ? '<span class="pill pill-warn">En pause</span>' : '<span class="pill pill-ok">Actif</span>') +
+            '<span class="pill pill-info">' + paid + ' réglée' + (paid > 1 ? 's' : '') + '</span></span></div>' +
+        '<dl class="promo-meta">' +
+            '<div><dt>Ambassadeur</dt><dd>' + escapeHTML(a.name || '') + '<br>' + escapeHTML(a.email) + '</dd></div>' +
+            '<div><dt>Situation</dt><dd>' + escapeHTML(SITUATIONS[app.situation] || '-') + (app.organisation ? '<br>' + escapeHTML(app.organisation) : '') + '</dd></div>' +
+            '<div><dt>Réduction client</dt><dd>-' + escapeHTML(formatEuro(a.discount)) + '</dd></div>' +
+            '<div><dt>Gain par commande</dt><dd>' + escapeHTML(formatEuro(a.reward)) + '</dd></div>' +
+            '<div><dt>Solde</dt><dd>' + escapeHTML(formatEuro(a.pendingBalance)) + '</dd></div>' +
+            '<div><dt>Depuis</dt><dd>' + escapeHTML(a.approvedAt ? new Date(a.approvedAt).toLocaleDateString('fr-FR') : '-') + '</dd></div>' +
+            (app.link ? '<div><dt>Lien</dt><dd>' + linkHTML(app.link) + '</dd></div>' : '') +
+        '</dl>' +
+        '<div class="promo-actions">' +
+            '<button type="button" class="btn btn-small" data-action="amb_edit">Modifier le code ou les montants</button>' +
+            '<button type="button" class="btn btn-small" data-action="' + (paused ? 'amb_resume' : 'amb_pause') + '" ' + attrs + '>' + (paused ? 'Réactiver le code' : 'Mettre en pause') + '</button>' +
+        '</div>' +
+        ambassadorForm(a, { code: a.code, hidden: true, notify: true, buttons: '<button type="button" class="btn btn-primary btn-small" data-action="amb_save" ' + attrs + '>Enregistrer</button>' }) +
+        walletBlocks(a, 'data-action="amb_transfer_done" data-email="' + escapeHTML(a.email) + '"', 'Commandes avec son code') +
+    '</div>';
+}
+
+function readAmbassadorForm(btn) {
+    var card = btn.closest('.promo');
+    var value = function(name) { var el = card.querySelector('[data-field="' + name + '"]'); return el ? (el.type === 'checkbox' ? el.checked : el.value.trim()) : undefined; };
+    return { code: String(value('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, ''), discount: value('discount'), reward: value('reward'), notify: value('notify') };
+}
+
+async function reviewAmbassador(btn, decision) {
+    var who = btn.dataset.name || btn.dataset.email;
+    var form = readAmbassadorForm(btn);
+    var question = decision === 'approve'
+        ? 'Accepter ' + who + ' comme ambassadeur ?\n\nCode ' + form.code + ' : -' + formatEuro(form.discount) + ' pour la personne qui commande, ' + formatEuro(form.reward) + ' de gain par commande réglée.\nLe code fonctionne tout de suite et la personne reçoit un e-mail de bienvenue.'
+        : 'Refuser la demande de ' + who + ' ?\n\nLa personne reçoit un e-mail poli, sans raison détaillée, et le code proposé est libéré.';
+    if (!confirm(question)) return;
+    var body = { email: btn.dataset.email, decision: decision };
+    if (decision === 'approve') { body.code = form.code; body.discount = form.discount; body.reward = form.reward; }
+    var res = await authFetch('/api/rewards?type=ambassador&action=review', { method: 'PUT', body: JSON.stringify(body) });
+    if (res.status === 401) return logout401();
+    var data = await res.json();
+    if (!data.success) { showToast(AMB_ERRORS[data.error] || data.error || 'Échec', 'error'); return; }
+    showToast(decision === 'approve' ? 'Ambassadeur accepté, e-mail envoyé' : 'Demande refusée, e-mail envoyé', 'success');
+    loadAmbassadors();
     loadStats();
 }
 
-async function markTransferDone(code, requestedAt, amount) {
-    if (!confirm('Le virement de ' + formatEuro(amount) + ' est fait ?\n\nLe parrain reçoit un e-mail de confirmation.')) return;
-    var res = await authFetch('/api/rewards?type=referral&action=transfer_done', { method: 'PUT', body: JSON.stringify({ code: code, requestedAt: requestedAt }) });
+async function saveAmbassador(btn, change) {
+    var who = btn.dataset.name || btn.dataset.email;
+    var body = { email: btn.dataset.email };
+    if (change.status) {
+        var question = change.status === 'paused'
+            ? 'Mettre le code de ' + who + ' en pause ?\n\nIl ne donne plus de réduction sur les nouvelles commandes. Les commandes déjà passées rapportent toujours le gain une fois réglées. L\'ambassadeur reçoit un e-mail.'
+            : 'Réactiver le code de ' + who + ' ?\n\nIl donne de nouveau la réduction et l\'ambassadeur reçoit un e-mail.';
+        if (!confirm(question)) return;
+        body.status = change.status;
+    } else {
+        var form = readAmbassadorForm(btn);
+        body.code = form.code;
+        body.discount = form.discount;
+        body.reward = form.reward;
+        body.notify = form.notify !== false;
+    }
+    var res = await authFetch('/api/rewards?type=ambassador&action=settings', { method: 'PUT', body: JSON.stringify(body) });
     if (res.status === 401) return logout401();
     var data = await res.json();
-    if (!data.success) { showToast(data.error || 'Échec', 'error'); return; }
-    showToast('Virement noté, parrain prévenu', 'success');
-    loadReferrals();
+    if (!data.success) { showToast(AMB_ERRORS[data.error] || data.error || 'Échec', 'error'); return; }
+    showToast(change.status === 'paused' ? 'Code en pause' : change.status === 'active' ? 'Code réactivé' : (data.emailSent ? 'Enregistré, ambassadeur prévenu' : 'Enregistré'), 'success');
+    loadAmbassadors();
 }
 
 // ===== Start =====

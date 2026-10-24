@@ -8,6 +8,7 @@ const { sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
 const { ensureReference } = require('./_orders');
 const { reverseReferrerCredit } = require('./_referrals');
+const { reverseAmbassadorCredit } = require('./_ambassadors');
 const checkRate = rateLimit({ windowMs: 60000, max: 10 });
 
 module.exports = async (req, res) => {
@@ -56,6 +57,7 @@ module.exports = async (req, res) => {
       order.refundedAt = new Date().toISOString();
       order.updatedAt = order.refundedAt;
       await reverseReferrerCredit(order);
+      await reverseAmbassadorCredit(order);
       await kvStore.set(`order:${session_id}`, JSON.stringify(order));
       const mail = await sendRefundEmail(order);
       return res.status(200).json({
@@ -81,6 +83,7 @@ module.exports = async (req, res) => {
     order.refundedAt = new Date().toISOString();
     order.updatedAt = new Date().toISOString();
     await reverseReferrerCredit(order);
+    await reverseAmbassadorCredit(order);
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
 

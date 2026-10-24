@@ -2,6 +2,7 @@ require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { countsAsRevenue, isPaymentDue, QUEUES } = require('./_payment');
+const { listAmbassadors } = require('./_ambassadors');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -80,7 +81,7 @@ module.exports = async (req, res) => {
         avgActivationMinutes: activationSamples ? Math.round(activationMinutes / activationSamples) : null,
         activationSamples,
         lateCount,
-        referralApplications: await countPendingReferralApplications()
+        ambassadorApplications: await countPendingAmbassadors()
       });
     }
 
@@ -166,17 +167,11 @@ module.exports = async (req, res) => {
   }
 };
 
-// Referral applications from non-customers waiting for the team.
-async function countPendingReferralApplications() {
+// Ambassador applications waiting for the team.
+async function countPendingAmbassadors() {
   try {
-    const keys = await kvStore.keys('referral:REF*');
-    let pending = 0;
-    for (const key of keys) {
-      const data = await kvStore.get(key);
-      const referral = typeof data === 'string' ? JSON.parse(data) : data;
-      if (referral && referral.status === 'pending') pending++;
-    }
-    return pending;
+    const accounts = await listAmbassadors();
+    return accounts.filter(a => a.status === 'pending').length;
   } catch (e) {
     return 0;
   }

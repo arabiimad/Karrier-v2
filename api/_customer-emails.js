@@ -644,92 +644,176 @@ function renewal(order) {
   });
 }
 
-// 9. Referral rewards, sent to the person whose code was used.
-const REFERRAL_FOOTER = {
-  fr: 'Vous recevez cet e-mail au sujet de votre parrainage Kareer.',
-  en: 'You are receiving this email about your Kareer referrals.',
-  es: 'Recibes este correo por tus recomendaciones en Kareer.',
-  de: 'Sie erhalten diese E-Mail zu Ihren Kareer-Empfehlungen.'
+// 9. Referral (customers) and ambassador (anyone accepted by the team) programmes.
+// Both share the balance, the transfer and the balance code; the wording and the page differ.
+const PROGRAMS = {
+  referral: {
+    path: '/parrainage',
+    footer: {
+      fr: 'Vous recevez cet e-mail au sujet de votre parrainage Kareer.',
+      en: 'You are receiving this email about your Kareer referrals.',
+      es: 'Recibes este correo por tus recomendaciones en Kareer.',
+      de: 'Sie erhalten diese E-Mail zu Ihren Kareer-Empfehlungen.'
+    },
+    name: { fr: 'Parrainage', en: 'Referral', es: 'Recomendación', de: 'Empfehlung' },
+    page: { fr: 'Mon espace parrainage', en: 'My referral page', es: 'Mi página de recomendaciones', de: 'Meine Empfehlungsseite' },
+    space: { fr: 'votre espace parrainage', en: 'your referral page', es: 'tu página de recomendaciones', de: 'Ihre Empfehlungsseite' },
+    balance: { fr: 'votre solde de parrainage', en: 'your referral balance', es: 'tu saldo de recomendaciones', de: 'Ihr Empfehlungsguthaben' }
+  },
+  ambassador: {
+    path: '/ambassadeur',
+    footer: {
+      fr: 'Vous recevez cet e-mail au sujet de votre compte ambassadeur Kareer.',
+      en: 'You are receiving this email about your Kareer ambassador account.',
+      es: 'Recibes este correo por tu cuenta de embajador de Kareer.',
+      de: 'Sie erhalten diese E-Mail zu Ihrem Kareer-Botschafterkonto.'
+    },
+    name: { fr: 'Ambassadeur', en: 'Ambassador', es: 'Embajador', de: 'Botschafter' },
+    page: { fr: 'Mon espace ambassadeur', en: 'My ambassador page', es: 'Mi página de embajador', de: 'Meine Botschafterseite' },
+    space: { fr: 'votre espace ambassadeur', en: 'your ambassador page', es: 'tu página de embajador', de: 'Ihre Botschafterseite' },
+    balance: { fr: 'votre solde ambassadeur', en: 'your ambassador balance', es: 'tu saldo de embajador', de: 'Ihr Botschafterguthaben' }
+  }
 };
 
-function referralPage() {
-  return `${getSiteUrl()}/parrainage`;
+function programOf(program) {
+  return PROGRAMS[program] || PROGRAMS.referral;
 }
 
-function buildReferralMail(lang, t, blocks) {
-  const rendered = renderEmail({ lang, title: t.title, preheader: t.a, blocks, footer: REFERRAL_FOOTER[lang] });
+function programPage(program) {
+  return `${getSiteUrl()}${programOf(program).path}`;
+}
+
+function buildProgramMail(program, lang, t, blocks, opts = {}) {
+  const rendered = renderEmail({
+    lang,
+    title: t.title,
+    preheader: t.a,
+    blocks,
+    footer: programOf(program).footer[lang],
+    signature: opts.signature
+  });
   return { subject: t.subject, html: rendered.html, text: rendered.text };
 }
 
-// Sent when a referred order is paid: 10 € more on the balance.
-function referralReward({ language, code, balance }) {
+// Sent when an order placed with the code is paid.
+function programReward({ program, language, code, amount, balance }) {
   const lang = langOf(language);
+  const p = programOf(program);
+  const sum = formatCurrency(amount || 0, 'EUR', lang);
   const t = {
-    fr: { subject: 'Parrainage : 10 € de plus sur votre solde', title: 'Vous avez gagné 10 €', a: `Une personne a commandé avec votre code ${code} et vient de régler sa commande. 10 € s'ajoutent à votre solde.`, balance: 'Solde disponible', use: 'Vous pouvez vous le faire virer, ou l\'utiliser pour payer votre propre abonnement LinkedIn Premium, depuis votre espace parrainage.', page: 'Mon espace parrainage' },
-    en: { subject: 'Referral: €10 added to your balance', title: 'You earned €10', a: `Someone ordered with your code ${code} and has just paid. €10 has been added to your balance.`, balance: 'Available balance', use: 'You can have it transferred to you, or use it to pay for your own LinkedIn Premium subscription, from your referral page.', page: 'My referral page' },
-    es: { subject: 'Recomendación: 10 € más en tu saldo', title: 'Has ganado 10 €', a: `Alguien ha pedido con tu código ${code} y acaba de pagar. Se suman 10 € a tu saldo.`, balance: 'Saldo disponible', use: 'Puedes pedir que te lo transfiramos o usarlo para pagar tu propia suscripción a LinkedIn Premium, desde tu página de recomendaciones.', page: 'Mi página de recomendaciones' },
-    de: { subject: 'Empfehlung: 10 € mehr Guthaben', title: 'Sie haben 10 € verdient', a: `Jemand hat mit Ihrem Code ${code} bestellt und gerade bezahlt. 10 € wurden Ihrem Guthaben gutgeschrieben.`, balance: 'Verfügbares Guthaben', use: 'Auf Ihrer Empfehlungsseite können Sie sich das Guthaben überweisen lassen oder damit Ihr eigenes LinkedIn-Premium-Abo bezahlen.', page: 'Meine Empfehlungsseite' }
+    fr: { subject: `${p.name.fr} : ${sum} de plus sur votre solde`, title: `Vous avez gagné ${sum}`, a: `Une personne a commandé avec votre code ${code} et vient de régler sa commande. Votre solde augmente de ${sum}.`, balance: 'Solde disponible', use: `Vous pouvez vous le faire virer, ou l'utiliser pour payer votre propre abonnement LinkedIn Premium, depuis ${p.space.fr}.` },
+    en: { subject: `${p.name.en}: ${sum} added to your balance`, title: `You earned ${sum}`, a: `Someone ordered with your code ${code} and has just paid. Your balance goes up by ${sum}.`, balance: 'Available balance', use: `You can have it transferred to you, or use it to pay for your own LinkedIn Premium subscription, from ${p.space.en}.` },
+    es: { subject: `${p.name.es}: ${sum} más en tu saldo`, title: `Has ganado ${sum}`, a: `Alguien ha pedido con tu código ${code} y acaba de pagar. Tu saldo aumenta en ${sum}.`, balance: 'Saldo disponible', use: `Puedes pedir que te lo transfiramos o usarlo para pagar tu propia suscripción a LinkedIn Premium, desde ${p.space.es}.` },
+    de: { subject: `${p.name.de}: ${sum} mehr Guthaben`, title: `Sie haben ${sum} verdient`, a: `Jemand hat mit Ihrem Code ${code} bestellt und gerade bezahlt. Ihr Guthaben erhöht sich um ${sum}.`, balance: 'Verfügbares Guthaben', use: `Auf ${p.space.de} können Sie sich das Guthaben überweisen lassen oder damit Ihr eigenes LinkedIn-Premium-Abo bezahlen.` }
   }[lang];
-  return buildReferralMail(lang, t, [
+  return buildProgramMail(program, lang, t, [
     { type: 'p', text: L[lang].hello },
     { type: 'p', text: t.a },
     { type: 'details', rows: [{ label: t.balance, value: formatCurrency(balance || 0, 'EUR', lang) }] },
     { type: 'p', text: t.use },
-    { type: 'button', label: t.page, href: referralPage() }
+    { type: 'button', label: p.page[lang], href: programPage(program) }
   ]);
 }
 
-// Application from someone who is not a customer yet.
-function referralApplicationReceived({ language, name }) {
+// Ambassador application, sent right after the form.
+function ambassadorApplicationReceived({ language, name, code }) {
   const lang = langOf(language);
   const t = {
-    fr: { subject: 'Votre demande de parrain est bien reçue', title: 'Demande reçue', a: `Merci ${name}. Nous regardons votre demande et vous répondons par e-mail, en général sous 48 heures ouvrées.`, b: 'En attendant, votre code n\'est pas encore actif. Vous recevrez un e-mail dès qu\'il fonctionne.' },
-    en: { subject: 'Your referral application has been received', title: 'Application received', a: `Thank you, ${name}. We review your application and reply by email, usually within 2 business days.`, b: 'Until then your code is not active yet. You will get an email as soon as it works.' },
-    es: { subject: 'Hemos recibido tu solicitud', title: 'Solicitud recibida', a: `Gracias, ${name}. Revisamos tu solicitud y te respondemos por correo, normalmente en 48 horas hábiles.`, b: 'Mientras tanto, tu código todavía no está activo. Te escribiremos en cuanto funcione.' },
-    de: { subject: 'Ihre Bewerbung ist eingegangen', title: 'Bewerbung eingegangen', a: `Vielen Dank, ${name}. Wir prüfen Ihre Bewerbung und antworten per E-Mail, in der Regel innerhalb von 2 Werktagen.`, b: 'Bis dahin ist Ihr Code noch nicht aktiv. Sie erhalten eine E-Mail, sobald er funktioniert.' }
+    fr: { subject: 'Votre demande d\'ambassadeur est bien reçue', title: 'Demande reçue', a: `Merci ${name}. Nous regardons votre demande et vous répondons par e-mail, en général sous 48 heures ouvrées.`, label: 'Code proposé', b: 'Ce code est réservé pour vous. Il ne donne pas encore de réduction : il fonctionnera dès que votre demande sera acceptée. Nous pouvons être amenés à l\'ajuster, par exemple s\'il ressemble trop à un autre code.' },
+    en: { subject: 'Your ambassador application has been received', title: 'Application received', a: `Thank you, ${name}. We review your application and reply by email, usually within 2 business days.`, label: 'Proposed code', b: 'This code is reserved for you. It does not give a discount yet: it will work as soon as your application is accepted. We may adjust it, for example if it looks too much like another code.' },
+    es: { subject: 'Hemos recibido tu solicitud de embajador', title: 'Solicitud recibida', a: `Gracias, ${name}. Revisamos tu solicitud y te respondemos por correo, normalmente en 48 horas hábiles.`, label: 'Código propuesto', b: 'Este código queda reservado para ti. Todavía no da descuento: funcionará en cuanto se acepte tu solicitud. Puede que lo ajustemos, por ejemplo si se parece demasiado a otro código.' },
+    de: { subject: 'Ihre Botschafter-Bewerbung ist eingegangen', title: 'Bewerbung eingegangen', a: `Vielen Dank, ${name}. Wir prüfen Ihre Bewerbung und antworten per E-Mail, in der Regel innerhalb von 2 Werktagen.`, label: 'Vorgeschlagener Code', b: 'Dieser Code ist für Sie reserviert. Er gibt noch keinen Rabatt, sondern funktioniert, sobald Ihre Bewerbung angenommen ist. Eventuell passen wir ihn an, etwa wenn er einem anderen Code zu ähnlich ist.' }
   }[lang];
-  return buildReferralMail(lang, t, [
+  return buildProgramMail('ambassador', lang, t, [
     { type: 'p', text: L[lang].hello },
     { type: 'p', text: t.a },
+    code ? { type: 'code', label: t.label, code } : null,
     { type: 'p', text: t.b }
   ]);
 }
 
-function referralApplicationApproved({ language, name, code }) {
+// Accepted, changed by the team, or active again after a pause.
+function ambassadorApproved({ language, name, code, discount, reward, variant = 'approved', previousCode }) {
   const lang = langOf(language);
+  const off = formatCurrency(discount || 0, 'EUR', lang);
+  const gain = formatCurrency(reward || 0, 'EUR', lang);
   const url = `${getSiteUrl()}/?ref=${encodeURIComponent(code)}`;
+  const intro = {
+    approved: {
+      fr: { subject: `Votre code ambassadeur ${code} est actif`, title: 'Bienvenue dans le programme ambassadeur', a: `Bonne nouvelle, ${name} : votre demande est acceptée et votre code fonctionne dès maintenant.` },
+      en: { subject: `Your ambassador code ${code} is active`, title: 'Welcome to the ambassador programme', a: `Good news, ${name}: your application is accepted and your code works from now on.` },
+      es: { subject: `Tu código de embajador ${code} está activo`, title: 'Te damos la bienvenida al programa de embajadores', a: `Buenas noticias, ${name}: tu solicitud está aceptada y tu código ya funciona.` },
+      de: { subject: `Ihr Botschafter-Code ${code} ist aktiv`, title: 'Willkommen im Botschafterprogramm', a: `Gute Nachricht, ${name}: Ihre Bewerbung wurde angenommen, Ihr Code funktioniert ab sofort.` }
+    },
+    updated: {
+      fr: { subject: 'Votre compte ambassadeur a été mis à jour', title: 'Vos conditions ont changé', a: `${name}, nous avons mis à jour votre compte ambassadeur. Voici ce qui s'applique à partir de maintenant.` },
+      en: { subject: 'Your ambassador account has been updated', title: 'Your terms have changed', a: `${name}, we have updated your ambassador account. Here is what applies from now on.` },
+      es: { subject: 'Hemos actualizado tu cuenta de embajador', title: 'Tus condiciones han cambiado', a: `${name}, hemos actualizado tu cuenta de embajador. Esto es lo que se aplica a partir de ahora.` },
+      de: { subject: 'Ihr Botschafterkonto wurde aktualisiert', title: 'Ihre Konditionen haben sich geändert', a: `${name}, wir haben Ihr Botschafterkonto aktualisiert. Ab sofort gilt Folgendes.` }
+    },
+    resumed: {
+      fr: { subject: `Votre code ambassadeur ${code} fonctionne de nouveau`, title: 'Votre code est de nouveau actif', a: `${name}, votre code ambassadeur est de nouveau actif : il donne la réduction dès maintenant.` },
+      en: { subject: `Your ambassador code ${code} works again`, title: 'Your code is active again', a: `${name}, your ambassador code is active again and gives the discount from now on.` },
+      es: { subject: `Tu código de embajador ${code} vuelve a funcionar`, title: 'Tu código vuelve a estar activo', a: `${name}, tu código de embajador vuelve a estar activo y da el descuento desde ahora.` },
+      de: { subject: `Ihr Botschafter-Code ${code} funktioniert wieder`, title: 'Ihr Code ist wieder aktiv', a: `${name}, Ihr Botschafter-Code ist wieder aktiv und gibt ab sofort den Rabatt.` }
+    }
+  }[variant] || {};
   const t = {
-    fr: { subject: 'Votre code de parrainage est actif', title: 'Bienvenue parmi nos parrains', a: `Bonne nouvelle, ${name} : votre demande est acceptée et votre code fonctionne dès maintenant.`, how: 'Comment ça marche', steps: [`Partagez votre code ou votre lien : ${url}`, 'La personne qui commande avec ce code paie 10 € de moins.', 'Dès qu\'elle a réglé sa commande, 10 € s\'ajoutent à votre solde.', 'Vous vous faites virer votre solde, ou vous l\'utilisez pour votre propre abonnement.'], page: 'Mon espace parrainage' },
-    en: { subject: 'Your referral code is active', title: 'Welcome to the referral programme', a: `Good news, ${name}: your application is accepted and your code works from now on.`, how: 'How it works', steps: [`Share your code or your link: ${url}`, 'Whoever orders with it pays €10 less.', 'As soon as they have paid, €10 is added to your balance.', 'Have your balance transferred to you, or use it for your own subscription.'], page: 'My referral page' },
-    es: { subject: 'Tu código de recomendación está activo', title: 'Te damos la bienvenida', a: `Buenas noticias, ${name}: tu solicitud está aceptada y tu código ya funciona.`, how: 'Cómo funciona', steps: [`Comparte tu código o tu enlace: ${url}`, 'Quien pida con él paga 10 € menos.', 'En cuanto haya pagado, se suman 10 € a tu saldo.', 'Pide la transferencia de tu saldo o úsalo para tu propia suscripción.'], page: 'Mi página de recomendaciones' },
-    de: { subject: 'Ihr Empfehlungscode ist aktiv', title: 'Willkommen im Empfehlungsprogramm', a: `Gute Nachricht, ${name}: Ihre Bewerbung wurde angenommen, Ihr Code funktioniert ab sofort.`, how: 'So funktioniert es', steps: [`Teilen Sie Ihren Code oder Ihren Link: ${url}`, 'Wer damit bestellt, zahlt 10 € weniger.', 'Sobald die Person bezahlt hat, werden Ihrem Guthaben 10 € gutgeschrieben.', 'Lassen Sie sich Ihr Guthaben überweisen oder nutzen Sie es für Ihr eigenes Abo.'], page: 'Meine Empfehlungsseite' }
+    fr: { label: 'Votre code ambassadeur', off: 'Réduction pour la personne qui commande', gain: 'Votre gain par commande réglée', how: 'Comment ça marche', share: `Partagez votre code ou votre lien : ${url}`, s2: `La personne qui commande avec ce code paie ${off} de moins.`, s3: `Dès qu'elle a réglé sa commande, ${gain} s'ajoutent à votre solde.`, s4: 'Vous vous faites virer votre solde, ou vous l\'utilisez pour votre propre abonnement.', old: `L'ancien code ${previousCode} ne fonctionne plus.` },
+    en: { label: 'Your ambassador code', off: 'Discount for the person ordering', gain: 'Your earnings per paid order', how: 'How it works', share: `Share your code or your link: ${url}`, s2: `Whoever orders with this code pays ${off} less.`, s3: `As soon as they have paid, ${gain} is added to your balance.`, s4: 'Have your balance transferred to you, or use it for your own subscription.', old: `The old code ${previousCode} no longer works.` },
+    es: { label: 'Tu código de embajador', off: 'Descuento para quien pide', gain: 'Lo que ganas por pedido pagado', how: 'Cómo funciona', share: `Comparte tu código o tu enlace: ${url}`, s2: `Quien pida con este código paga ${off} menos.`, s3: `En cuanto haya pagado, se suman ${gain} a tu saldo.`, s4: 'Pide la transferencia de tu saldo o úsalo para tu propia suscripción.', old: `El código anterior ${previousCode} ya no funciona.` },
+    de: { label: 'Ihr Botschafter-Code', off: 'Rabatt für die bestellende Person', gain: 'Ihr Verdienst pro bezahlter Bestellung', how: 'So funktioniert es', share: `Teilen Sie Ihren Code oder Ihren Link: ${url}`, s2: `Wer mit diesem Code bestellt, zahlt ${off} weniger.`, s3: `Sobald die Person bezahlt hat, werden Ihrem Guthaben ${gain} gutgeschrieben.`, s4: 'Lassen Sie sich Ihr Guthaben überweisen oder nutzen Sie es für Ihr eigenes Abo.', old: `Der alte Code ${previousCode} funktioniert nicht mehr.` }
   }[lang];
-  return buildReferralMail(lang, t, [
+  const head = intro[lang] || intro.fr || {};
+  const rows = [
+    discount > 0 ? { label: t.off, value: `-${off}` } : null,
+    reward > 0 ? { label: t.gain, value: gain } : null
+  ].filter(Boolean);
+  const steps = [t.share, discount > 0 ? t.s2 : null, reward > 0 ? t.s3 : null, reward > 0 ? t.s4 : null].filter(Boolean);
+  return buildProgramMail('ambassador', lang, { ...head }, [
     { type: 'p', text: L[lang].hello },
-    { type: 'p', text: t.a },
-    { type: 'code', label: L[lang].referralLabel, code },
-    { type: 'steps', title: t.how, items: t.steps },
-    { type: 'button', label: t.page, href: referralPage() }
+    { type: 'p', text: head.a },
+    { type: 'code', label: t.label, code },
+    previousCode && previousCode !== code ? { type: 'note', text: t.old, tone: 'highlight' } : null,
+    rows.length ? { type: 'details', rows } : null,
+    { type: 'steps', title: t.how, items: steps },
+    { type: 'button', label: PROGRAMS.ambassador.page[lang], href: programPage('ambassador') }
   ]);
 }
 
-function referralApplicationRejected({ language, name }) {
+function ambassadorPaused({ language, name, code }) {
   const lang = langOf(language);
   const t = {
-    fr: { subject: 'Votre demande de parrain', title: 'Votre demande n\'a pas été retenue', a: `Merci ${name} pour votre intérêt. Nous ne pouvons pas donner suite à votre demande pour le moment.`, b: 'Si vous pensez qu\'il manque une information, répondez simplement à cet e-mail.' },
-    en: { subject: 'Your referral application', title: 'We cannot accept your application', a: `Thank you for your interest, ${name}. We are not able to accept your application at the moment.`, b: 'If you think some information is missing, just reply to this email.' },
-    es: { subject: 'Tu solicitud de recomendación', title: 'No podemos aceptar tu solicitud', a: `Gracias por tu interés, ${name}. Por ahora no podemos aceptar tu solicitud.`, b: 'Si crees que falta algún dato, responde a este correo.' },
-    de: { subject: 'Ihre Bewerbung', title: 'Wir können Ihre Bewerbung nicht annehmen', a: `Vielen Dank für Ihr Interesse, ${name}. Wir können Ihre Bewerbung derzeit leider nicht annehmen.`, b: 'Falls Ihrer Meinung nach eine Angabe fehlt, antworten Sie einfach auf diese E-Mail.' }
+    fr: { subject: `Votre code ambassadeur ${code} est en pause`, title: 'Votre code est en pause', a: `${name}, votre code ${code} est en pause : pour l'instant, il ne donne plus de réduction sur les nouvelles commandes. Les commandes déjà passées avec votre code vous rapportent toujours votre gain une fois réglées.`, b: 'Votre solde reste à vous : vous pouvez toujours vous le faire virer ou l\'utiliser depuis votre espace ambassadeur. Pour toute question, répondez à cet e-mail.' },
+    en: { subject: `Your ambassador code ${code} is paused`, title: 'Your code is paused', a: `${name}, your code ${code} is paused: for now it gives no discount on new orders. Orders already placed with your code still earn you your reward once they are paid.`, b: 'Your balance is still yours: you can have it transferred or use it from your ambassador page. If you have any questions, reply to this email.' },
+    es: { subject: `Tu código de embajador ${code} está en pausa`, title: 'Tu código está en pausa', a: `${name}, tu código ${code} está en pausa: por ahora no da descuento en los pedidos nuevos. Los pedidos ya hechos con tu código te siguen dando tu ganancia en cuanto se paguen.`, b: 'Tu saldo sigue siendo tuyo: puedes pedir la transferencia o usarlo desde tu página de embajador. Si tienes alguna pregunta, responde a este correo.' },
+    de: { subject: `Ihr Botschafter-Code ${code} ist pausiert`, title: 'Ihr Code ist pausiert', a: `${name}, Ihr Code ${code} ist pausiert: Er gibt vorerst keinen Rabatt auf neue Bestellungen. Bestellungen, die bereits mit Ihrem Code aufgegeben wurden, bringen Ihnen Ihren Verdienst weiterhin, sobald sie bezahlt sind.`, b: 'Ihr Guthaben gehört weiterhin Ihnen: Sie können es sich auf Ihrer Botschafterseite überweisen lassen oder dort nutzen. Bei Fragen antworten Sie einfach auf diese E-Mail.' }
   }[lang];
-  return buildReferralMail(lang, t, [
+  return buildProgramMail('ambassador', lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'p', text: t.b },
+    { type: 'button', label: PROGRAMS.ambassador.page[lang], href: programPage('ambassador'), variant: 'ghost' }
+  ]);
+}
+
+function ambassadorRejected({ language, name }) {
+  const lang = langOf(language);
+  const t = {
+    fr: { subject: 'Votre demande d\'ambassadeur', title: 'Votre demande n\'a pas été retenue', a: `Merci ${name} pour votre intérêt. Nous ne pouvons pas donner suite à votre demande pour le moment, et le code proposé est libéré.`, b: 'Si vous pensez qu\'il manque une information, répondez simplement à cet e-mail.' },
+    en: { subject: 'Your ambassador application', title: 'We cannot accept your application', a: `Thank you for your interest, ${name}. We are not able to accept your application at the moment, and the proposed code has been released.`, b: 'If you think some information is missing, just reply to this email.' },
+    es: { subject: 'Tu solicitud de embajador', title: 'No podemos aceptar tu solicitud', a: `Gracias por tu interés, ${name}. Por ahora no podemos aceptar tu solicitud y el código propuesto queda libre.`, b: 'Si crees que falta algún dato, responde a este correo.' },
+    de: { subject: 'Ihre Botschafter-Bewerbung', title: 'Wir können Ihre Bewerbung nicht annehmen', a: `Vielen Dank für Ihr Interesse, ${name}. Wir können Ihre Bewerbung derzeit leider nicht annehmen, der vorgeschlagene Code wurde freigegeben.`, b: 'Falls Ihrer Meinung nach eine Angabe fehlt, antworten Sie einfach auf diese E-Mail.' }
+  }[lang];
+  return buildProgramMail('ambassador', lang, t, [
     { type: 'p', text: L[lang].hello },
     { type: 'p', text: t.a },
     { type: 'p', text: t.b }
   ]);
 }
 
-// The referrer turned (part of) their balance into a single-use discount code.
-function referralBalanceCode({ language, promoCode, amount, balanceLeft }) {
+// The owner turned (part of) their balance into a single-use discount code.
+function balanceCode({ program, language, promoCode, amount, balanceLeft }) {
   const lang = langOf(language);
   const sum = formatCurrency(amount, 'EUR', lang);
   const t = {
@@ -738,7 +822,7 @@ function referralBalanceCode({ language, promoCode, amount, balanceLeft }) {
     es: { subject: `Tu código de ${sum} para LinkedIn Premium`, title: 'Tu saldo ahora es un código', a: `Aquí tienes tu código de ${sum} para usar al hacer el pedido. Funciona una vez, en la oferta que elijas. Si cubre todo el precio, no tienes nada que pagar.`, label: 'Código de descuento', left: 'Saldo restante', button: 'Elegir mi suscripción', note: 'Si el código vale más que la oferta elegida, la diferencia no se conserva.' },
     de: { subject: `Ihr Code über ${sum} für LinkedIn Premium`, title: 'Ihr Guthaben als Code', a: `Hier ist Ihr Code über ${sum}, den Sie bei der Bestellung eingeben. Er gilt einmal, für ein Angebot Ihrer Wahl. Deckt er den ganzen Preis, zahlen Sie nichts.`, label: 'Rabattcode', left: 'Restguthaben', button: 'Abo auswählen', note: 'Ist der Code mehr wert als das gewählte Angebot, verfällt die Differenz.' }
   }[lang];
-  return buildReferralMail(lang, t, [
+  return buildProgramMail(program, lang, t, [
     { type: 'p', text: L[lang].hello },
     { type: 'p', text: t.a },
     { type: 'code', label: t.label, code: promoCode },
@@ -749,16 +833,17 @@ function referralBalanceCode({ language, promoCode, amount, balanceLeft }) {
 }
 
 // The team marked the transfer as sent.
-function referralTransferSent({ language, amount, iban }) {
+function transferSent({ program, language, amount, iban }) {
   const lang = langOf(language);
+  const p = programOf(program);
   const sum = formatCurrency(amount, 'EUR', lang);
   const t = {
-    fr: { subject: `Virement envoyé : ${sum}`, title: 'Votre virement est parti', a: `Nous avons envoyé le virement de ${sum} correspondant à votre solde de parrainage. Selon votre banque, il arrive sous 1 à 3 jours ouvrés.`, amount: 'Montant' },
-    en: { subject: `Transfer sent: ${sum}`, title: 'Your transfer is on its way', a: `We have sent the transfer of ${sum} for your referral balance. Depending on your bank, it arrives within 1 to 3 business days.`, amount: 'Amount' },
-    es: { subject: `Transferencia enviada: ${sum}`, title: 'Tu transferencia está en camino', a: `Hemos enviado la transferencia de ${sum} de tu saldo de recomendaciones. Según tu banco, llega en 1 a 3 días hábiles.`, amount: 'Importe' },
-    de: { subject: `Überweisung gesendet: ${sum}`, title: 'Ihre Überweisung ist unterwegs', a: `Wir haben die Überweisung über ${sum} für Ihr Empfehlungsguthaben veranlasst. Je nach Bank kommt sie innerhalb von 1 bis 3 Werktagen an.`, amount: 'Betrag' }
+    fr: { subject: `Virement envoyé : ${sum}`, title: 'Votre virement est parti', a: `Nous avons envoyé le virement de ${sum} correspondant à ${p.balance.fr}. Selon votre banque, il arrive sous 1 à 3 jours ouvrés.`, amount: 'Montant' },
+    en: { subject: `Transfer sent: ${sum}`, title: 'Your transfer is on its way', a: `We have sent the transfer of ${sum} for ${p.balance.en}. Depending on your bank, it arrives within 1 to 3 business days.`, amount: 'Amount' },
+    es: { subject: `Transferencia enviada: ${sum}`, title: 'Tu transferencia está en camino', a: `Hemos enviado la transferencia de ${sum} de ${p.balance.es}. Según tu banco, llega en 1 a 3 días hábiles.`, amount: 'Importe' },
+    de: { subject: `Überweisung gesendet: ${sum}`, title: 'Ihre Überweisung ist unterwegs', a: `Wir haben die Überweisung über ${sum} für ${p.balance.de} veranlasst. Je nach Bank kommt sie innerhalb von 1 bis 3 Werktagen an.`, amount: 'Betrag' }
   }[lang];
-  return buildReferralMail(lang, t, [
+  return buildProgramMail(program, lang, t, [
     { type: 'p', text: L[lang].hello },
     { type: 'p', text: t.a },
     { type: 'details', rows: [{ label: t.amount, value: sum }, { label: 'IBAN', value: maskIban(iban), mono: true }] }
@@ -771,7 +856,7 @@ function maskIban(iban) {
   return `${clean.slice(0, 4)} •••• ${clean.slice(-4)}`;
 }
 
-function transferRequested({ language, amount, iban, accountName }) {
+function transferRequested({ program, language, amount, iban, accountName }) {
   const lang = langOf(language);
   const sum = formatCurrency(amount, 'EUR', lang);
   const t = {
@@ -780,66 +865,53 @@ function transferRequested({ language, amount, iban, accountName }) {
     es: { subject: 'Solicitud de transferencia recibida', title: 'Solicitud de transferencia recibida', a: `Hemos recibido tu solicitud de transferencia de ${sum}. La tramitamos en 48 horas hábiles y te escribimos cuando la enviemos.`, amount: 'Importe', holder: 'Titular', warn: 'Si no has hecho esta solicitud, responde a este correo enseguida.' },
     de: { subject: 'Überweisungsanfrage erhalten', title: 'Überweisungsanfrage erhalten', a: `Wir haben Ihre Anfrage über eine Überweisung von ${sum} erhalten. Wir bearbeiten sie innerhalb von 2 Werktagen und schreiben Ihnen, sobald die Überweisung unterwegs ist.`, amount: 'Betrag', holder: 'Kontoinhaber', warn: 'Falls Sie diese Anfrage nicht gestellt haben, antworten Sie bitte sofort auf diese E-Mail.' }
   }[lang];
-  const rendered = renderEmail({
-    lang,
-    title: t.title,
-    preheader: t.a,
-    footer: REFERRAL_FOOTER[lang],
-    blocks: [
-      { type: 'p', text: L[lang].hello },
-      { type: 'p', text: t.a },
-      { type: 'details', rows: [
-        { label: t.amount, value: sum },
-        { label: t.holder, value: accountName },
-        { label: 'IBAN', value: maskIban(iban), mono: true }
-      ] },
-      { type: 'note', text: t.warn, tone: 'highlight' }
-    ]
-  });
-  return { subject: t.subject, html: rendered.html, text: rendered.text };
+  return buildProgramMail(program, lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'details', rows: [
+      { label: t.amount, value: sum },
+      { label: t.holder, value: accountName },
+      { label: 'IBAN', value: maskIban(iban), mono: true }
+    ] },
+    { type: 'note', text: t.warn, tone: 'highlight' }
+  ]);
 }
 
-// 10. Sign-in code for the referral page.
-function referralAccessCode({ language, code }) {
+// 10. Sign-in code for the referral or ambassador page.
+function accessCode({ program, language, code }) {
   const lang = langOf(language);
+  const p = programOf(program);
   const t = {
-    fr: { subject: `${code} est votre code Kareer`, title: 'Votre code d\'accès', a: 'Voici le code pour ouvrir votre espace parrainage. Il est valable 15 minutes.', label: 'Code', warn: 'Si vous n\'avez pas demandé ce code, ignorez cet e-mail : sans lui, personne ne peut ouvrir votre espace.' },
-    en: { subject: `${code} is your Kareer code`, title: 'Your access code', a: 'Here is the code to open your referral page. It is valid for 15 minutes.', label: 'Code', warn: 'If you did not ask for this code, ignore this email: nobody can open your page without it.' },
-    es: { subject: `${code} es tu código de Kareer`, title: 'Tu código de acceso', a: 'Este es el código para abrir tu página de recomendaciones. Es válido durante 15 minutos.', label: 'Código', warn: 'Si no has pedido este código, ignora este correo: sin él nadie puede abrir tu página.' },
-    de: { subject: `${code} ist Ihr Kareer-Code`, title: 'Ihr Zugangscode', a: 'Mit diesem Code öffnen Sie Ihre Empfehlungsseite. Er ist 15 Minuten gültig.', label: 'Code', warn: 'Falls Sie diesen Code nicht angefordert haben, ignorieren Sie diese E-Mail: Ohne ihn kann niemand Ihre Seite öffnen.' }
+    fr: { subject: `${code} est votre code Kareer`, title: 'Votre code d\'accès', a: `Voici le code pour ouvrir ${p.space.fr}. Il est valable 15 minutes.`, label: 'Code', warn: 'Si vous n\'avez pas demandé ce code, ignorez cet e-mail : sans lui, personne ne peut ouvrir votre espace.' },
+    en: { subject: `${code} is your Kareer code`, title: 'Your access code', a: `Here is the code to open ${p.space.en}. It is valid for 15 minutes.`, label: 'Code', warn: 'If you did not ask for this code, ignore this email: nobody can open your page without it.' },
+    es: { subject: `${code} es tu código de Kareer`, title: 'Tu código de acceso', a: `Este es el código para abrir ${p.space.es}. Es válido durante 15 minutos.`, label: 'Código', warn: 'Si no has pedido este código, ignora este correo: sin él nadie puede abrir tu página.' },
+    de: { subject: `${code} ist Ihr Kareer-Code`, title: 'Ihr Zugangscode', a: `Mit diesem Code öffnen Sie ${p.space.de}. Er ist 15 Minuten gültig.`, label: 'Code', warn: 'Falls Sie diesen Code nicht angefordert haben, ignorieren Sie diese E-Mail: Ohne ihn kann niemand Ihre Seite öffnen.' }
   }[lang];
-  const rendered = renderEmail({
-    lang,
-    title: t.title,
-    preheader: t.a,
-    footer: REFERRAL_FOOTER[lang],
-    signature: false,
-    blocks: [
-      { type: 'p', text: t.a },
-      { type: 'code', label: t.label, code },
-      { type: 'p', text: t.warn, small: true }
-    ]
-  });
-  return { subject: t.subject, html: rendered.html, text: rendered.text };
+  return buildProgramMail(program, lang, t, [
+    { type: 'p', text: t.a },
+    { type: 'code', label: t.label, code },
+    { type: 'p', text: t.warn, small: true }
+  ], { signature: false });
 }
 
 module.exports = {
+  accessCode,
   activated,
   activationStarted,
+  ambassadorApplicationReceived,
+  ambassadorApproved,
+  ambassadorPaused,
+  ambassadorRejected,
+  balanceCode,
   credentialLink,
   maskIban,
   orderReceived,
   paymentReceived,
-  referralAccessCode,
-  referralApplicationApproved,
-  referralApplicationReceived,
-  referralApplicationRejected,
-  referralBalanceCode,
-  referralReward,
-  referralTransferSent,
+  programReward,
   refunded,
   reminder,
   renewal,
   transferRequested,
+  transferSent,
   waText
 };

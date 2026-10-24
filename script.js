@@ -136,6 +136,6 @@ setAudience(audience);
 (function rememberReferral() {
     try {
         const code = (new URLSearchParams(window.location.search).get('ref') || '').trim().toUpperCase();
-        if (/^REF[A-Z0-9]{4,}$/.test(code)) localStorage.setItem('kareer_ref', JSON.stringify({ code: code, at: Date.now() }));
+        if (/^[A-Z0-9]{4,20}$/.test(code)) localStorage.setItem('kareer_ref', JSON.stringify({ code: code, at: Date.now() }));
     } catch (e) {}
 })();

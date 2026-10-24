@@ -6,6 +6,7 @@ const { sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
 const { ensureReference, issueCredentialLink } = require('./_orders');
 const { creditReferrer, ensureReferralCode, reverseReferrerCredit } = require('./_referrals');
+const { creditAmbassador, reverseAmbassadorCredit } = require('./_ambassadors');
 const { isPaid } = require('./_payment');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
@@ -138,6 +139,7 @@ module.exports = async (req, res) => {
     if (status === 'refunded' && previousStatus !== 'refunded') {
       if (!order.refundedAt) order.refundedAt = new Date().toISOString();
       await reverseReferrerCredit(order);
+      await reverseAmbassadorCredit(order);
     }
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
@@ -244,8 +246,11 @@ async function markPaid(sessionId, body, res) {
     receiptSent = !!mail.sent;
     if (receiptSent) order.receiptSentAt = now;
   }
-  // The referrer earns their 10 € once the referred order is actually paid.
-  if (paid && !wasPaid) await creditReferrer(order);
+  // The referrer or the ambassador earns their reward once the order is actually paid.
+  if (paid && !wasPaid) {
+    await creditReferrer(order);
+    await creditAmbassador(order);
+  }
 
   await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
   await logAction(kvStore, {

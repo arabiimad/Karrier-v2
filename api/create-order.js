@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const { sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
 const { alertTeam, newReference } = require('./_orders');
-const { getReferral, isActive } = require('./_referrals');
+const { REWARD, getReferral, isActive } = require('./_referrals');
+const ambassadors = require('./_ambassadors');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -48,12 +49,16 @@ module.exports = async (req, res) => {
     const discounts = [];
     let normalizedPromoCode = null;
     let normalizedReferralCode = null;
+    let ambassador = null;
 
+    // One field for both: a customer's referral code (REF...) or an ambassador's own code.
     if (referralCode) {
-      const referralResult = await validateReferralCode(referralCode, customerEmail || linkedinEmail);
-      amount = Math.max(0, amount - 10);
-      normalizedReferralCode = referralResult.code;
-      discounts.push({ type: 'referral', code: referralResult.code, amount: 10 });
+      const shared = await validateSharedCode(referralCode, [customerEmail, linkedinEmail]);
+      const discount = Math.min(shared.discount, amount);
+      amount -= discount;
+      if (shared.kind === 'ambassador') ambassador = shared.account;
+      else normalizedReferralCode = shared.code;
+      discounts.push({ type: shared.kind, code: shared.code, amount: discount });
     }
 
     if (promoCode) {
@@ -80,6 +85,10 @@ module.exports = async (req, res) => {
       discounts,
       promoCode: normalizedPromoCode,
       usedReferralCode: normalizedReferralCode,
+      // The reward is fixed when the order is placed, even if the team changes it later.
+      usedAmbassadorCode: ambassador ? ambassador.code : null,
+      ambassadorEmail: ambassador ? ambassador.email : null,
+      ambassadorReward: ambassador ? Number(ambassador.reward || 0) : null,
       linkedinEmail: String(linkedinEmail).trim(),
       customerEmail: String(customerEmail || linkedinEmail).trim(),
       language: ['fr', 'en', 'es', 'de'].includes(language) ? language : 'fr',
@@ -199,28 +208,32 @@ async function applyPromoCode({ code, plan, orderId, amount }) {
   return { code: promoCode, discount };
 }
 
-async function validateReferralCode(code, customerEmail) {
-  const referralCode = String(code || '').toUpperCase().trim();
-  const referral = await getReferral(referralCode);
-  // Codes waiting for the team's approval (or refused) do not give the discount.
-  if (!referral || !isActive(referral)) {
-    const error = new Error('Invalid referral code');
-    error.statusCode = 400;
-    throw error;
+function codeError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
+}
+
+async function validateSharedCode(code, buyerEmails) {
+  const normalized = ambassadors.normalizeCode(code);
+  const emails = buyerEmails.filter(Boolean).map(e => String(e).trim().toLowerCase());
+
+  const referral = await getReferral(normalized);
+  // Codes refused or not yet accepted do not give the discount.
+  if (referral && typeof referral === 'object' && isActive(referral)) {
+    if (referral.referrerEmail && emails.includes(referral.referrerEmail.toLowerCase())) {
+      throw codeError('Self-referral is not allowed');
+    }
+    const alreadyUsed = (referral.referrals || []).some(r => emails.includes(String(r.email || '').toLowerCase()));
+    if (alreadyUsed) throw codeError('Referral code already used by this email');
+    return { kind: 'referral', code: normalized, discount: REWARD };
   }
 
-  const email = String(customerEmail || '').toLowerCase();
-  if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === email) {
-    const error = new Error('Self-referral is not allowed');
-    error.statusCode = 400;
-    throw error;
-  }
-  const alreadyUsed = (referral.referrals || []).some(r => String(r.email || '').toLowerCase() === email);
-  if (alreadyUsed) {
-    const error = new Error('Referral code already used by this email');
-    error.statusCode = 400;
-    throw error;
+  const account = await ambassadors.getAmbassadorByCode(normalized);
+  if (ambassadors.isActive(account) && account.code === normalized) {
+    if (emails.includes(account.email)) throw codeError('An ambassador cannot use their own code');
+    return { kind: 'ambassador', code: normalized, discount: Number(account.discount || 0), account };
   }
 
-  return { code: referralCode };
+  throw codeError('Invalid referral code');
 }

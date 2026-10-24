@@ -8,7 +8,7 @@ Engagement affiché sur le site : Premium actif **5 à 30 minutes après récept
 
 ## 1. Le client commande sur le site
 
-- Il choisit une offre, saisit l'e-mail de son compte LinkedIn (et un e-mail de contact s'il est différent), éventuellement un code promo ou de parrainage.
+- Il choisit une offre, saisit l'e-mail de son compte LinkedIn (et un e-mail de contact s'il est différent), éventuellement un code promo et un code de parrainage ou ambassadeur.
 - Il arrive sur une page de confirmation avec son numéro de commande, le montant et un bouton « Confirmer sur WhatsApp » dont le message est déjà rédigé.
 - **E-mail client :** « Commande KR-… reçue » : récapitulatif, déroulé en trois étapes, rien à payer maintenant. Pour le tarif étudiant, il prévient qu'un justificatif peut être demandé.
 - **Alerte équipe :** e-mail « Nouvelle commande KR-… » (et Telegram si configuré).
@@ -38,7 +38,6 @@ Bouton **Marquer activée**.
 
 - Les identifiants sont supprimés, l'abonnement est daté (12 mois) et le client reçoit son code de parrainage.
 - **E-mail client :** « Premium est actif » : où vérifier, montant à régler, bouton « Régler sur WhatsApp » (message prérempli), code de parrainage.
-- Si la commande avait été passée avec un code de parrainage, la personne qui a parrainé reçoit sa récompense (code de 10 € ou solde de 10 €) et un e-mail.
 
 **Équipe :** envoyer le message « Premium actif, paiement » sur WhatsApp et indiquer le moyen de paiement.
 
@@ -48,6 +47,7 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 
 - **E-mail client :** « Reçu de paiement, commande KR-… » : montant, date, moyen de paiement, validité de l'abonnement.
 - La commande sort de la file « À encaisser » et compte dans le chiffre encaissé.
+- Si elle avait été passée avec un code de parrainage ou ambassadeur, son propriétaire reçoit son gain sur son solde et un e-mail.
 
 ### Si le paiement tarde
 
@@ -65,25 +65,41 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 | Statut corrigé à la main | Changer le statut | Un e-mail seulement pour « En activation », « Activée » et « Remboursée » ; le tableau de bord demande confirmation avant |
 | Paiement marqué par erreur | Repasser en non payée | Rien (le reçu n'est jamais renvoyé deux fois) |
 
-## 7. Parrainage et ambassadeurs
+## 7. Parrainage (clients)
 
-**Qui a un code**
-- **Les clients** : le code est créé automatiquement à l'activation de leur première commande.
-- **Les autres** (étudiants, jeunes diplômés, créateurs de contenu…) : ils font une demande sur `kareer.pro/parrainage`, après avoir vérifié leur e-mail avec un code à 6 chiffres. Leur code reste inactif : il ne donne aucune réduction tant que l'équipe ne l'a pas accepté.
-- **Équipe :** alerte « Demande de parrain », puis *Tableau de bord > Parrainage > Demandes à valider* : **Accepter** ou **Refuser**. La personne reçoit un e-mail dans les deux cas. Un badge sur « Parrainage » indique les demandes en attente.
+- **Qui** : uniquement les clients. Le code (`REF…`) est créé automatiquement à l'activation de leur première commande et figure dans l'e-mail « Premium est actif ». Rien à valider.
+- **Ce que ça rapporte** : la personne qui commande avec le code paie 10 € de moins. Le parrain gagne 10 € sur son solde **quand la commande est réglée** (bouton « Marquer payée »), avec un e-mail. Rien n'est versé pour une commande impayée ou gratuite. Une commande remboursée retire les 10 € du solde (jamais en dessous de zéro).
+- **Page** : `kareer.pro/parrainage`. Une personne qui n'a pas de code y est orientée vers le programme ambassadeur.
+- **Équipe** : *Tableau de bord > Parrainage* pour suivre les soldes et faire les virements.
+
+## 8. Ambassadeurs (tout le monde)
+
+Pour les étudiants, créateurs de contenu, salariés qui en parlent à leurs collègues, clients ou non.
+
+**La demande**
+- Sur `kareer.pro/ambassadeur`, la personne vérifie son e-mail (code à 6 chiffres), se présente et **propose son propre code** (4 à 20 lettres ou chiffres, par exemple `LUCIE10`). Les préfixes `REF`, `KR`, `SOLDE`, `KAREER` et `PARRAIN` sont réservés, et un code déjà pris (ambassadeur, parrainage ou code promo) est refusé.
+- Le code est réservé mais **ne donne rien tant que l'équipe n'a pas accepté**. La personne reçoit « Demande reçue », l'équipe reçoit « Demande d'ambassadeur » (et Telegram si configuré). Un badge sur « Ambassadeurs » indique les demandes en attente.
+
+**La validation** (*Tableau de bord > Ambassadeurs > Demandes à valider*)
+- Vérifier le profil, puis ajuster si besoin **le code**, **la réduction pour la personne qui commande** et **le gain de l'ambassadeur** (10 € et 10 € par défaut), et cliquer **Accepter** : le code fonctionne tout de suite et l'ambassadeur reçoit un e-mail avec ses conditions. **Refuser** envoie un e-mail poli et libère le code.
+- Plus tard, sur la fiche de l'ambassadeur : **Modifier le code ou les montants** (e-mail à l'ambassadeur si la case est cochée ; l'ancien code cesse de fonctionner), **Mettre en pause** ou **Réactiver le code** (e-mail dans les deux cas).
 
 **Ce que ça rapporte**
-- La personne qui commande avec le code paie 10 € de moins.
-- Le parrain gagne 10 € sur son solde **quand la commande est réglée** (bouton « Marquer payée »), avec un e-mail. Rien n'est versé pour une commande impayée ou gratuite.
-- Si une commande parrainée est remboursée, les 10 € sont retirés du solde (jamais en dessous de zéro).
+- La réduction et le gain sont ceux de l'ambassadeur **au moment de la commande** : un changement de montant ne touche pas les commandes déjà passées.
+- Le gain est crédité **quand la commande est réglée**, avec un e-mail. Il est retiré si la commande est remboursée. Une commande passée avant une pause rapporte toujours son gain une fois réglée.
+- Un ambassadeur ne peut pas utiliser son propre code.
 
-**Ce que le parrain fait de son solde** (depuis sa page parrainage)
-- **Virement** : tout le solde, sans minimum. L'équipe reçoit « Virement parrainage à faire » avec l'IBAN complet, vérifie que le titulaire correspond, fait le virement, puis clique **Marquer comme viré** : le parrain reçoit la confirmation.
-- **Abonnement** : il transforme le montant de son choix en code de réduction à usage unique, envoyé par e-mail. Si le code couvre tout le prix, la commande est gratuite : elle passe directement en « payée » et suit le parcours normal (lien, activation).
+**Client et ambassadeur à la fois** : c'est possible. Les deux codes et les deux soldes sont séparés, chacun sur sa page.
 
-**Sécurité** : l'espace parrainage s'ouvre avec un code à 6 chiffres envoyé par e-mail (15 minutes, 5 essais, 3 codes par adresse sur 15 minutes). Sans ce code, personne ne peut voir un espace ni changer un IBAN.
+## 9. Le solde (parrains et ambassadeurs)
 
-## 8. E-mails automatiques planifiés
+Depuis sa page, la personne choisit :
+- **Virement** : tout le solde, sans minimum. L'équipe reçoit « Virement parrainage à faire » ou « Virement ambassadeur à faire » avec l'IBAN complet, vérifie que le titulaire correspond, fait le virement, puis clique **Marquer comme viré** : la personne reçoit la confirmation.
+- **Abonnement** : elle transforme le montant de son choix en code de réduction à usage unique (`SOLDE…`), envoyé par e-mail. Si le code couvre tout le prix, la commande est gratuite : elle passe directement en « payée » et suit le parcours normal (lien, activation).
+
+**Sécurité** : les deux pages s'ouvrent avec un code à 6 chiffres envoyé par e-mail (15 minutes, 5 essais, 3 codes par adresse sur 15 minutes). Sans ce code, personne ne peut voir un espace ni changer un IBAN. Au moment de commander, un seul champ accepte les deux types de code ; un code de parrainage ou ambassadeur saisi dans le champ « Code promo » est déplacé automatiquement.
+
+## 10. E-mails automatiques planifiés
 
 | Quand | Quoi |
 | --- | --- |
@@ -91,7 +107,7 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 | Tous les jours à 3 h 30 (UTC) | Suppression des mots de passe de plus de 7 jours |
 | Le 1er du mois | Rapport du mois précédent à l'adresse admin |
 
-## 9. Réglages nécessaires
+## 11. Réglages nécessaires
 
 | Variable | Rôle |
 | --- | --- |

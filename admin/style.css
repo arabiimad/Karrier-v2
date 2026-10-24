@@ -433,6 +433,7 @@ textarea.input { min-height: 88px; padding: 10px 12px; resize: vertical; line-he
         background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r-md); box-shadow: var(--shadow);
     }
     .more-sheet .nav-item { flex-direction: row; font-size: 14px; padding: 11px 12px; text-align: left; }
+    .more-sheet .nav-count { position: static; margin-left: auto; }
     .main { padding: 20px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
     .toolbar { grid-template-columns: 1fr 1fr; }
     .toolbar .input-search { grid-column: 1 / -1; }
@@ -492,3 +493,7 @@ textarea.input { min-height: 88px; padding: 10px 12px; resize: vertical; line-he
 .ref-section[hidden] { display: none; }
 .promo-head .row { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .subitem .btn { flex-shrink: 0; }
+.amb-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; padding-top: 10px; border-top: 1px solid var(--rule-2); }
+.amb-form .field-wide { grid-column: 1 / -1; }
+.amb-form .check { padding: 8px 10px; font-size: 13px; font-weight: 500; }
+@media (max-width: 560px) { .amb-form { grid-template-columns: 1fr 1fr; } .amb-form .field-code { grid-column: 1 / -1; } }
