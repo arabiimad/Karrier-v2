@@ -56,31 +56,33 @@ function jsArg(value) {
 }
 function getStatusLabel(status) {
     var labels = {
-        pending: 'En attente',
-        pending_payment: 'Paiement en attente',
-        awaiting_credentials: 'Identifiants demandes',
-        activating: 'En activation',
-        done: 'Termine',
-        refunded: 'Rembourse'
+        pending: 'Nouvelle',
+        pending_payment: 'Nouvelle',
+        awaiting_credentials: 'Attente identifiants',
+        activating: 'À activer',
+        done: 'Activée',
+        refunded: 'Remboursée'
     };
     return labels[status] || status || 'pending';
 }
 function getCredentialLabel(order) {
-    if (order.hasCredentials) return 'Identifiants recus';
-    if (order.credentialLinkSentAt) return 'Lien envoye';
-    return 'Aucun identifiant';
+    if (order.hasCredentials) return 'Identifiants reçus';
+    if (order.credentialsDeletedAt) return 'Identifiants supprimés';
+    if (order.status === 'done' || order.status === 'refunded') return '';
+    if (order.credentialLinkSentAt) return 'Lien envoyé';
+    return 'Lien pas encore envoyé';
 }
 function safeDate(value) {
     return value ? new Date(value).toLocaleString('fr-FR') : '-';
 }
 function renderStatusOptions(selected) {
     var options = [
-        ['', 'Changer...'],
-        ['pending_payment', 'Paiement en attente'],
-        ['awaiting_credentials', 'Identifiants demandes'],
-        ['activating', 'En activation'],
-        ['done', 'Termine'],
-        ['refunded', 'Rembourse']
+        ['', 'Statut…'],
+        ['pending_payment', 'Nouvelle'],
+        ['awaiting_credentials', 'Attente identifiants'],
+        ['activating', 'À activer'],
+        ['done', 'Activée'],
+        ['refunded', 'Remboursée']
     ];
     return options.map(function(option) {
         return '<option value="' + option[0] + '"' + (option[0] === selected ? ' selected' : '') + '>' + option[1] + '</option>';
@@ -88,6 +90,69 @@ function renderStatusOptions(selected) {
 }
 function canSendCredentialLink(order) {
     return order && (order.status === 'pending' || order.status === 'pending_payment' || order.status === 'awaiting_credentials');
+}
+
+// ===== Order state helpers =====
+// The site promises activation within 30 minutes once credentials arrive.
+var LATE_AFTER_MIN = 30;
+
+function minutesSince(value) {
+    if (!value) return null;
+    return Math.floor((Date.now() - new Date(value).getTime()) / 60000);
+}
+function timeAgo(value) {
+    var m = minutesSince(value);
+    if (m === null) return '';
+    if (m < 1) return "à l'instant";
+    if (m < 60) return 'il y a ' + m + ' min';
+    var h = Math.floor(m / 60);
+    if (h < 24) return 'il y a ' + h + ' h';
+    return 'il y a ' + Math.floor(h / 24) + ' j';
+}
+function isLate(order) {
+    if (!order.hasCredentials || order.status === 'done' || order.status === 'refunded') return false;
+    var m = minutesSince(order.credentialsSubmittedAt);
+    return m !== null && m > LATE_AFTER_MIN;
+}
+function formatAudience(audience) {
+    var names = { Etudiant: 'Étudiant', Salarie: 'Salarié', student: 'Étudiant', salary: 'Salarié' };
+    return names[audience] || audience || '';
+}
+function planKey(plan) {
+    return String(plan || '').replace(/-(student|salary)$/, '');
+}
+function formatEuro(value) {
+    return Number(value || 0).toLocaleString('fr-FR') + ' €';
+}
+function paymentBadge(order) {
+    if (order.status === 'refunded') return '';
+    if (order.isPaid) return '<span class="pay-badge pay-paid" title="' + escapeHTML(order.paidAt ? 'Payée le ' + safeDate(order.paidAt) : 'Payée') + '">Payée</span>';
+    if (order.paymentDue) return '<span class="pay-badge pay-due">À encaisser</span>';
+    return '<span class="pay-badge pay-none">Non payée</span>';
+}
+// The one or two buttons that move an order to its next step.
+function nextActions(order) {
+    var id = jsArg(order.sessionId);
+    var s = order.status;
+    if (s === 'refunded') return '<span class="muted">-</span>';
+    if (s === 'pending' || s === 'pending_payment') {
+        return '<button class="action-btn primary-action" onclick="sendCredentialLink(' + id + ')">Envoyer le lien</button>';
+    }
+    if (s !== 'done' && (order.hasCredentials || s === 'activating')) {
+        var html = order.hasCredentials ? '<button class="action-btn" onclick="revealCredentials(' + id + ')">Copier les accès</button>' : '';
+        return html + '<button class="action-btn primary-action" onclick="markActivated(' + id + ')">Marquer activée</button>';
+    }
+    if (s === 'awaiting_credentials') {
+        return '<button class="action-btn" onclick="sendCredentialLink(' + id + ')">Renvoyer le lien</button>';
+    }
+    if (s === 'done' && !order.isPaid) {
+        return '<button class="action-btn primary-action" onclick="markPaid(' + id + ', true)">Marquer payée</button>';
+    }
+    return '<span class="muted">Rien à faire</span>';
+}
+function closeModal() {
+    var m = $('modalOverlay');
+    if (m) m.style.display = 'none';
 }
 
 // ===== Toast =====
@@ -201,6 +266,10 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 });
 
 // ===== Stats =====
+function setText(id, value) {
+    var el = $(id);
+    if (el) el.textContent = value;
+}
 async function loadStats() {
     try {
         var res = await fetch(API_BASE + '/analytics?type=stats', { headers: authHeaders() });
@@ -208,13 +277,29 @@ async function loadStats() {
         if (res.status === 429) { showToast('Rate limit — patientez', 'error'); return; }
         setConnected(true);
         var data = await res.json();
-        var el;
-        if ((el = $('statRevenue'))) { el.textContent = data.totalRevenue.toLocaleString('fr-FR') + '€'; el.classList.add('stat-flash'); setTimeout(function() { el.classList.remove('stat-flash'); }, 600); }
-        if ((el = $('statOrders'))) el.textContent = data.totalOrders;
-        if ((el = $('statPending'))) el.textContent = data.pendingCount;
-        if ((el = $('statActivating'))) el.textContent = data.activatingCount;
-        if ((el = $('statDone'))) el.textContent = data.doneCount;
-        if ((el = $('statToday'))) el.textContent = data.todayOrders + ' (' + data.todayRevenue.toLocaleString('fr-FR') + '€)';
+        var q = data.queues || {};
+
+        var revenueEl = $('statRevenue');
+        if (revenueEl) { revenueEl.textContent = formatEuro(data.totalRevenue); revenueEl.classList.add('stat-flash'); setTimeout(function() { revenueEl.classList.remove('stat-flash'); }, 600); }
+        setText('statToday', data.todayRevenue ? 'dont ' + formatEuro(data.todayRevenue) + " aujourd'hui" : 'payé, hors remboursements');
+        setText('statDue', formatEuro(data.dueAmount));
+        setText('statDueCount', data.dueCount ? data.dueCount + ' commande(s) activée(s) non payée(s)' : 'rien en attente');
+        setText('statOrders', data.totalOrders);
+        setText('statTodayOrders', data.todayOrders ? '+' + data.todayOrders + " aujourd'hui" : "aucune aujourd'hui");
+        setText('statToLink', q.to_link || 0);
+        setText('statToActivate', q.to_activate || 0);
+        setText('statDone', data.doneCount);
+
+        setText('q_all', data.totalOrders);
+        ['to_link', 'waiting_credentials', 'to_activate', 'to_collect'].forEach(function(name) {
+            setText('q_' + name, q[name] || 0);
+            var chip = document.querySelector('.queue-chip[data-view="' + name + '"]');
+            if (chip) chip.classList.toggle('has-items', (q[name] || 0) > 0);
+        });
+
+        // Keep the waiting work visible in the browser tab.
+        var todo = (q.to_link || 0) + (q.to_activate || 0);
+        document.title = (todo ? '(' + todo + ') ' : '') + 'Kareer Admin';
 
         if (lastOrderCount >= 0 && data.totalOrders > lastOrderCount) {
             playNotificationSound();
@@ -236,11 +321,13 @@ async function loadOrders(page, status) {
 
     var tbody = $('ordersBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="loading-spinner"></div> Chargement...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="loading-spinner"></div> Chargement...</td></tr>';
 
     try {
         var url = API_BASE + '/orders?page=' + page + '&limit=20';
         if (status) url += '&status=' + status;
+        if (currentView) url += '&view=' + currentView;
+        if (currentPayment) url += '&payment=' + currentPayment;
         if (currentSearch) url += '&search=' + encodeURIComponent(currentSearch);
 
         var res = await fetch(url, { headers: authHeaders() });
@@ -254,8 +341,8 @@ async function loadOrders(page, status) {
         if (countEl) countEl.textContent = data.total ? data.total + ' commande(s)' : '';
 
         if (!data.orders || data.orders.length === 0) {
-            var emptyMsg = currentSearch ? 'Aucun résultat pour "' + currentSearch + '"' : 'Aucune commande';
-            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">' + emptyMsg + '</td></tr>';
+            var emptyMsg = currentSearch ? 'Aucun résultat pour "' + escapeHTML(currentSearch) + '"' : (currentView ? 'Rien dans cette file.' : 'Aucune commande');
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">' + emptyMsg + '</td></tr>';
             var pg = $('pagination'); if (pg) pg.innerHTML = '';
             return;
         }
@@ -264,7 +351,7 @@ async function loadOrders(page, status) {
         renderPagination(data.page, data.totalPages);
 
     } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Erreur de chargement</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Erreur de chargement</td></tr>';
         console.error('Orders error:', err);
     }
 }
@@ -314,28 +401,27 @@ function renderOrdersV2(orders) {
             minute: '2-digit'
         }) : '-';
         var status = order.status || 'pending_payment';
-        var plan = order.plan || order.planLabel || '-';
-        var actions = '';
+        var plan = order.planLabel || order.plan || '-';
+        var late = isLate(order);
+        var credentialNote = getCredentialLabel(order);
+        if (order.hasCredentials && order.credentialsSubmittedAt) credentialNote += ' ' + timeAgo(order.credentialsSubmittedAt);
+        var linkedin = order.linkedinEmail && order.linkedinEmail !== order.customerEmail
+            ? '<br><small>LinkedIn : ' + escapeHTML(order.linkedinEmail) + '</small>'
+            : '';
 
-        actions += '<button class="action-btn view-btn" onclick="viewOrderSafe(' + jsArg(order.sessionId) + ')" title="Voir">Voir</button>';
-        if (canSendCredentialLink(order)) {
-            actions += '<button class="action-btn copy-btn" onclick="sendCredentialLink(' + jsArg(order.sessionId) + ')" title="Paiement recu / envoyer lien">Lien</button>';
-        }
-        if (order.hasCredentials) {
-            actions += '<button class="action-btn copy-btn" onclick="revealCredentials(' + jsArg(order.sessionId) + ')" title="Reveler / copier">Reveler</button>';
-        }
-        actions += '<button class="action-btn delete-btn" onclick="deleteOrder(' + jsArg(order.sessionId) + ')" title="Supprimer">Suppr.</button>';
-        actions += '<select class="status-select" onchange="updateStatus(' + jsArg(order.sessionId) + ', this.value)">' + renderStatusOptions('') + '</select>';
-
-        return '<tr>' +
-            '<td>' + escapeHTML(date) + '</td>' +
-            '<td><span class="plan-badge plan-' + escapeHTML(order.plan || '') + '">' + escapeHTML(plan) + '</span></td>' +
-            '<td>' + escapeHTML(order.audience || '-') + '</td>' +
-            '<td><strong>' + escapeHTML(order.amount || 0) + ' EUR</strong></td>' +
-            '<td class="email-cell">' + escapeHTML(order.customerEmail || '-') + '</td>' +
-            '<td class="email-cell">' + escapeHTML(order.linkedinEmail || '-') + '</td>' +
-            '<td><span class="status-badge status-' + escapeHTML(status) + '">' + escapeHTML(getStatusLabel(status)) + '</span><br><small>' + escapeHTML(getCredentialLabel(order)) + '</small></td>' +
-            '<td class="actions-cell">' + actions + '</td>' +
+        return '<tr' + (late ? ' class="row-late"' : '') + '>' +
+            '<td data-label="Date">' + escapeHTML(date) + '<br><small>' + escapeHTML(timeAgo(order.createdAt)) + '</small></td>' +
+            '<td data-label="Plan"><span class="plan-badge plan-' + escapeHTML(planKey(order.plan)) + '">' + escapeHTML(plan) + '</span><br><small>' + escapeHTML(formatAudience(order.audience)) + '</small></td>' +
+            '<td data-label="Montant"><strong>' + escapeHTML(formatEuro(order.amount)) + '</strong><br>' + paymentBadge(order) + '</td>' +
+            '<td data-label="Client" class="email-cell">' + escapeHTML(order.customerEmail || '-') + linkedin + '</td>' +
+            '<td data-label="Statut"><span class="status-badge status-' + escapeHTML(status) + '">' + escapeHTML(getStatusLabel(status)) + '</span>' +
+                (late ? ' <span class="late-badge" title="Identifiants reçus il y a plus de ' + LATE_AFTER_MIN + ' min">En retard</span>' : '') +
+                '<br><small>' + escapeHTML(credentialNote) + '</small></td>' +
+            '<td data-label="Prochaine action" class="next-cell">' + nextActions(order) + '</td>' +
+            '<td class="actions-cell">' +
+                '<button class="action-btn view-btn" onclick="viewOrderSafe(' + jsArg(order.sessionId) + ')">Détails</button>' +
+                '<select class="status-select" aria-label="Changer le statut" onchange="updateStatus(' + jsArg(order.sessionId) + ', this.value)">' + renderStatusOptions('') + '</select>' +
+            '</td>' +
         '</tr>';
     }).join('');
 }
@@ -462,9 +548,9 @@ async function sendCredentialLink(sessionId) {
             return showToast('Erreur: ' + (data.error || 'Echec'), 'error');
         }
         if (data.link) {
-            await copyText(data.link, data.emailSent ? 'Lien envoye par email et copie' : 'Lien copie');
+            await copyText(data.link, data.emailSent ? 'Lien envoyé par e-mail et copié' : 'Lien copié, à envoyer sur WhatsApp');
         } else {
-            showToast(data.emailSent ? 'Lien envoye par email' : 'Lien genere', 'success');
+            showToast(data.emailSent ? 'Lien envoyé par e-mail' : 'Lien généré', 'success');
         }
         loadStats();
         loadOrders();
@@ -525,6 +611,11 @@ async function viewOrderSafe(sessionId) {
             ['Montant', '<strong>' + escapeHTML(order.amount || 0) + ' ' + escapeHTML((order.currency || 'EUR').toUpperCase()) + '</strong>'],
             ['Statut', '<span class="status-badge status-' + escapeHTML(status) + '">' + escapeHTML(getStatusLabel(status)) + '</span>'],
             ['Email LinkedIn', escapeHTML(order.linkedinEmail || '-')],
+            ['Paiement', order.status === 'refunded'
+                ? 'Remboursée' + (order.refundMethod === 'manual' ? ' (hors site)' : '')
+                : order.isPaid
+                    ? 'Payée' + (order.paidAt ? ' le ' + escapeHTML(safeDate(order.paidAt)) : '') + (order.paymentMethod ? ' (' + escapeHTML(order.paymentMethod) + ')' : '')
+                    : (order.paymentDue ? '<span class="pay-badge pay-due">À encaisser</span>' : 'Non payée')],
             ['Identifiants', escapeHTML(credentialStatus)],
             ['Lien envoye le', escapeHTML(safeDate(order.credentialLinkSentAt))],
             ['Lien expire le', escapeHTML(safeDate(order.credentialLinkExpiresAt))],
@@ -544,17 +635,27 @@ async function viewOrderSafe(sessionId) {
         }).join('');
 
         if (actions) {
+            var id = jsArg(order.sessionId);
             var html = '';
             if (canSendCredentialLink(order)) {
-                html += '<button class="auto-btn" onclick="sendCredentialLink(' + jsArg(order.sessionId) + ')">Paiement recu / envoyer lien</button>';
+                html += '<button class="auto-btn" onclick="sendCredentialLink(' + id + ')">' + (order.credentialLinkSentAt ? 'Renvoyer le lien sécurisé' : 'Envoyer le lien sécurisé') + '</button>';
             }
             if (order.hasCredentials) {
-                html += '<button class="auto-btn" onclick="revealCredentials(' + jsArg(order.sessionId) + ')">Reveler / copier</button>';
+                html += '<button class="auto-btn" onclick="revealCredentials(' + id + ')">Copier les accès</button>';
             }
-            html += '<button class="auto-btn" onclick="sendReminderFromModal(' + jsArg(order.sessionId) + ')">Envoyer rappel</button>';
+            if (order.status !== 'done' && order.status !== 'refunded' && (order.hasCredentials || order.status === 'activating')) {
+                html += '<button class="auto-btn" onclick="markActivated(' + id + ')">Marquer activée</button>';
+            }
             if (order.status !== 'refunded') {
-                html += '<button class="auto-btn auto-btn-danger" onclick="refundFromModal(' + jsArg(order.sessionId) + ')">Rembourser</button>';
+                html += order.isPaid
+                    ? '<button class="auto-btn" onclick="markPaid(' + id + ', false)">Repasser en non payée</button>'
+                    : '<button class="auto-btn" onclick="markPaid(' + id + ', true)">Marquer payée</button>';
             }
+            html += '<button class="auto-btn" onclick="sendReminderFromModal(' + id + ')">Envoyer un rappel</button>';
+            if (order.status !== 'refunded' && order.isPaid) {
+                html += '<button class="auto-btn auto-btn-danger" onclick="refundFromModal(' + id + ')">Rembourser</button>';
+            }
+            html += '<button class="auto-btn auto-btn-danger" onclick="deleteOrder(' + id + ')">Supprimer</button>';
             actions.innerHTML = html;
         }
     } catch (err) {
@@ -570,14 +671,41 @@ async function sendReminderFromModal(sessionId) {
     } catch (err) { showToast('Erreur réseau', 'error'); }
 }
 
+async function markPaid(sessionId, paid) {
+    var body = { action: 'mark_paid', session_id: sessionId, paid: paid };
+    if (paid) {
+        var method = prompt('Commande payée. Moyen de paiement (facultatif) :', '');
+        if (method === null) return;
+        if (method.trim()) body.method = method.trim();
+    } else if (!confirm('Repasser cette commande en non payée ?')) {
+        return;
+    }
+    try {
+        var res = await fetch(API_BASE + '/update-order', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+        if (res.status === 401) return logout401();
+        var data = await res.json();
+        if (!data.success) return showToast('Erreur : ' + (data.error || 'échec'), 'error');
+        showToast(paid ? 'Commande marquée payée' : 'Commande repassée en non payée', 'success');
+        closeModal();
+        loadStats();
+        loadOrders();
+    } catch (err) { showToast('Erreur réseau', 'error'); }
+}
+
+async function markActivated(sessionId) {
+    if (!confirm("Premium est actif sur le compte du client ?\n\nLe client reçoit l'e-mail de confirmation et ses identifiants sont supprimés.")) return;
+    closeModal();
+    await updateStatus(sessionId, 'done');
+}
+
 async function refundFromModal(sessionId) {
-    if (!confirm('Confirmer le remboursement de cette commande ?')) return;
+    if (!confirm('Le remboursement se fait hors du site, par le même moyen que le paiement.\n\nMarquer cette commande comme remboursée et prévenir le client par e-mail ?')) return;
     try {
         var res = await fetch(API_BASE + '/refund', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ session_id: sessionId, reason: 'requested_by_customer' }) });
         var data = await res.json();
         if (data.success) {
-            showToast('Remboursement effectué: ' + data.refund.amount + '€', 'success');
-            var m = $('modalOverlay'); if (m) m.style.display = 'none';
+            showToast(data.refund.manual ? 'Remboursement enregistré, client prévenu' : 'Remboursement effectué : ' + data.refund.amount + ' €', 'success');
+            closeModal();
             loadStats(); loadOrders();
         } else { showToast('Erreur: ' + (data.error || 'Échec'), 'error'); }
     } catch (err) { showToast('Erreur réseau', 'error'); }
@@ -588,6 +716,7 @@ async function updateStatus(sessionId, status) {
     if (!status) return;
     try {
         var res = await fetch(API_BASE + '/update-order', { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ session_id: sessionId, status: status }) });
+        if (res.status === 401) return logout401();
         var data = await res.json();
         if (data.success) { showToast('Statut mis à jour', 'success'); loadStats(); loadOrders(); }
         else { showToast('Erreur: ' + (data.error || 'Échec'), 'error'); }
@@ -602,6 +731,7 @@ async function deleteOrder(sessionId) {
         var data = await res.json();
         if (data.success) { 
             showToast('Commande supprimée', 'success'); 
+            closeModal();
             loadStats(); 
             loadOrders(); 
         } else { 
@@ -652,7 +782,7 @@ function renderBreakdown(containerId, revenueMap, ordersMap, suffix) {
     container.innerHTML = entries.map(function(e) {
         var pct = ((e[1] / total) * 100).toFixed(1);
         var orders = ordersMap[e[0]] || 0;
-        return '<div class="breakdown-item"><div class="breakdown-header"><span class="breakdown-name">' + e[0] + '</span><span class="breakdown-value">' + e[1].toLocaleString('fr-FR') + suffix + ' (' + orders + ')</span></div><div class="breakdown-bar"><div class="breakdown-fill" style="width:' + pct + '%"></div></div></div>';
+        return '<div class="breakdown-item"><div class="breakdown-header"><span class="breakdown-name">' + escapeHTML(e[0]) + '</span><span class="breakdown-value">' + e[1].toLocaleString('fr-FR') + suffix + ' (' + orders + ')</span></div><div class="breakdown-bar"><div class="breakdown-fill" style="width:' + pct + '%"></div></div></div>';
     }).join('');
 }
 
@@ -673,13 +803,14 @@ function renderKPIs(data) {
     var container = $('kpiSection');
     if (!container) return;
     var kpis = [
-        { label: 'Revenu total', value: data.revenue.total.toLocaleString('fr-FR') + '€' },
+        { label: 'Encaissé', value: formatEuro(data.revenue.total) },
+        { label: 'À encaisser', value: formatEuro(data.revenue.due) },
         { label: 'Commandes', value: data.orders.total },
-        { label: 'Panier moyen', value: data.conversion.averageOrderValue.toFixed(2) + '€' },
-        { label: 'Taux complétion', value: data.conversion.completionRate.toFixed(1) + '%' }
+        { label: 'Panier moyen (payées)', value: data.conversion.averageOrderValue.toFixed(2) + ' €' },
+        { label: 'Commandes activées', value: data.conversion.completionRate.toFixed(1) + '%' }
     ];
     if (data.topPlans && data.topPlans.length) {
-        kpis.push({ label: 'Top plan', value: data.topPlans[0].plan + ' (' + data.topPlans[0].revenue + '€)' });
+        kpis.push({ label: 'Top plan', value: escapeHTML(data.topPlans[0].plan) + ' (' + formatEuro(data.topPlans[0].revenue) + ')' });
     }
     container.innerHTML = kpis.map(function(k) {
         return '<div class="kpi-item"><span class="kpi-label">' + k.label + '</span><span class="kpi-value">' + k.value + '</span></div>';
@@ -956,13 +1087,13 @@ on('btnBulkUpdate', 'click', async function() {
 on('btnRefund', 'click', async function() {
     var sid = $('refundSessionId'), reasonEl = $('refundReason');
     if (!sid || !sid.value.trim()) return showToast('Entrez un Session ID', 'error');
-    if (!confirm('Confirmer le remboursement ?')) return;
+    if (!confirm('Le remboursement se fait hors du site, par le même moyen que le paiement.\n\nMarquer cette commande comme remboursée et prévenir le client par e-mail ?')) return;
     this.disabled = true;
     var result = $('resultRefund'); if (result) result.textContent = 'Remboursement...';
     try {
         var res = await fetch(API_BASE + '/refund', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ session_id: sid.value.trim(), reason: reasonEl ? reasonEl.value : 'requested_by_customer' }) });
         var data = await res.json();
-        if (data.success) { if (result) { result.textContent = 'Remboursé: ' + data.refund.amount + '€ (ID: ' + data.refund.id + ')'; result.className = 'auto-result auto-result-success'; } showToast('Remboursement effectué: ' + data.refund.amount + '€', 'success'); loadStats(); loadOrders(); }
+        if (data.success) { var msg = data.refund.manual ? 'Remboursement enregistré (' + data.refund.amount + ' €), client prévenu' : 'Remboursé : ' + data.refund.amount + ' € (ID : ' + data.refund.id + ')'; if (result) { result.textContent = msg; result.className = 'auto-result auto-result-success'; } showToast(msg, 'success'); loadStats(); loadOrders(); }
         else { if (result) { result.textContent = 'Erreur: ' + (data.error || 'Échec'); result.className = 'auto-result auto-result-error'; } }
     } catch (err) { if (result) { result.textContent = 'Erreur réseau'; result.className = 'auto-result auto-result-error'; } }
     this.disabled = false;
@@ -1012,6 +1143,23 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { var
 // ===== Filter =====
 on('filterStatus', 'change', function(e) { loadOrders(1, e.target.value); });
 
+var currentView = '';
+var currentPayment = '';
+on('filterPayment', 'change', function(e) { currentPayment = e.target.value; loadOrders(1); });
+
+function setView(view) {
+    currentView = view || '';
+    document.querySelectorAll('.queue-chip').forEach(function(chip) {
+        chip.classList.toggle('active', chip.dataset.view === currentView);
+    });
+    var ordersTab = document.querySelector('.tab-btn[data-tab="orders"]');
+    if (ordersTab && !ordersTab.classList.contains('active')) ordersTab.click();
+    loadOrders(1);
+}
+document.querySelectorAll('.queue-chip, .stat-link').forEach(function(el) {
+    el.addEventListener('click', function() { setView(el.dataset.view); });
+});
+
 // ===== Refresh =====
 on('refreshBtn', 'click', async function() {
     var icon = $('refreshIcon');
@@ -1027,8 +1175,16 @@ async function loadConfigCheck() {
         var res = await fetch(API_BASE + '/config-check', { headers: authHeaders() });
         if (res.status === 401) return;
         var data = await res.json();
+        var notUsed = { cfgStripe: true, cfgWebhook: true };
         [{ id: 'cfgStripe', ok: data.stripe }, { id: 'cfgWebhook', ok: data.webhook }, { id: 'cfgResend', ok: data.resend }, { id: 'cfgTelegram', ok: data.telegram }, { id: 'cfgKV', ok: data.kv }, { id: 'cfgCredentials', ok: data.credentialsEncryption }].forEach(function(item) {
             var el = $(item.id); if (!el) return;
+            if (!item.ok && notUsed[item.id]) {
+                el.textContent = 'Non utilisé';
+                el.title = 'Paiement sur WhatsApp : Stripe n\'est pas nécessaire';
+                el.style.background = 'rgba(148, 163, 184, 0.15)';
+                el.style.color = '#94A3B8';
+                return;
+            }
             el.textContent = item.ok ? 'Actif' : 'Non configuré';
             el.style.background = item.ok ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
             el.style.color = item.ok ? '#10B981' : '#EF4444';
@@ -1166,10 +1322,21 @@ async function loadPromos() {
         }
 
         var html = '';
+        var groups = [
+            { title: 'Actifs', items: [] },
+            { title: 'Expirés, épuisés ou désactivés', items: [] }
+        ];
         data.codes.forEach(function(promo) {
             var isExpired = promo.expiresAt && new Date(promo.expiresAt) < new Date();
             var isExhausted = promo.maxUses && promo.usedCount >= promo.maxUses;
             var isActive = promo.active && !isExpired && !isExhausted;
+            groups[isActive ? 0 : 1].items.push({ promo: promo, isExpired: isExpired, isExhausted: isExhausted, isActive: isActive });
+        });
+        groups.forEach(function(group) {
+            if (!group.items.length) return;
+            html += '<h3 class="promo-group-title">' + group.title + ' (' + group.items.length + ')</h3>';
+            group.items.forEach(function(item) {
+            var promo = item.promo, isExpired = item.isExpired, isExhausted = item.isExhausted, isActive = item.isActive;
             var statusClass = isActive ? 'active' : (isExpired ? 'expired' : 'inactive');
             var statusText = isActive ? 'Actif' : (isExpired ? 'Expiré' : (isExhausted ? 'Épuisé' : 'Inactif'));
 
@@ -1220,6 +1387,7 @@ async function loadPromos() {
             html += '<button onclick="deletePromo(' + jsArg(promo.code) + ')" class="promo-action-btn danger">Supprimer</button>';
             html += '</div>';
             html += '</div>';
+            });
         });
 
         list.innerHTML = html;

@@ -1,6 +1,7 @@
 require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { isPaid } = require('./_payment');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -48,6 +49,8 @@ function generateCSV(orders) {
     'Customer Email',
     'LinkedIn Email',
     'Language',
+    'Paid',
+    'Paid At',
     'Updated At'
   ];
 
@@ -62,6 +65,8 @@ function generateCSV(orders) {
     order.customerEmail || '',
     order.linkedinEmail || '',
     order.language || 'fr',
+    order.isPaid ? 'yes' : 'no',
+    order.paidAt || '',
     order.updatedAt || ''
   ]);
 
@@ -77,6 +82,7 @@ function sanitizeOrder(order) {
   const copy = { ...order };
   copy.hasCredentials = !!(order.credentials && order.credentials.linkedinPassword) || !!order.linkedinPassword || !!order.hasCredentials;
   copy.credentialsSubmittedAt = order.credentialsSubmittedAt || (order.credentials && order.credentials.submittedAt) || '';
+  copy.isPaid = isPaid(order);
   delete copy.linkedinPassword;
   delete copy.credentials;
   if (copy.credentialLink) {

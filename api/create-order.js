@@ -85,6 +85,7 @@ module.exports = async (req, res) => {
       language,
       status: 'pending_payment',
       source: 'checkout-whatsapp',
+      paymentFlow: 'after_activation',
       hasCredentials: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

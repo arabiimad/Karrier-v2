@@ -2,6 +2,7 @@ require('./_env');
 const Stripe = require('stripe');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { isPaid } = require('./_payment');
 const rateLimit = require('./_rate-limit');
 const {
   buildEmailHtml,
@@ -29,8 +30,6 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
   try {
     const { session_id, reason } = req.body;
 
@@ -45,14 +44,33 @@ module.exports = async (req, res) => {
 
     const order = typeof data === 'string' ? JSON.parse(data) : data;
 
-    if (!order.paymentIntentId) {
-      return res.status(400).json({ error: 'No payment intent found' });
-    }
-
     if (order.status === 'refunded') {
       return res.status(400).json({ error: 'Order already refunded' });
     }
 
+    // WhatsApp orders are paid outside the site, so the money goes back the same way.
+    // Here we only record the refund and tell the customer.
+    if (!order.paymentIntentId) {
+      if (!isPaid(order)) {
+        return res.status(400).json({ error: 'Order is not paid' });
+      }
+      order.status = 'refunded';
+      order.refundMethod = 'manual';
+      order.refundReason = reason || 'requested_by_customer';
+      order.refundedAt = new Date().toISOString();
+      order.updatedAt = order.refundedAt;
+      await kvStore.set(`order:${session_id}`, JSON.stringify(order));
+      if (process.env.RESEND_API_KEY && order.customerEmail) {
+        await sendRefundEmail(order);
+      }
+      return res.status(200).json({
+        success: true,
+        refund: { id: 'manual', amount: order.amount, status: 'recorded', manual: true },
+        order
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const refund = await stripe.refunds.create({
       payment_intent: order.paymentIntentId,
       reason: reason || 'requested_by_customer',
@@ -98,14 +116,18 @@ async function sendRefundEmail(order) {
     const t = lang === 'fr' ? {
       subject: 'Remboursement effectué — Kareer',
       title: 'Remboursement effectué',
-      message: 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans un délai habituel de 5 à 10 jours ouvrés.',
+      message: order.refundMethod === 'manual'
+        ? 'Votre commande a été remboursée. Le délai pour voir le montant revenir dépend du moyen de paiement utilisé.'
+        : 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans un délai habituel de 5 à 10 jours ouvrés.',
       amount: 'Montant remboursé',
       order: 'Commande',
       contact: 'Nous contacter'
     } : {
       subject: 'Refund processed — Kareer',
       title: 'Refund processed',
-      message: 'Your order has been refunded. The amount will be credited to your account within the usual 5 to 10 business days.',
+      message: order.refundMethod === 'manual'
+        ? 'Your order has been refunded. How long the money takes to arrive depends on the payment method you used.'
+        : 'Your order has been refunded. The amount will be credited to your account within the usual 5 to 10 business days.',
       amount: 'Refunded amount',
       order: 'Order',
       contact: 'Contact us'

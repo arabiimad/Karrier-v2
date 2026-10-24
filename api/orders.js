@@ -1,6 +1,7 @@
 require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { isPaid, isPaymentDue, QUEUES } = require('./_payment');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -13,12 +14,15 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { status, search, page = '1', limit = '50' } = req.query;
+    const { status, search, view, payment, page = '1', limit = '50' } = req.query;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
     const orders = await kvStore.getAllOrders(order => {
       if (status && order.status !== status) return false;
+      if (view && QUEUES[view] && !QUEUES[view](order)) return false;
+      if (payment === 'paid' && !isPaid(order)) return false;
+      if (payment === 'unpaid' && (isPaid(order) || order.status === 'refunded')) return false;
       if (search) {
         const q = search.toLowerCase();
         return (order.customerEmail || '').toLowerCase().includes(q)
@@ -56,6 +60,8 @@ function sanitizeOrder(order) {
   copy.credentialsExpiresAt = order.credentials && order.credentials.expiresAt ? order.credentials.expiresAt : null;
   copy.credentialLinkSentAt = order.credentialLinkSentAt || (order.credentialLink && order.credentialLink.sentAt) || null;
   copy.credentialLinkExpiresAt = order.credentialLink && order.credentialLink.expiresAt ? order.credentialLink.expiresAt : null;
+  copy.isPaid = isPaid(order);
+  copy.paymentDue = isPaymentDue(order);
   delete copy.linkedinPassword;
   delete copy.credentials;
   if (copy.credentialLink) {

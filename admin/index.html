@@ -47,33 +47,39 @@
         <section class="stats-row" id="statsRow">
             <div class="stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-label">Revenu total</div>
+                <div class="stat-label">Encaissé</div>
                 <div class="stat-value" id="statRevenue">—</div>
+                <div class="stat-sub" id="statToday">payé, hors remboursements</div>
             </div>
+            <button type="button" class="stat-card stat-link" data-view="to_collect">
+                <div class="stat-icon">🧾</div>
+                <div class="stat-label">À encaisser</div>
+                <div class="stat-value stat-pending" id="statDue">—</div>
+                <div class="stat-sub" id="statDueCount">activées, pas encore payées</div>
+            </button>
             <div class="stat-card">
                 <div class="stat-icon">📦</div>
                 <div class="stat-label">Commandes</div>
                 <div class="stat-value" id="statOrders">—</div>
+                <div class="stat-sub" id="statTodayOrders">&nbsp;</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-label">En attente</div>
-                <div class="stat-value stat-pending" id="statPending">—</div>
-            </div>
-            <div class="stat-card">
+            <button type="button" class="stat-card stat-link" data-view="to_link">
+                <div class="stat-icon">📨</div>
+                <div class="stat-label">Lien à envoyer</div>
+                <div class="stat-value stat-activating" id="statToLink">—</div>
+                <div class="stat-sub">nouvelles commandes</div>
+            </button>
+            <button type="button" class="stat-card stat-link" data-view="to_activate">
                 <div class="stat-icon">⚡</div>
-                <div class="stat-label">En activation</div>
-                <div class="stat-value stat-activating" id="statActivating">—</div>
-            </div>
+                <div class="stat-label">À activer</div>
+                <div class="stat-value stat-activating" id="statToActivate">—</div>
+                <div class="stat-sub">identifiants reçus</div>
+            </button>
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
-                <div class="stat-label">Terminées</div>
+                <div class="stat-label">Activées</div>
                 <div class="stat-value stat-done" id="statDone">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📅</div>
-                <div class="stat-label">Aujourd'hui</div>
-                <div class="stat-value" id="statToday">—</div>
+                <div class="stat-sub">Premium actif</div>
             </div>
         </section>
 
@@ -90,14 +96,26 @@
 
         <!-- TAB: Orders -->
         <div class="tab-content active" id="tab-orders">
+            <div class="queue-bar" role="group" aria-label="Files de travail">
+                <button type="button" class="queue-chip active" data-view="">Toutes <span class="queue-count" id="q_all"></span></button>
+                <button type="button" class="queue-chip" data-view="to_link">Lien à envoyer <span class="queue-count" id="q_to_link"></span></button>
+                <button type="button" class="queue-chip" data-view="waiting_credentials">Attente identifiants <span class="queue-count" id="q_waiting_credentials"></span></button>
+                <button type="button" class="queue-chip" data-view="to_activate">À activer <span class="queue-count" id="q_to_activate"></span></button>
+                <button type="button" class="queue-chip" data-view="to_collect">À encaisser <span class="queue-count" id="q_to_collect"></span></button>
+            </div>
             <section class="filters-row">
-                <select id="filterStatus">
+                <select id="filterStatus" aria-label="Statut">
                     <option value="">Tous les statuts</option>
-                    <option value="pending_payment">Paiement en attente</option>
-                    <option value="awaiting_credentials">Identifiants demandes</option>
-                    <option value="activating">En activation</option>
-                    <option value="done">Terminé</option>
-                    <option value="refunded">Remboursé</option>
+                    <option value="pending_payment">Nouvelle</option>
+                    <option value="awaiting_credentials">Attente identifiants</option>
+                    <option value="activating">À activer</option>
+                    <option value="done">Activée</option>
+                    <option value="refunded">Remboursée</option>
+                </select>
+                <select id="filterPayment" aria-label="Paiement">
+                    <option value="">Payées et non payées</option>
+                    <option value="paid">Payées</option>
+                    <option value="unpaid">Non payées</option>
                 </select>
                 <input type="text" id="searchInput" placeholder="Rechercher email, plan..." class="search-input">
                 <button class="refresh-btn" id="refreshBtn"><span class="refresh-icon" id="refreshIcon">🔄</span> Actualiser</button>
@@ -111,16 +129,15 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Plan</th>
-                                <th>Audience</th>
                                 <th>Montant</th>
-                                <th>Email client</th>
-                                <th>Email LinkedIn</th>
+                                <th>Client</th>
                                 <th>Statut</th>
-                                <th>Actions</th>
+                                <th>Prochaine action</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="ordersBody">
-                            <tr><td colspan="8" class="empty-state">Chargement...</td></tr>
+                            <tr><td colspan="7" class="empty-state">Chargement...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -220,16 +237,16 @@
                     <p>Change le statut de toutes les commandes d'un statut à un autre.</p>
                     <div class="auto-row">
                         <select id="bulkFrom" class="auto-select">
-                            <option value="pending_payment">Paiement en attente</option>
-                            <option value="awaiting_credentials">Identifiants demandes</option>
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
+                            <option value="pending_payment">Nouvelle</option>
+                            <option value="awaiting_credentials">Attente identifiants</option>
+                            <option value="activating">À activer</option>
+                            <option value="done">Activée</option>
                         </select>
                         <span class="auto-arrow">→</span>
                         <select id="bulkTo" class="auto-select">
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
-                            <option value="refunded">Remboursé</option>
+                            <option value="activating">À activer</option>
+                            <option value="done">Activée</option>
+                            <option value="refunded">Remboursée</option>
                         </select>
                     </div>
                     <button class="auto-btn auto-btn-warning" id="btnBulkUpdate">Appliquer</button>
@@ -239,7 +256,7 @@
                 <div class="auto-card">
                     <div class="auto-icon">💸</div>
                     <h3>Rembourser une commande</h3>
-                    <p>Effectue un remboursement Stripe et notifie le client par email.</p>
+                    <p>Enregistre le remboursement (fait hors site, par le même moyen que le paiement) et prévient le client par email.</p>
                     <input type="text" id="refundSessionId" placeholder="Session ID" class="auto-input">
                     <select id="refundReason" class="auto-select">
                         <option value="requested_by_customer">Demande client</option>
@@ -275,11 +292,11 @@
                         </select>
                         <select id="exportStatus">
                             <option value="">Tous les statuts</option>
-                            <option value="pending_payment">Paiement en attente</option>
-                            <option value="awaiting_credentials">Identifiants demandes</option>
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
-                            <option value="refunded">Remboursé</option>
+                            <option value="pending_payment">Nouvelle</option>
+                            <option value="awaiting_credentials">Attente identifiants</option>
+                            <option value="activating">À activer</option>
+                            <option value="done">Activée</option>
+                            <option value="refunded">Remboursée</option>
                         </select>
                         <button class="auto-btn" id="btnExport">Télécharger</button>
                     </div>
@@ -370,7 +387,7 @@
             </div>
             <div class="promo-list-container">
                 <div class="promo-list-header">
-                    <h2 class="promo-list-title">📋 Codes promo actifs</h2>
+                    <h2 class="promo-list-title">📋 Codes promo</h2>
                 </div>
                 <div id="promosList">Chargement...</div>
             </div>

@@ -13,6 +13,7 @@ const {
   formatPlan,
   getSiteUrl
 } = require('./_email');
+const { isPaid } = require('./_payment');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
 const LINK_TTL_MS = 72 * 60 * 60 * 1000;
@@ -34,6 +35,9 @@ module.exports = async (req, res) => {
       }
       if (action === 'reveal_credentials') {
         return await revealCredentials(session_id, res);
+      }
+      if (action === 'mark_paid') {
+        return await markPaid(session_id, req.body, res);
       }
       return res.status(400).json({ error: 'Invalid action' });
     } catch (error) {
@@ -415,6 +419,32 @@ async function rewardReferrerIfNeeded(order) {
   }
 }
 
+async function markPaid(sessionId, body, res) {
+  if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
+
+  const data = await kvStore.get(`order:${sessionId}`);
+  if (!data) return res.status(404).json({ error: 'Order not found' });
+
+  const order = typeof data === 'string' ? JSON.parse(data) : data;
+  const paid = body.paid !== false;
+  const now = new Date().toISOString();
+
+  order.paid = paid;
+  order.paidAt = paid ? (order.paidAt || now) : null;
+  if (paid && body.method) order.paymentMethod = String(body.method).slice(0, 60);
+  if (!paid) delete order.paymentMethod;
+  order.updatedAt = now;
+
+  await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+  await logAction(kvStore, {
+    action: paid ? 'marked_paid' : 'marked_unpaid',
+    sessionId,
+    timestamp: now
+  });
+
+  return res.status(200).json({ success: true, order: sanitizeOrder(order) });
+}
+
 function deleteCredentials(order) {
   if (order.credentials || order.linkedinPassword || order.hasCredentials) {
     delete order.credentials;
@@ -427,6 +457,7 @@ function deleteCredentials(order) {
 function sanitizeOrder(order) {
   const copy = { ...order };
   copy.hasCredentials = !!(order.credentials && order.credentials.linkedinPassword) || !!order.linkedinPassword || !!order.hasCredentials;
+  copy.isPaid = isPaid(order);
   delete copy.credentials;
   delete copy.linkedinPassword;
   if (copy.credentialLink) {
