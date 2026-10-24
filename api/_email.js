@@ -6,8 +6,9 @@ const path = require('path');
 
 const FROM = 'Kareer <notifications@kareer.pro>';
 const REPLY_TO = 'contact@kareer.pro';
-const WHATSAPP_NUMBER = '212651064637';
-const WHATSAPP_DISPLAY = '+212 6 51 06 46 37';
+// WhatsApp username (links use the lowercase form, text shows the brand spelling).
+const WHATSAPP_USERNAME = 'kareer.pro';
+const WHATSAPP_DISPLAY = '@Kareer.pro';
 const LANGS = ['fr', 'en', 'es', 'de'];
 const LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE' };
 const TIME_ZONE = 'Europe/Paris';
@@ -153,7 +154,7 @@ function trackingUrl(order) {
 }
 
 function whatsappUrl(text) {
-  return `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
+  return `https://wa.me/@${WHATSAPP_USERNAME}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 }
 
 // ---------- HTML pieces ----------
@@ -431,7 +432,7 @@ async function notifyTelegram(text) {
 module.exports = {
   FROM,
   REPLY_TO,
-  WHATSAPP_NUMBER,
+  WHATSAPP_USERNAME,
   WHATSAPP_DISPLAY,
   adminEmail,
   buildEmailHtml,

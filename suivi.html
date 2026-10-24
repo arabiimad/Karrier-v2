@@ -106,7 +106,7 @@
 
     <script>
     (function () {
-        var WA_NUMBER = '212651064637';
+        var WA_LINK = 'https://wa.me/@kareer.pro';
         var T = {
             fr: {
                 title: 'Suivi de commande', subtitle: "Où en est l'activation de votre LinkedIn Premium.", loading: 'Chargement…', back: 'Retour au site',
@@ -242,7 +242,7 @@
             var who = /^(student|etudiant)/.test(key) ? t.student : /^(salary|salarie)/.test(key) ? t.salary : '';
             return (order.planLabel || order.plan || 'LinkedIn Premium') + (who ? ' · ' + who : '');
         }
-        function wa(text) { return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text); }
+        function wa(text) { return WA_LINK + '?text=' + encodeURIComponent(text); }
         function fill(template, map) { return template.replace(/\{(\w+)\}/g, function (_, k) { return map[k] != null ? map[k] : ''; }); }
 
         function applyStatic() {

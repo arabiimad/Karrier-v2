@@ -680,7 +680,8 @@ const translations = {
 };
 
 const LOCALE_MAP = { fr: 'fr-FR', en: 'en-IE', es: 'es-ES', de: 'de-DE' };
-const WA_NUMBER = '212651064637';
+// WhatsApp username link; ?text= prefills the message.
+const WA_LINK = 'https://wa.me/@kareer.pro';
 
 function detectUrlLang() {
     try {
@@ -732,7 +733,7 @@ function setLanguage(lang) {
     });
     document.querySelectorAll('[data-wa]').forEach(el => {
         const text = dict['wa_' + el.getAttribute('data-wa')];
-        if (text) el.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+        if (text) el.href = WA_LINK + '?text=' + encodeURIComponent(text);
     });
     document.querySelectorAll('[data-lang]').forEach(btn => {
         const on = btn.getAttribute('data-lang') === lang;

@@ -93,7 +93,7 @@
         </ol>
         <p class="fine" data-i18n="merci_guarantee">Si l'activation n'aboutit pas, vous ne payez rien.</p>
         <div class="done-actions">
-            <a class="btn btn-wa" id="waConfirm" href="https://wa.me/212651064637" target="_blank" rel="noopener">
+            <a class="btn btn-wa" id="waConfirm" href="https://wa.me/@kareer.pro" target="_blank" rel="noopener">
                 <svg aria-hidden="true"><use href="#i-wa"/></svg>
                 <span data-i18n="merci_wa">Confirmer sur WhatsApp</span>
             </a>
@@ -147,7 +147,7 @@
             var lang = window.currentLang || 'fr';
             var wa = document.getElementById('waConfirm');
             if (!order) {
-                wa.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(tr('wa_order'));
+                wa.href = WA_LINK + '?text=' + encodeURIComponent(tr('wa_order'));
                 return;
             }
             var amount = new Intl.NumberFormat(LOCALES[lang] || 'fr-FR', {
@@ -163,7 +163,7 @@
             document.getElementById('orderReceipt').hidden = false;
             document.getElementById('trackLink').href = 'suivi.html?id=' + encodeURIComponent(ref);
             var text = tr('wa_confirm').replace('{ref}', ref).replace('{plan}', plan).replace('{amount}', amount);
-            wa.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+            wa.href = WA_LINK + '?text=' + encodeURIComponent(text);
         }
 
         document.addEventListener('kareer:lang', render);
