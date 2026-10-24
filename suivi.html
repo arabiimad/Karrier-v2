@@ -3,277 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suivi de commande — Kareer</title>
+    <title>Suivi de commande · Kareer</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="kareer-logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #0F172A;
-            --card: #1E293B;
-            --border: #334155;
-            --text: #CBD5E1;
-            --bright: #F1F5F9;
-            --muted: #94A3B8;
-            --primary: #1565C0;
-            --primary-light: #42A5F5;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --info: #3B82F6;
-            --danger: #EF4444;
+            --paper: #F4F1EA; --card: #FFFDF8; --ink: #16181B; --ink-2: #4B5058; --ink-3: #80848B;
+            --rule: #D8D1C3; --blue: #1B4DB8; --wa: #1E7A4C; --wa-ink: #165E3A; --danger: #B4351F; --mark: #FFE36E;
+            --sans: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+            /* older names still used inline by the script */
+            --warning: var(--danger); --success: var(--wa); --muted: var(--ink-3);
+            color-scheme: light;
         }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --paper: #121314; --card: #1C1D20; --ink: #EDEAE3; --ink-2: #B3AFA7; --ink-3: #86837D;
+                --rule: #2D2F33; --blue: #86A6FF; --wa: #4CC38A; --wa-ink: #6FD6A3; --danger: #F08A73; --mark: #4A3F0A;
+                color-scheme: dark;
+            }
         }
-        .track-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 40px 36px;
-            max-width: 560px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-        }
-        .track-logo { width: 52px; height: 52px; margin-bottom: 14px; }
-        .track-card h1 { font-size: 1.4rem; font-weight: 800; color: var(--bright); margin-bottom: 6px; }
-        .track-subtitle { color: var(--muted); font-size: 0.875rem; margin-bottom: 28px; }
-
-        /* Progress bar */
-        .progress-container { margin: 0 0 20px; }
-        .progress-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            color: var(--muted);
-            margin-bottom: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .progress-labels span.active-label { color: var(--primary-light); }
-        .progress-labels span.done-label { color: var(--success); }
-        .progress-track {
-            height: 8px;
-            background: var(--border);
-            border-radius: 99px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            border-radius: 99px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-light));
-            width: 0%;
-            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .progress-fill.done {
-            background: linear-gradient(90deg, var(--success), #34d399);
-        }
-
-        /* ETA badge */
-        .eta-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 24px;
-            border: 1px solid;
-        }
-        .eta-badge.pending,
-        .eta-badge.pending_payment { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--warning); }
-        .eta-badge.awaiting_credentials { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.3); color: #a78bfa; }
-        .eta-badge.activating { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--info); }
-        .eta-badge.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--success); }
-        .eta-badge.refunded { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--danger); }
-
-        /* Status timeline */
-        .status-timeline { display: flex; flex-direction: column; gap: 0; text-align: left; margin: 0 0 24px; }
+        body { font-family: var(--sans); background: var(--paper); color: var(--ink); min-height: 100vh; display: flex; justify-content: center; padding: 32px 16px 48px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        .track-card { width: 100%; max-width: 560px; }
+        .track-logo { width: 30px; height: 30px; border-radius: 7px; margin-bottom: 28px; }
+        .track-card h1 { font-size: clamp(30px, 6vw, 40px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; }
+        .track-subtitle { color: var(--ink-2); margin: 10px 0 28px; }
+        #trackContent { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 24px; }
+        .progress-container { margin-bottom: 18px; }
+        .progress-labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
+        .progress-labels span.active-label { color: var(--ink); font-weight: 600; }
+        .progress-labels span.done-label { color: var(--ink-2); }
+        .progress-track { height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--ink); transition: width .6s ease; }
+        .progress-fill.done { background: var(--wa); }
+        .eta-badge { display: inline-block; font-family: var(--mono); font-size: 13px; padding: 4px 8px; border: 1px solid var(--rule); border-radius: 4px; margin-bottom: 22px; color: var(--ink-2); }
+        .eta-badge.done { border-color: var(--wa); color: var(--wa); }
+        .eta-badge.refunded { border-color: var(--danger); color: var(--danger); }
+        .status-timeline { margin-bottom: 22px; }
         .timeline-step { display: flex; align-items: flex-start; gap: 14px; position: relative; padding-bottom: 20px; }
         .timeline-step:last-child { padding-bottom: 0; }
-        .timeline-dot {
-            width: 34px; height: 34px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-            background: var(--bg);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.95rem; flex-shrink: 0;
-            position: relative; z-index: 1;
-            transition: all 0.3s;
-        }
-        .timeline-step.active .timeline-dot { border-color: var(--primary); background: var(--primary); box-shadow: 0 0 12px rgba(21,101,192,0.4); }
-        .timeline-step.completed .timeline-dot { border-color: var(--success); background: var(--success); }
-        .timeline-line {
-            position: absolute; left: 16px; top: 34px;
-            width: 2px; height: calc(100% - 34px);
-            background: var(--border);
-        }
-        .timeline-step.completed .timeline-line { background: var(--success); }
+        .timeline-dot { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--rule); background: var(--card); display: grid; place-items: center; font-family: var(--mono); font-size: 12px; color: var(--ink-3); flex-shrink: 0; position: relative; z-index: 1; }
+        .timeline-step.active .timeline-dot { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+        .timeline-step.completed .timeline-dot { border-color: var(--ink); color: var(--ink); }
+        .timeline-line { position: absolute; left: 13px; top: 28px; width: 1px; height: calc(100% - 28px); background: var(--rule); }
         .timeline-step:last-child .timeline-line { display: none; }
-        .timeline-info h3 { font-size: 0.9rem; font-weight: 700; color: var(--bright); margin-bottom: 2px; }
-        .timeline-info p { font-size: 0.78rem; color: var(--muted); }
-        .timeline-step.active .timeline-info h3 { color: var(--primary-light); }
-        .timeline-step.completed .timeline-info h3 { color: var(--success); }
-
-        /* Order details */
-        .order-details {
-            background: rgba(15,23,42,0.6);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px 20px;
-            text-align: left;
-            margin-bottom: 20px;
-        }
-        .detail-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(51,65,85,0.5); font-size: 0.82rem; }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { color: var(--muted); }
-        .detail-val { color: var(--bright); font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
-
-        /* Referral section */
-        .referral-section {
-            background: rgba(16,185,129,0.07);
-            border: 1px solid rgba(16,185,129,0.25);
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .referral-section h3 { font-size: 0.9rem; font-weight: 700; color: var(--success); margin-bottom: 8px; }
-        .referral-section p { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; }
-        .referral-code-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(15,23,42,0.6);
-            border: 1px solid rgba(16,185,129,0.3);
-            border-radius: 10px;
-            padding: 12px 16px;
-        }
-        .referral-code {
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: 4px;
-            color: var(--success);
-            flex: 1;
-        }
-        .copy-btn {
-            background: rgba(16,185,129,0.15);
-            border: 1px solid rgba(16,185,129,0.3);
-            color: var(--success);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .copy-btn:hover { background: rgba(16,185,129,0.25); }
-        .wa-share-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #25D366;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            margin-top: 10px;
-            transition: all 0.2s;
-        }
-        .wa-share-btn:hover { background: #1fbd5a; }
-
-        /* Last checked + auto-refresh */
-        .poll-info {
-            font-size: 0.72rem;
-            color: var(--muted);
-            margin-bottom: 16px;
-        }
-        .poll-dot {
-            display: inline-block;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--success);
-            margin-right: 5px;
-            animation: pulse-dot 2s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* WhatsApp support */
-        .wa-support {
-            display: none;
-            margin-top: 16px;
-        }
-        .wa-support a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(37,211,102,0.1);
-            border: 1px solid rgba(37,211,102,0.25);
-            color: #25D366;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-        .wa-support a:hover { background: rgba(37,211,102,0.18); }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: var(--primary-light);
-            text-decoration: none;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-        .back-link:hover { text-decoration: underline; }
-
-        .track-loading { color: var(--muted); padding: 40px 0; }
-        .track-error {
-            color: var(--danger);
-            padding: 16px 20px;
-            background: rgba(239,68,68,0.08);
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 12px;
-            margin: 16px 0;
-            font-size: 0.875rem;
-        }
-
-        @media (max-width: 480px) {
-            .track-card { padding: 28px 20px; }
-            .referral-code { font-size: 1.1rem; letter-spacing: 2px; }
-        }
+        .timeline-info h3 { font-size: 16px; font-weight: 700; color: var(--ink-3); padding-top: 3px; }
+        .timeline-info p { font-size: 14px; color: var(--ink-3); }
+        .timeline-step.active .timeline-info h3, .timeline-step.completed .timeline-info h3 { color: var(--ink); }
+        .timeline-step.active .timeline-info p { color: var(--ink-2); }
+        .order-details { border-top: 1px dashed var(--rule); padding-top: 14px; font-family: var(--mono); font-size: 13px; }
+        .detail-row { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; }
+        .detail-label { color: var(--ink-3); }
+        .detail-val { color: var(--ink); text-align: right; }
+        .referral-section { margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--rule); }
+        .referral-section h3 { font-size: 17px; margin-bottom: 4px; }
+        .referral-section p { font-size: 14px; color: var(--ink-2); margin-bottom: 12px; }
+        .referral-code-box { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .referral-code { flex: 1; font-family: var(--mono); font-size: 18px; font-weight: 600; letter-spacing: .08em; padding: 10px 12px; border: 1.5px dashed var(--ink); border-radius: 6px; }
+        .copy-btn { min-height: 44px; padding: 0 14px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); border-radius: 6px; font: inherit; font-weight: 700; cursor: pointer; }
+        .copy-btn:hover { background: var(--ink); color: var(--paper); }
+        .wa-share-btn, .wa-support a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--wa); color: var(--wa); border-radius: 6px; text-decoration: none; font-weight: 700; }
+        .wa-share-btn:hover, .wa-support a:hover { background: var(--wa); color: var(--paper); }
+        .wa-support { margin-top: 16px; }
+        .poll-info { margin-top: 16px; font-size: 13px; color: var(--ink-3); }
+        .poll-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--wa); margin-right: 4px; vertical-align: middle; }
+        .back-link { display: inline-block; margin-top: 22px; color: var(--ink-2); font-size: 15px; }
+        .back-link:hover { color: var(--ink); }
+        .track-loading { color: var(--ink-3); }
+        .track-error { color: var(--danger); }
+        .track-form label { display: block; font-weight: 600; margin-bottom: 6px; }
+        .track-form .row { display: flex; gap: 8px; }
+        .track-form input { flex: 1; min-width: 0; min-height: 48px; padding: 0 12px; border: 1.5px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: var(--mono); font-size: 15px; }
+        .track-form input:focus { outline: none; border-color: var(--blue); }
+        .track-form button { min-height: 48px; padding: 0 18px; border: 0; border-radius: 6px; background: var(--blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+        .track-form p { margin-top: 8px; font-size: 13px; color: var(--ink-3); }
+        @media (prefers-color-scheme: dark) { .track-form button { color: #0E1320; } }
+        @media (max-width: 480px) { #trackContent { padding: 18px 16px; } .progress-labels { font-size: 11px; } }
     </style>
 </head>
 <body>
     <div class="track-card">
-        <img src="kareer-logo.png" alt="Kareer" class="track-logo">
+        <a href="/"><img src="karrier-logo.png" alt="Kareer" class="track-logo"></a>
         <h1>Suivi de commande</h1>
-        <p class="track-subtitle">Suivez l'avancement de votre activation LinkedIn Premium</p>
+        <p class="track-subtitle">Où en est l'activation de votre LinkedIn Premium.</p>
         <div id="trackContent">
             <div class="track-loading">Chargement...</div>
         </div>
-        <a href="/" class="back-link">← Retour au site</a>
+        <a href="/" class="back-link">Retour au site</a>
     </div>
 
     <script>
@@ -285,7 +105,7 @@
         var orderCreatedAt = null;
 
         if (!sessionId) {
-            container.innerHTML = '<div class="track-error">Aucun identifiant de commande fourni.</div>';
+            container.innerHTML = '<form class="track-form" action="suivi.html" method="get"><label for="orderId">Numéro de commande</label><div class="row"><input id="orderId" name="id" required autocomplete="off" placeholder="kareer_business-salary_..."><button type="submit">Suivre</button></div><p>Il commence par kareer_ et figure dans votre message WhatsApp et dans vos e-mails de mise à jour.</p></form>';
             return;
         }
 
@@ -308,33 +128,33 @@
             if (order.status === 'pending' || order.status === 'pending_payment') {
                 etaText = 'Paiement en attente de validation';
             } else if (order.status === 'awaiting_credentials') {
-                etaText = 'Paiement valide, identifiants demandes';
+                etaText = 'Paiement validé, accès demandés';
             } else if (order.status === 'activating') {
-                etaText = '⚡ Activation en cours — sous 24h';
+                etaText = 'Activation en cours, sous 24 à 48 h';
             } else if (order.status === 'done') {
-                etaText = '✅ Activé !';
+                etaText = 'Premium est actif';
             } else if (order.status === 'refunded') {
-                etaText = '💸 Remboursé';
+                etaText = 'Remboursé';
             }
 
             // Timeline steps
             var steps = order.status === 'refunded'
                 ? [
-                    { key: 'pending',   icon: '📦', title: 'Commande reçue',   desc: 'Paiement confirmé' },
-                    { key: 'refunded',  icon: '💸', title: 'Remboursé',         desc: 'Votre commande a été remboursée' }
+                    { key: 'pending',   icon: '1', title: 'Commande reçue',   desc: 'Paiement confirmé' },
+                    { key: 'refunded',  icon: '2', title: 'Remboursé',         desc: 'Votre commande a été remboursée' }
                   ]
                 : [
-                    { key: 'pending',    icon: '📦', title: 'Commande reçue',       desc: 'Paiement WhatsApp confirmé' },
-                    { key: 'activating', icon: '⚡', title: 'Activation en cours',  desc: 'Votre compte LinkedIn est en cours d\'activation' },
-                    { key: 'done',       icon: '✅', title: 'Activé !',             desc: 'Votre LinkedIn Premium est opérationnel' }
+                    { key: 'pending',    icon: '1', title: 'Commande reçue',       desc: 'Paiement WhatsApp confirmé' },
+                    { key: 'activating', icon: '2', title: 'Activation en cours',  desc: 'Votre compte LinkedIn est en cours d\'activation' },
+                    { key: 'done',       icon: '3', title: 'Actif',             desc: 'Votre LinkedIn Premium est opérationnel' }
                   ];
 
             if (order.status !== 'refunded') {
                 steps = [
-                    { key: 'pending_payment', icon: '1', title: 'Paiement en attente', desc: 'Votre commande est creee, le paiement est en verification' },
-                    { key: 'awaiting_credentials', icon: '2', title: 'Identifiants demandes', desc: 'Un lien securise vous permet de transmettre votre mot de passe LinkedIn' },
-                    { key: 'activating', icon: '3', title: 'Activation en cours', desc: 'Votre compte LinkedIn est en cours d activation' },
-                    { key: 'done', icon: '4', title: 'Active', desc: 'Votre LinkedIn Premium est operationnel' }
+                    { key: 'pending_payment', icon: '1', title: 'Paiement en attente', desc: 'Votre commande est créée, le paiement est en cours de vérification.' },
+                    { key: 'awaiting_credentials', icon: '2', title: 'Accès demandés', desc: 'Un lien sécurisé vous permet de transmettre votre mot de passe LinkedIn.' },
+                    { key: 'activating', icon: '3', title: 'Activation en cours', desc: 'Premium est en cours d\'activation sur votre compte LinkedIn.' },
+                    { key: 'done', icon: '4', title: 'Actif', desc: 'Votre LinkedIn Premium est opérationnel.' }
                 ];
             }
 
@@ -349,9 +169,9 @@
             html += '<div class="progress-container">';
             html += '<div class="progress-labels">';
             html += '<span class="' + (currentIdx > 0 ? 'done-label' : '') + '">Paiement</span>';
-            html += '<span class="' + (order.status === 'awaiting_credentials' ? progressLabelCls : (currentIdx > 1 ? 'done-label' : '')) + '">Identifiants</span>';
+            html += '<span class="' + (order.status === 'awaiting_credentials' ? progressLabelCls : (currentIdx > 1 ? 'done-label' : '')) + '">Accès</span>';
             html += '<span class="' + (order.status === 'activating' ? progressLabelCls : (currentIdx > 2 ? 'done-label' : '')) + '">Activation</span>';
-            html += '<span class="' + (order.status === 'done' ? 'done-label' : '') + '">Active</span>';
+            html += '<span class="' + (order.status === 'done' ? 'done-label' : '') + '">Actif</span>';
             html += '</div>';
             html += '<div class="progress-track"><div class="progress-fill' + (order.status === 'done' ? ' done' : '') + '" id="progressFill" style="width:0%"></div></div>';
             html += '</div>';
@@ -388,22 +208,22 @@
             // Referral section (only when done)
             if (order.status === 'done' && order.referralCode) {
                 var refUrl = 'https://kareer.pro/?ref=' + order.referralCode;
-                var waShareText = encodeURIComponent('Je viens d\'activer LinkedIn Premium via Kareer 🚀\nUtilise mon code ' + order.referralCode + ' pour bénéficier d\'une réduction : ' + refUrl);
+                var waShareText = encodeURIComponent('J\'ai pris LinkedIn Premium chez Kareer. Avec mon code ' + order.referralCode + ', tu paies 10 € de moins : ' + refUrl);
                 html += '<div class="referral-section">';
-                html += '<h3>🎁 Parrainez vos amis !</h3>';
-                html += '<p>Partagez votre code de parrainage et gagnez des avantages exclusifs.</p>';
+                html += '<h3>Votre code de parrainage</h3>';
+                html += '<p>La personne qui commande avec ce code paie 10 € de moins.</p>';
                 html += '<div class="referral-code-box">';
                 html += '<span class="referral-code" id="refCode">' + order.referralCode + '</span>';
-                html += '<button class="copy-btn" onclick="copyRefCode(\'' + order.referralCode + '\', this)">📋 Copier</button>';
+                html += '<button class="copy-btn" onclick="copyRefCode(\'' + order.referralCode + '\', this)">Copier</button>';
                 html += '</div>';
-                html += '<a href="https://wa.me/?text=' + waShareText + '" target="_blank" class="wa-share-btn">💬 Partager sur WhatsApp</a>';
+                html += '<a href="https://wa.me/?text=' + waShareText + '" target="_blank" class="wa-share-btn">Partager sur WhatsApp</a>';
                 html += '</div>';
             }
 
             // Poll info
             html += '<div class="poll-info" id="pollInfo">';
             if (order.status !== 'done' && order.status !== 'refunded') {
-                html += '<span class="poll-dot"></span> Mise à jour automatique toutes les 60s · ';
+                html += '<span class="poll-dot"></span> Actualisé toutes les 60 s · ';
             }
             html += 'Vérifié : <span id="lastCheckedTime">' + new Date().toLocaleTimeString('fr-FR') + '</span>';
             html += '</div>';
@@ -415,7 +235,7 @@
                 if (hoursElapsed >= 48) showWaSupport = true;
             }
             html += '<div class="wa-support" id="waSupportBlock" style="display:' + (showWaSupport ? 'block' : 'none') + '">';
-            html += '<a href="https://wa.me/212651064637" target="_blank">💬 Contacter le support WhatsApp</a>';
+            html += '<a href="https://wa.me/212651064637" target="_blank">Écrire au support sur WhatsApp</a>';
             html += '</div>';
 
             container.innerHTML = html;
@@ -464,10 +284,10 @@
 
     function copyRefCode(code, btn) {
         navigator.clipboard.writeText(code).then(function() {
-            btn.textContent = '✅ Copié !';
-            setTimeout(function() { btn.textContent = '📋 Copier'; }, 2000);
+            btn.textContent = 'Copié';
+            setTimeout(function() { btn.textContent = 'Copier'; }, 2000);
         }).catch(function() {
-            btn.textContent = '📋 Copier';
+            btn.textContent = 'Copier';
         });
     }
     </script>

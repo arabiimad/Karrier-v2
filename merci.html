@@ -3,440 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merci ! — Kareer</title>
-    <meta name="description" content="Votre commande a bien été reçue. Activation sous 24 à 48h.">
+    <title>Commande envoyée · Kareer</title>
+    <meta name="robots" content="noindex">
+        <link rel="icon" href="karrier-logo.png" type="image/png">
+    <meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121314" media="(prefers-color-scheme: dark)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="kareer-logo.png" type="image/png">
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#1565C0">
-
-    <!-- Inline theme to prevent FOUC -->
-    <script>
-    (function(){try{var t=localStorage.getItem('karrier_theme');if(t==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();
-    </script>
-    <style>html.light-pending body{background:#F5F8FC;color:#1E293B}html.light-pending .theme-icon-sun{opacity:1;transform:rotate(0) scale(1)}html.light-pending .theme-icon-moon{opacity:0;transform:rotate(90deg) scale(.5)}</style>
-
-    <noscript>
-        <style>
-            .animate-fade-up,.animate-fade-in{opacity:1!important;transform:none!important}
-            #particles{display:none!important}
-        </style>
-    </noscript>
-
-    <style>
-        /* Merci page specific styles */
-        .merci-section {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 120px 20px 60px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .merci-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 48px;
-            max-width: 640px;
-            width: 100%;
-            text-align: center;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .merci-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-        }
-
-        .merci-icon svg {
-            width: 40px;
-            height: 40px;
-            color: white;
-            stroke: white;
-        }
-
-        .merci-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-bright);
-            margin-bottom: 12px;
-        }
-
-        .merci-subtitle {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-
-        /* Timeline */
-        .merci-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            text-align: left;
-            margin-bottom: 40px;
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .timeline-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px 0;
-            position: relative;
-        }
-
-        .timeline-step:not(:last-child) {
-            border-bottom: none;
-        }
-
-        .timeline-dot {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 2;
-        }
-
-        .timeline-step.completed .timeline-dot {
-            background: linear-gradient(135deg, #10B981, #059669);
-            color: white;
-        }
-
-        .timeline-step.active .timeline-dot {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            box-shadow: 0 0 20px var(--glow-primary);
-            animation: pulse-dot 2s ease-in-out infinite;
-        }
-
-        .timeline-step.pending .timeline-dot {
-            background: var(--bg-card-hover);
-            border: 2px solid var(--border);
-            color: var(--text-muted);
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { box-shadow: 0 0 10px var(--glow-primary); }
-            50% { box-shadow: 0 0 25px var(--glow-primary); }
-        }
-
-        /* Connecting line between dots */
-        .timeline-step:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            left: 17px;
-            top: 52px;
-            width: 2px;
-            height: calc(100% - 36px);
-            background: var(--border);
-        }
-
-        .timeline-step.completed:not(:last-child)::after {
-            background: linear-gradient(to bottom, #10B981, var(--border));
-        }
-
-        .timeline-content {
-            flex: 1;
-            padding-top: 6px;
-        }
-
-        .timeline-content h2 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-bright);
-            margin-bottom: 4px;
-        }
-
-        .timeline-content p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .timeline-step.completed .timeline-content h2 {
-            color: #10B981;
-        }
-
-        .timeline-step.active .timeline-content h2 {
-            color: var(--primary-light);
-        }
-
-        /* Support box */
-        .merci-support {
-            background: var(--bg-card-hover);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-
-        .merci-support-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--text-bright);
-            margin-bottom: 12px;
-        }
-
-        .support-links {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .support-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border-radius: 12px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .support-link:hover {
-            border-color: var(--primary);
-            color: var(--primary-light);
-        }
-
-        .merci-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary-light);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: opacity 0.3s ease;
-        }
-
-        .merci-back:hover {
-            opacity: 0.8;
-        }
-
-        /* Confetti animation */
-        .confetti-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
-            overflow: hidden;
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            top: -10px;
-            animation: confetti-fall 3s ease-out forwards;
-        }
-
-        @keyframes confetti-fall {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-
-        /* Guarantee badge */
-        .merci-guarantee {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 100px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #10B981;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 32px;
-        }
-
-        @media (max-width: 640px) {
-            .merci-card { padding: 32px 20px; }
-            .merci-title { font-size: 1.5rem; }
-            .merci-icon { width: 64px; height: 64px; }
-            .merci-icon svg { width: 32px; height: 32px; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .timeline-step.active .timeline-dot { animation: none; }
-            .confetti { animation: none; display: none; }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
-<body>
+<body data-title-key="merci_page_title">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.42.25-.69.25-1.29.18-1.41-.08-.12-.28-.2-.57-.35m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.88 9.88m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.41z"/></symbol></svg>
 
-    <!-- Background gradient orbs -->
-    <div class="bg-orbs">
-        <div class="bg-orb bg-orb-1"></div>
-        <div class="bg-orb bg-orb-2"></div>
-        <div class="bg-orb bg-orb-3"></div>
-    </div>
-
-    <canvas id="particles"></canvas>
-
-    <!-- Header -->
-    <header class="header" id="header">
-        <div class="container header-inner">
-            <a href="index.html" class="logo">
-                <img src="kareer-logo.png" alt="Kareer" class="logo-img" width="40" height="40">
-                <span class="logo-text">Kareer</span>
+    <header class="site-header">
+        <div class="wrap header-row">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
             </a>
-            <div class="header-right">
-                <div class="lang-switcher" id="langSwitcher">
-                    <button class="lang-btn" id="langBtn" aria-label="Choisir la langue" data-i18n-aria="lang_label">
-                        <span class="lang-flag" id="langFlag">🇫🇷</span>
-                        <span class="lang-code" id="langCode">FR</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                    </button>
-                    <div class="lang-dropdown" id="langDropdown">
-                        <button class="lang-option active" data-lang="fr"><span>🇫🇷</span> Français</button>
-                        <button class="lang-option" data-lang="en"><span>🇬🇧</span> English</button>
-                        <button class="lang-option" data-lang="es"><span>🇪🇸</span> Español</button>
-                        <button class="lang-option" data-lang="de"><span>🇩🇪</span> Deutsch</button>
-                    </div>
+            <nav class="nav" aria-label="Navigation principale" data-i18n-aria="nav_label">
+                <a href="/#tarifs" data-i18n="nav_pricing">Tarifs</a>
+                <a href="/#etapes" data-i18n="nav_how">Comment ça marche</a>
+                <a href="/#faq" data-i18n="nav_faq">Questions</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
+            </nav>
+            <div class="header-tools">
+                <div class="langs" role="group" aria-label="Langue" data-i18n-aria="lang_label">
+                    <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+                    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+                    <button type="button" data-lang="es" aria-pressed="false">ES</button>
+                    <button type="button" data-lang="de" aria-pressed="false">DE</button>
                 </div>
-                <a href="index.html#pricing" class="header-cta" data-i18n="nav_cta">Voir les offres</a>
+                <a class="btn btn-primary btn-small" href="/#tarifs" data-i18n="nav_cta">Commander</a>
+                <details class="menu">
+                    <summary data-i18n="menu">Menu</summary>
+                    <div class="menu-panel">
+                        <a href="/#tarifs" data-i18n="nav_pricing">Tarifs</a>
+                        <a href="/#etapes" data-i18n="nav_how">Comment ça marche</a>
+                        <a href="/#faq" data-i18n="nav_faq">Questions</a>
+                        <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                        <div class="langs" role="group" aria-label="Langue" data-i18n-aria="lang_label">
+                            <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+                            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+                            <button type="button" data-lang="es" aria-pressed="false">ES</button>
+                            <button type="button" data-lang="de" aria-pressed="false">DE</button>
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
     </header>
 
-    <!-- Confetti -->
-    <div class="confetti-container" id="confettiContainer"></div>
+    <main class="wrap">
+        <section class="page-hero">
+            <h1 class="page-title" data-i18n="merci_title">Votre commande est partie sur WhatsApp.</h1>
+            <p class="page-subtitle" data-i18n="merci_subtitle">Si la conversation ne s'est pas ouverte, écrivez-nous avec le bouton ci-dessous. Voici la suite.</p>
+        </section>
 
-    <!-- Main content -->
-    <section class="merci-section">
-        <div class="merci-card animate-fade-up">
-            <!-- Success icon -->
-            <div class="merci-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-            </div>
-
-            <h1 class="merci-title">Merci pour votre commande ! 🎉</h1>
-            <p class="merci-subtitle">Votre commande a bien été reçue via WhatsApp. Voici les prochaines étapes :</p>
-
-            <!-- Guarantee badge -->
-            <div class="merci-guarantee">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span data-i18n="merci_guarantee">Remboursement int&eacute;gral si &eacute;chec sous 30 jours</span>
-            </div>
-
-            <!-- Timeline -->
-            <ol class="merci-timeline">
-                <li class="timeline-step completed">
-                    <div class="timeline-dot">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="timeline-content">
-                        <h2>Commande reçue</h2>
-                        <p>Votre demande a été transmise à notre équipe via WhatsApp.</p>
-                    </div>
-                </li>
-                <li class="timeline-step active">
-                    <div class="timeline-dot">2</div>
-                    <div class="timeline-content">
-                        <h2>Règlement &amp; activation</h2>
-                        <p>Notre équipe vous contacte pour le règlement et active votre accès sous 24–48h.</p>
-                    </div>
-                </li>
-                <li class="timeline-step pending">
-                    <div class="timeline-dot">3</div>
-                    <div class="timeline-content">
-                        <h2>Accès activé !</h2>
-                        <p>Vous recevrez un email de confirmation dès que votre compte est activé.</p>
-                    </div>
-                </li>
-            </ol>
-
-            <!-- Support -->
-            <div class="merci-support">
-                <p class="merci-support-title">Une question ? Contactez-nous :</p>
-                <div class="support-links">
-                    <a href="https://wa.me/212651064637?text=Bonjour%2C%20j'ai%20une%20question%20sur%20ma%20commande%20Kareer" target="_blank" rel="noopener" class="support-link" style="color:#25D366;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                        WhatsApp : +212 651 064 637
-                    </a>
-                    <a href="mailto:contact@kareer.pro" class="support-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        contact@kareer.pro
-                    </a>
+        <ol class="step-list done-steps">
+            <li>
+                <span class="step-n" aria-hidden="true">1</span>
+                <div>
+                    <h2 class="h3" data-i18n="merci_step1_t">Commande reçue</h2>
+                    <p data-i18n="merci_step1_d">Votre commande est enregistrée et l'équipe la voit dans WhatsApp.</p>
                 </div>
-            </div>
+            </li>
+            <li>
+                <span class="step-n" aria-hidden="true">2</span>
+                <div>
+                    <h2 class="h3" data-i18n="merci_step2_t">Paiement</h2>
+                    <p data-i18n="merci_step2_d">On vous confirme le montant et le moyen de paiement dans la conversation.</p>
+                </div>
+            </li>
+            <li>
+                <span class="step-n" aria-hidden="true">3</span>
+                <div>
+                    <h2 class="h3" data-i18n="merci_step3_t">Lien sécurisé, puis activation</h2>
+                    <p data-i18n="merci_step3_d">Après le paiement, vous recevez un lien pour transmettre vos accès. Premium est actif sous 24 à 48&nbsp;h.</p>
+                </div>
+            </li>
+        </ol>
 
-            <!-- Back to home -->
-            <a href="index.html" class="merci-back">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                <span data-i18n="merci_back">Retour &agrave; l'accueil</span>
+        <p class="fine" data-i18n="merci_guarantee">Si l'activation échoue dans les 30 jours, vous êtes remboursé en totalité.</p>
+
+        <div class="done-actions">
+            <a class="btn btn-wa" href="https://wa.me/212651064637?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ma%20commande%20Kareer." target="_blank" rel="noopener" data-wa="order">
+                <svg aria-hidden="true"><use href="#i-wa"/></svg>
+                <span data-i18n="merci_wa">Écrire sur WhatsApp</span>
             </a>
+            <a class="btn btn-ghost" href="/" data-i18n="merci_back">Retour à l'accueil</a>
         </div>
-    </section>
+    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-brand"><img src="kareer-logo.png" alt="Kareer" class="footer-logo-img"><span class="logo-text">Kareer</span></div>
-                <p class="footer-copyright">&copy; 2026 Kareer. <span data-i18n="footer_rights">Tous droits r&eacute;serv&eacute;s.</span></p>
+    <footer class="site-footer">
+        <div class="wrap footer-grid">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
+            </a>
+            <nav class="footer-links" aria-label="Liens utiles" data-i18n-aria="footer_nav_label">
+                <a href="suivi.html" data-i18n="footer_track">Suivre une commande</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                <a href="cgv.html" data-i18n="footer_terms">CGV</a>
+                <a href="confidentialite.html" data-i18n="footer_privacy">Confidentialité</a>
+                <a href="mentions-legales.html" data-i18n="footer_legal">Mentions légales</a>
+            </nav>
+            <div class="footer-note">
+                <p data-i18n="footer_disclaimer">Kareer est un service indépendant, sans lien avec LinkedIn Corporation. LinkedIn est une marque déposée de LinkedIn Corporation.</p>
+                <p>© 2026 Kareer</p>
             </div>
         </div>
     </footer>
 
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-i18n-aria="toggle_theme">
-        <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-    </button>
-
-    <script src="i18n.js"></script>
-    <script src="script.js"></script>
-
-    <!-- Confetti effect -->
-    <script>
-    (function() {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const container = document.getElementById('confettiContainer');
-        const colors = ['#1565C0', '#1E88E5', '#00BCD4', '#10B981', '#F59E0B', '#EC4899'];
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 50; i++) {
-            const el = document.createElement('div');
-            el.className = 'confetti';
-            el.style.cssText = 'left:' + (Math.random() * 100) + '%;background:' + colors[Math.floor(Math.random() * colors.length)] + ';animation-delay:' + (Math.random() * 2) + 's;animation-duration:' + (2 + Math.random() * 2) + 's;border-radius:' + (Math.random() > 0.5 ? '50%' : '2px') + ';width:' + (6 + Math.random() * 8) + 'px;height:' + (6 + Math.random() * 8) + 'px';
-            fragment.appendChild(el);
-        }
-        container.appendChild(fragment);
-        setTimeout(() => { container.style.display = 'none'; }, 5000);
-    })();
-    </script>
-
+    <script src="i18n.js?v=3"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

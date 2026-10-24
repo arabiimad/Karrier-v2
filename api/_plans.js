@@ -38,6 +38,14 @@ const PLAN_CATALOG = {
     amount: 550,
     officialAmount: 1079.88,
     currency: 'EUR'
+  },
+  'recruiter': {
+    plan: 'recruiter',
+    planLabel: 'Recruiter Lite',
+    audience: 'Tous profils',
+    amount: 530,
+    officialAmount: 1487.52,
+    currency: 'EUR'
   }
 };
 

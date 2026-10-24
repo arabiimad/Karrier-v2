@@ -3,287 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commander — Kareer</title>
+    <title>Commander · Kareer</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="karrier-logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>(function(){try{if(localStorage.getItem('kareer_theme')==='light')document.documentElement.classList.add('light-pending')}catch(e){}})();</script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #0a0e1a;
-            --card: #111827;
-            --card-border: #1e293b;
-            --text: #e2e8f0;
-            --text-muted: #94a3b8;
-            --primary: #2563eb;
-            --primary-light: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --accent: #10b981;
-            --danger: #ef4444;
-            --surface: #1e293b;
-            --glow: rgba(37, 99, 235, 0.15);
-            --wa-green: #25D366;
+            --paper: #F4F1EA; --card: #FFFDF8; --ink: #16181B; --ink-2: #4B5058; --ink-3: #80848B;
+            --rule: #D8D1C3; --blue: #1B4DB8; --blue-ink: #133A8C; --on-blue: #fff; --mark: #FFE36E;
+            --wa: #1E7A4C; --wa-ink: #165E3A; --danger: #B4351F; --input: #FFFFFF;
+            --sans: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+            /* names still used by inline styles and scripts below */
+            --text: var(--ink); --text-muted: var(--ink-3); --primary-light: var(--blue);
+            --error: var(--danger); --success: var(--wa); --wa-green: var(--wa);
+            color-scheme: light;
         }
-        body.light {
-            --bg: #F5F8FC;
-            --card: #ffffff;
-            --card-border: #e2e8f0;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --surface: #f1f5f9;
-            --glow: rgba(37, 99, 235, 0.1);
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --paper: #121314; --card: #1C1D20; --ink: #EDEAE3; --ink-2: #B3AFA7; --ink-3: #86837D;
+                --rule: #2D2F33; --blue: #86A6FF; --blue-ink: #A9C0FF; --on-blue: #0E1320; --mark: #4A3F0A;
+                --wa: #4CC38A; --wa-ink: #6FD6A3; --danger: #F08A73; --input: #141517;
+                color-scheme: dark;
+            }
         }
-        body.light::before { opacity: 0.3; }
-        body.light .plan-icon { box-shadow: 0 4px 15px rgba(37,99,235,0.15); }
-        body.light .checkout-logo span { background: linear-gradient(135deg, #1e293b, #64748b); -webkit-background-clip: text; }
-        body.light .plan-name, body.light .price-row.total .label, body.light .price-row.total .value { color: #0f172a; }
-        body.light .form-input { background: #fff; border-color: #e2e8f0; color: #1e293b; }
-        body.light .form-input::placeholder { color: #94a3b8; }
-        body.light .checkout-card { box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04); }
-        html.light-pending body { background: #F5F8FC; color: #1e293b; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg); color: var(--text);
-            min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding: 24px; position: relative; overflow-x: hidden;
+            font-family: var(--sans); font-size: 16px; line-height: 1.5;
+            background: var(--paper); color: var(--ink);
+            min-height: 100vh; display: flex; justify-content: center;
+            padding: 32px 16px 48px; -webkit-font-smoothing: antialiased;
         }
-        body::before {
-            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(37,99,235,0.08) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(16,185,129,0.05) 0%, transparent 50%);
-            z-index: 0; pointer-events: none;
-        }
-        .checkout-container { position: relative; z-index: 1; width: 100%; max-width: 520px; }
-        .back-link {
-            display: inline-flex; align-items: center; gap: 8px;
-            color: var(--text-muted); text-decoration: none; font-size: 0.875rem;
-            font-weight: 500; margin-bottom: 24px; transition: color 0.2s;
-        }
-        .back-link:hover { color: var(--primary-light); }
+        .checkout-container { width: 100%; max-width: 540px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); text-decoration: none; font-size: 15px; font-weight: 500; }
+        .back-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
         .back-link svg { width: 16px; height: 16px; }
-        .checkout-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
-        .checkout-logo img { width: 40px; height: 40px; }
-        .checkout-logo span {
-            font-size: 1.5rem; font-weight: 800;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .checkout-logo { display: flex; align-items: center; gap: 10px; margin: 28px 0 20px; }
+        .checkout-logo img { width: 30px; height: 30px; border-radius: 7px; }
+        .checkout-logo span { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+        .step-indicator { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .step { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-3); }
+        .step.active { color: var(--ink); font-weight: 600; }
+        .step-num { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; border: 1.5px solid var(--rule); }
+        .step.active .step-num { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+        .step-line { width: 18px; height: 1px; background: var(--rule); }
+        .secure-badge { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; margin-bottom: 20px; }
+        .secure-badge svg { width: 15px; height: 15px; flex: none; }
+        .checkout-card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; box-shadow: 0 30px 50px -40px rgba(40, 30, 10, .5); }
+        .order-summary { padding: 24px 24px 20px; border-bottom: 1px dashed var(--rule); }
+        .order-label, .features-included .feat-label { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+        .order-plan { display: flex; align-items: center; gap: 14px; }
+        .plan-icon { display: none; }
+        .plan-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+        .plan-type { font-size: 14px; color: var(--ink-2); margin-top: 2px; }
+        .type-badge { font-family: var(--mono); font-size: 12px; padding: 2px 6px; border: 1px solid var(--rule); border-radius: 4px; color: var(--ink-2); }
+        .price-block { padding: 18px 24px 22px; border-bottom: 1px dashed var(--rule); font-family: var(--mono); font-size: 14px; }
+        .price-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 5px 0; }
+        .price-row .label { color: var(--ink-2); }
+        .price-row .value { font-weight: 500; white-space: nowrap; }
+        .price-row.total { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--rule); }
+        .price-row.total .label { color: var(--ink); font-weight: 600; font-family: var(--sans); font-size: 16px; }
+        .price-row.total .value { font-size: 24px; font-weight: 600; }
+        .price-savings { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; padding: 1px 4px; background: linear-gradient(transparent 12%, var(--mark) 12%, var(--mark) 88%, transparent 88%); }
+        .features-included { padding: 18px 24px 4px; }
+        .feat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+        .feat-item { font-size: 14px; color: var(--ink-2); display: flex; gap: 8px; }
+        .feat-item .check { color: var(--ink-3); font-size: 12px; }
+        .form-section { padding: 20px 24px 24px; }
+        .form-group, .promo-section { margin-bottom: 18px; }
+        .form-label, .promo-section > label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .form-input, .promo-input-row input {
+            width: 100%; min-height: 48px; padding: 0 14px; background: var(--input); color: var(--ink);
+            border: 1.5px solid var(--rule); border-radius: 6px; font: inherit; font-size: 16px; outline: none;
         }
-        .secure-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
-            color: var(--accent); font-size: 0.75rem; font-weight: 600;
-            padding: 6px 14px; border-radius: 20px; margin-bottom: 24px;
-        }
-        .secure-badge svg { width: 14px; height: 14px; }
-        .checkout-card {
-            background: var(--card); border: 1px solid var(--card-border);
-            border-radius: 20px; overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.03);
-        }
-        .order-summary { padding: 32px; border-bottom: 1px solid var(--card-border); }
-        .order-label {
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text-muted); margin-bottom: 16px; font-weight: 600;
-        }
-        .order-plan { display: flex; align-items: center; gap: 16px; }
-        .plan-icon {
-            width: 56px; height: 56px; border-radius: 16px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(37,99,235,0.3);
-        }
-        .plan-details { flex: 1; }
-        .plan-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
-        .plan-type { font-size: 0.8rem; color: var(--text-muted); }
-        .type-badge {
-            display: inline-block; background: rgba(37,99,235,0.1);
-            color: var(--primary-light); padding: 2px 8px; border-radius: 4px;
-            font-weight: 600; font-size: 0.7rem;
-        }
-        .price-block {
-            padding: 24px 32px; background: rgba(37,99,235,0.03);
-            border-bottom: 1px solid var(--card-border);
-        }
-        .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .price-row:last-child { margin-bottom: 0; }
-        .price-row .label { color: var(--text-muted); font-size: 0.9rem; }
-        .price-row .value { color: var(--text); font-weight: 600; }
-        .price-row.total { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--card-border); }
-        .price-row.total .label { font-size: 1rem; font-weight: 700; color: #fff; }
-        .price-row.total .value { font-size: 1.5rem; font-weight: 800; color: #fff; }
-        .price-savings {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: rgba(16,185,129,0.1); color: var(--accent);
-            font-size: 0.75rem; font-weight: 700; padding: 3px 10px;
-            border-radius: 12px; margin-top: 8px;
-        }
-        .form-section { padding: 32px; }
-        .form-group { margin-bottom: 20px; }
-        .form-label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: var(--text-muted); margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .form-input {
-            width: 100%; padding: 14px 16px; background: var(--surface);
-            border: 1px solid var(--card-border); border-radius: 12px;
-            color: #fff; font-size: 1rem; font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
-        }
-        .form-input::placeholder { color: #475569; }
-        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow); }
-        .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
-        .form-hint.warning { color: #f59e0b; }
-        .password-wrapper { position: relative; }
-        .password-wrapper .form-input { padding-right: 48px; }
-        .toggle-pw {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: none; border: none; color: var(--text-muted);
-            cursor: pointer; font-size: 1.1rem; padding: 4px;
-        }
+        .form-input::placeholder, .promo-input-row input::placeholder { color: var(--ink-3); }
+        .form-input:focus, .promo-input-row input:focus { border-color: var(--blue); }
+        .form-hint { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+        .form-hint.warning { color: var(--danger); }
+        .promo-input-row { display: flex; gap: 8px; }
+        .promo-input-row button { padding: 0 16px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); border-radius: 6px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .promo-input-row button:hover { background: var(--ink); color: var(--paper); }
+        #promoResult { margin-top: 8px; font-size: 14px; }
         .submit-btn {
-            width: 100%; padding: 18px;
-            background: linear-gradient(135deg, var(--wa-green), #128C7E);
-            color: #fff; border: none; border-radius: 14px;
-            font-size: 1.05rem; font-weight: 700; font-family: inherit;
-            cursor: pointer; transition: all 0.3s ease; position: relative;
-            overflow: hidden; display: flex; align-items: center;
-            justify-content: center; gap: 10px;
+            width: 100%; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: var(--wa); color: var(--paper); border: 0; border-radius: 6px;
+            font: inherit; font-size: 17px; font-weight: 700; cursor: pointer;
         }
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(37,211,102,0.4);
-        }
-        .submit-btn:active:not(:disabled) { transform: translateY(0); }
-        .submit-btn:disabled { opacity: 0.7; cursor: wait; }
-        .submit-btn::after {
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.6s;
-        }
-        .submit-btn:hover::after { left: 100%; }
-        .spinner {
-            width: 20px; height: 20px;
-            border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
-            border-radius: 50%; animation: spin 0.7s linear infinite; display: none;
-        }
+        .submit-btn:hover:not(:disabled) { background: var(--wa-ink); }
+        .submit-btn:disabled { opacity: .7; cursor: wait; }
+        .spinner { width: 18px; height: 18px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .features-included { padding: 0 32px 24px; }
-        .features-included .feat-label {
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
-            color: var(--text-muted); margin-bottom: 12px; font-weight: 600;
-        }
-        .feat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .feat-item {
-            font-size: 0.8rem; color: var(--text-muted);
-            display: flex; align-items: center; gap: 6px;
-        }
-        .feat-item .check { color: var(--accent); font-weight: 700; font-size: 0.7rem; }
-        .trust-row {
-            display: flex; justify-content: center; gap: 24px;
-            padding: 20px 32px; border-top: 1px solid var(--card-border);
-        }
-        .trust-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); }
-        .trust-item svg { width: 14px; height: 14px; color: var(--accent); }
-        .error-msg {
-            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
-            color: var(--danger); padding: 12px 16px; border-radius: 12px;
-            font-size: 0.85rem; margin-bottom: 16px; display: none;
-            align-items: center; gap: 8px;
-        }
+        .error-msg { display: none; align-items: center; gap: 8px; padding: 12px 14px; margin-bottom: 16px; border: 1.5px solid var(--danger); border-radius: 6px; color: var(--danger); font-size: 14px; }
         .error-msg.visible { display: flex; }
-        .success-state { text-align: center; padding: 48px 32px; display: none; }
+        .success-state { display: none; padding: 32px 24px; }
         .success-state.visible { display: block; }
-        .success-icon {
-            width: 72px; height: 72px; border-radius: 50%;
-            background: rgba(37,211,102,0.1); display: flex;
-            align-items: center; justify-content: center;
-            margin: 0 auto 20px; font-size: 2rem;
-        }
-        .success-state h2 { font-size: 1.3rem; color: #fff; margin-bottom: 8px; }
-        .success-state p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px; }
-        .checkout-footer { text-align: center; margin-top: 24px; font-size: 0.75rem; color: #475569; }
-        .checkout-footer a { color: var(--primary-light); text-decoration: none; }
-        .checkout-footer a:hover { text-decoration: underline; }
-        .step-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
-        .step { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
-        .step.active { color: var(--primary-light); font-weight: 600; }
-        .step-num {
-            width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem; font-weight: 700;
-            background: var(--surface); border: 1px solid var(--card-border);
-        }
-        .step.active .step-num { background: var(--primary); border-color: var(--primary); color: #fff; }
-        .step-line { width: 24px; height: 1px; background: var(--card-border); }
+        .success-icon { display: none; }
+        .success-state h2 { font-size: 22px; letter-spacing: -0.02em; margin-bottom: 8px; }
+        .success-state p { color: var(--ink-2); margin-bottom: 8px; }
+        .trust-row { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 14px 24px; border-top: 1px solid var(--rule); }
+        .trust-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+        .trust-item svg { width: 14px; height: 14px; }
+        .checkout-footer { margin-top: 20px; font-size: 13px; color: var(--ink-3); }
+        .checkout-footer a { color: var(--blue); }
         @media (max-width: 480px) {
-            body { padding: 16px; }
-            .checkout-container { max-width: 100%; }
-            .order-summary, .price-block, .form-section { padding: 20px 16px; }
-            .features-included { padding: 0 16px 20px; }
-            .trust-row { gap: 12px; padding: 14px 16px; flex-wrap: wrap; justify-content: center; }
-            .trust-item { font-size: 0.7rem; }
+            .order-summary, .price-block, .form-section, .features-included { padding-left: 16px; padding-right: 16px; }
             .feat-list { grid-template-columns: 1fr; }
-            .plan-icon { width: 48px; height: 48px; font-size: 1.3rem; }
-            .plan-name { font-size: 1rem; }
-            .price-row.total .value { font-size: 1.3rem; }
-            .submit-btn { padding: 16px; font-size: 0.95rem; }
-            .step-indicator { gap: 4px; flex-wrap: nowrap; }
-            .step { font-size: 0.7rem; gap: 4px; }
-            .step-num { width: 20px; height: 20px; font-size: 0.6rem; }
-            .step-line { width: 16px; }
-            .checkout-logo span { font-size: 1.3rem; }
-            .secure-badge { font-size: 0.7rem; padding: 5px 10px; }
-            .back-link { font-size: 0.8rem; }
-        }
-        /* Promo code section */
-        .promo-section { margin-bottom: 20px; }
-        .promo-section > label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: var(--text-muted); margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .promo-input-row { display: flex; gap: 10px; }
-        .promo-input-row input {
-            flex: 1; padding: 14px 16px; background: var(--surface);
-            border: 1px solid var(--card-border); border-radius: 12px;
-            color: #fff; font-size: 1rem; font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
-        }
-        .promo-input-row input::placeholder { color: #475569; }
-        .promo-input-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow); }
-        .promo-input-row button {
-            padding: 0 20px; background: var(--surface);
-            border: 1px solid var(--card-border); border-radius: 12px;
-            color: var(--primary-light); font-size: 0.85rem; font-weight: 700;
-            font-family: inherit; cursor: pointer; white-space: nowrap;
-            transition: all 0.2s;
-        }
-        .promo-input-row button:hover { background: rgba(37,99,235,0.15); border-color: var(--primary); }
-        #promoResult { margin-top: 8px; font-size: 0.82rem; padding: 4px 0; }
-
-        @media (max-width: 360px) {
-            body { padding: 12px; }
-            .order-summary, .price-block, .form-section { padding: 16px 12px; }
-            .step { font-size: 0.65rem; }
-            .form-input { padding: 12px 14px; font-size: 0.9rem; }
+            .trust-row { padding: 14px 16px; }
         }
     </style>
 </head>
 <body>
 
 <div class="checkout-container">
-    <a href="index.html#pricing" class="back-link">
+    <a href="/#tarifs" class="back-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         Retour aux offres
     </a>
 
     <div class="checkout-logo">
-        <img src="kareer-logo.png" alt="Kareer">
+        <img src="karrier-logo.png" alt="">
         <span>Kareer</span>
     </div>
 
@@ -360,7 +200,7 @@
             <div class="form-group">
                 <label class="form-label" for="referralCodeInput">Code de parrainage (optionnel)</label>
                 <input type="text" id="referralCodeInput" class="form-input" placeholder="Ex: REF12AB34CD" style="text-transform:uppercase">
-                <div class="form-hint">👥 Vous avez été parrainé ? Entrez le code pour recevoir 10€ de réduction !</div>
+                <div class="form-hint">Si quelqu'un vous a parrainé, son code vous donne 10 € de réduction.</div>
             </div>
 
             <div class="promo-section">
@@ -373,7 +213,7 @@
             </div>
 
             <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
-                <span id="submitBtnText">📩 Valider et continuer vers WhatsApp</span>
+                <span id="submitBtnText">Continuer sur WhatsApp</span>
                 <div class="spinner" id="spinner"></div>
             </button>
         </div>
@@ -381,7 +221,7 @@
         <!-- Success state -->
         <div class="success-state" id="successState">
             <div class="success-icon">✅</div>
-            <h2>Commande enregistrée !</h2>
+            <h2>Commande enregistrée.</h2>
             <p>Vous allez être redirigé vers WhatsApp pour finaliser le paiement.</p>
             <p style="font-size:0.8rem">Si la redirection ne fonctionne pas, <a id="waFallbackLink" href="#" target="_blank" style="color:var(--wa-green)">cliquez ici</a>.</p>
         </div>
@@ -410,33 +250,32 @@
 </div>
 
 <script>
-// Apply saved theme
-(function(){
-    document.documentElement.classList.remove('light-pending');
-    try { if(localStorage.getItem('kareer_theme')==='light') document.body.classList.add('light'); } catch(e) {}
-})();
 
 // Plan features translations
 const planFeatures = {
   fr: {
     career: ['5 InMails/mois','Profil 90j','LinkedIn Learning','Top Choice (3/mois)','Préparation entretiens IA','Candidature mise en avant'],
     business: ['15 InMails/mois','Profil 365j','LinkedIn Learning','Company Analytics','Navigation illimitée','Insights business'],
-    sales: ['50 InMails/mois','+40 filtres avancés','10 000 leads','Recommandations auto','Listes personnalisées','Alertes leads']
+    sales: ['50 InMails/mois','+40 filtres avancés','10 000 leads','Recommandations auto','Listes personnalisées','Alertes leads'],
+    recruiter: ['30 InMails/mois','+20 filtres de recherche','Candidats suggérés','Profils 3e degré','Offres d\'emploi','Suivi des candidatures']
   },
   en: {
     career: ['5 InMails/month','90-day profile','LinkedIn Learning','Top Choice (3/month)','AI interview prep','Featured application'],
     business: ['15 InMails/month','365-day profile','LinkedIn Learning','Company Analytics','Unlimited browsing','Business insights'],
-    sales: ['50 InMails/month','+40 advanced filters','10,000 leads','Auto recommendations','Custom lists','Lead alerts']
+    sales: ['50 InMails/month','+40 advanced filters','10,000 leads','Auto recommendations','Custom lists','Lead alerts'],
+    recruiter: ['30 InMails/month','+20 search filters','Suggested candidates','3rd-degree profiles','Job posts','Applicant tracking']
   },
   es: {
     career: ['5 InMails/mes','Perfil 90d','LinkedIn Learning','Top Choice (3/mes)','Prep. entrevistas IA','Candidatura destacada'],
     business: ['15 InMails/mes','Perfil 365d','LinkedIn Learning','Company Analytics','Navegación ilimitada','Insights business'],
-    sales: ['50 InMails/mes','+40 filtros avanzados','10.000 leads','Recomendaciones auto','Listas personalizadas','Alertas leads']
+    sales: ['50 InMails/mes','+40 filtros avanzados','10.000 leads','Recomendaciones auto','Listas personalizadas','Alertas leads'],
+    recruiter: ['30 InMails/mes','+20 filtros de búsqueda','Candidatos sugeridos','Perfiles 3er grado','Ofertas de empleo','Seguimiento de candidaturas']
   },
   de: {
     career: ['5 InMails/Monat','90-Tage-Profil','LinkedIn Learning','Top Choice (3/Monat)','KI-Interview-Vorbereitung','Hervorgehobene Bewerbung'],
     business: ['15 InMails/Monat','365-Tage-Profil','LinkedIn Learning','Company Analytics','Unbegrenztes Browsen','Business Insights'],
-    sales: ['50 InMails/Monat','+40 erweiterte Filter','10.000 Leads','Auto-Empfehlungen','Benutzerdefinierte Listen','Lead-Benachrichtigungen']
+    sales: ['50 InMails/Monat','+40 erweiterte Filter','10.000 Leads','Auto-Empfehlungen','Benutzerdefinierte Listen','Lead-Benachrichtigungen'],
+    recruiter: ['30 InMails/Monat','+20 Suchfilter','Kandidatenvorschläge','Profile 3. Grades','Stellenanzeigen','Bewerberverwaltung']
   }
 };
 
@@ -446,6 +285,7 @@ const PLANS = {
     'business-student': { name: 'LinkedIn Business',    price: 80,  official: 660.00, type: 'Étudiant',      icon: '🎓', featureKey: 'business' },
     'business-salary':  { name: 'LinkedIn Business',    price: 120, official: 660.00, type: 'Salarié',       icon: '💼', featureKey: 'business' },
     'sales-nav':        { name: 'Sales Navigator Core', price: 550, official: 1079.88, type: 'Tous profils', icon: '🎯', featureKey: 'sales' },
+    'recruiter':        { name: 'Recruiter Lite',       price: 530, official: 1487.52, type: 'Tous profils', icon: '🧭', featureKey: 'recruiter' },
 };
 
 const WA_NUMBER = '212651064637';
@@ -455,7 +295,7 @@ const checkoutTranslations = {
   fr: {
     backToOffers: 'Retour aux offres',
     step1: 'Votre compte', step2: 'Paiement WhatsApp', step3: 'Activation',
-    secureData: 'Lien securise apres paiement',
+    secureData: 'Pas de carte ici : le paiement se fait sur WhatsApp',
     orderSummary: 'Récapitulatif de commande',
     subscription1y: 'Abonnement 1 an',
     officialPrice: 'Prix officiel LinkedIn',
@@ -467,27 +307,27 @@ const checkoutTranslations = {
     emailPlaceholder: 'votre@email.com',
     emailHint: 'L\'email de votre compte LinkedIn sur lequel activer le Premium',
     contactEmail: 'Email de contact (optionnel)',
-    contactHint: 'Pour recevoir la confirmation et le lien securise apres paiement',
+    contactHint: 'Pour recevoir la confirmation et le lien sécurisé après le paiement.',
     referralCode: 'Code de parrainage (optionnel)',
-    referralHint: '👥 Vous avez été parrainé ? Entrez le code pour recevoir 10€ de réduction !',
+    referralHint: 'Si quelqu\'un vous a parrainé, son code vous donne 10 € de réduction.',
     promoCode: 'Code promo (optionnel)',
     promoPlaceholder: 'Ex: BIENVENUE10',
     applyBtn: 'Appliquer',
-    submitBtn: '📩 Valider et continuer vers WhatsApp',
-    orderSaved: 'Commande enregistree !',
-    redirectMsg: 'Vous allez etre redirige vers WhatsApp pour finaliser le paiement. Apres validation, vous recevrez un lien securise pour transmettre vos identifiants.',
+    submitBtn: 'Continuer sur WhatsApp',
+    orderSaved: 'Commande enregistrée.',
+    redirectMsg: 'WhatsApp va s\'ouvrir pour le paiement. Une fois le paiement validé, vous recevrez un lien sécurisé pour transmettre vos accès.',
     clickHere: 'cliquez ici',
-    sslEncrypted: 'Chiffré SSL',
-    refund30d: 'Remboursé 30j',
-    activation24h: 'Activation 24-48h',
+    sslEncrypted: 'Aucune carte demandée',
+    refund30d: 'Remboursé si échec sous 30 jours',
+    activation24h: 'Actif sous 24 à 48 h',
     footerTerms: 'En commandant, vous acceptez les',
     footerPrivacy: 'politique de confidentialité',
-    footerCopyright: '© 2026 Kareer · Vos données sont protégées'
+    footerCopyright: 'Kareer est un service indépendant, sans lien avec LinkedIn Corporation.'
   },
   en: {
     backToOffers: 'Back to offers',
     step1: 'Your account', step2: 'WhatsApp Payment', step3: 'Activation',
-    secureData: 'Secure link after payment',
+    secureData: 'No card here: payment happens on WhatsApp',
     orderSummary: 'Order summary',
     subscription1y: '1-year subscription',
     officialPrice: 'Official LinkedIn price',
@@ -499,27 +339,27 @@ const checkoutTranslations = {
     emailPlaceholder: 'your@email.com',
     emailHint: 'The email of your LinkedIn account to activate Premium on',
     contactEmail: 'Contact email (optional)',
-    contactHint: 'To receive confirmation and the secure credential link after payment',
+    contactHint: 'To receive the confirmation and the secure link after payment.',
     referralCode: 'Referral code (optional)',
-    referralHint: '👥 Been referred? Enter the code to get €10 off!',
+    referralHint: 'If someone referred you, their code takes €10 off.',
     promoCode: 'Promo code (optional)',
     promoPlaceholder: 'Ex: WELCOME10',
     applyBtn: 'Apply',
-    submitBtn: '📩 Validate and continue to WhatsApp',
-    orderSaved: 'Order saved!',
-    redirectMsg: 'You will be redirected to WhatsApp to complete payment. After validation, you will receive a secure link for your credentials.',
+    submitBtn: 'Continue on WhatsApp',
+    orderSaved: 'Order saved.',
+    redirectMsg: 'WhatsApp will open for payment. Once payment is confirmed, you will get a secure link to send your login details.',
     clickHere: 'click here',
-    sslEncrypted: 'SSL Encrypted',
-    refund30d: 'Refunded 30d',
-    activation24h: 'Activation 24-48h',
+    sslEncrypted: 'No card required',
+    refund30d: 'Refunded if it fails within 30 days',
+    activation24h: 'Live within 24 to 48 hours',
     footerTerms: 'By ordering, you accept the',
     footerPrivacy: 'privacy policy',
-    footerCopyright: '© 2026 Kareer · Your data is protected'
+    footerCopyright: 'Kareer is an independent service with no connection to LinkedIn Corporation.'
   },
   es: {
     backToOffers: 'Volver a las ofertas',
     step1: 'Tu cuenta', step2: 'Pago WhatsApp', step3: 'Activación',
-    secureData: 'Enlace seguro despues del pago',
+    secureData: 'Aquí no se pide tarjeta: el pago es por WhatsApp',
     orderSummary: 'Resumen del pedido',
     subscription1y: 'Suscripción 1 año',
     officialPrice: 'Precio oficial LinkedIn',
@@ -531,27 +371,27 @@ const checkoutTranslations = {
     emailPlaceholder: 'tu@email.com',
     emailHint: 'El email de tu cuenta LinkedIn para activar Premium',
     contactEmail: 'Email de contacto (opcional)',
-    contactHint: 'Para recibir confirmacion y el enlace seguro despues del pago',
+    contactHint: 'Para recibir la confirmación y el enlace seguro después del pago.',
     referralCode: 'Código de referido (opcional)',
-    referralHint: '👥 ¿Te han referido? ¡Ingresa el código para obtener 10€ de descuento!',
+    referralHint: 'Si alguien te recomendó, su código te descuenta 10 €.',
     promoCode: 'Código promocional (opcional)',
     promoPlaceholder: 'Ej: BIENVENIDO10',
     applyBtn: 'Aplicar',
-    submitBtn: '📩 Validar y continuar a WhatsApp',
-    orderSaved: '¡Pedido guardado!',
-    redirectMsg: 'Seras redirigido a WhatsApp para completar el pago. Tras la validacion, recibiras un enlace seguro para tus credenciales.',
+    submitBtn: 'Continuar en WhatsApp',
+    orderSaved: 'Pedido guardado.',
+    redirectMsg: 'WhatsApp se abrirá para el pago. Cuando se confirme, recibirás un enlace seguro para enviar tus datos de acceso.',
     clickHere: 'haz clic aquí',
-    sslEncrypted: 'Cifrado SSL',
-    refund30d: 'Reembolso 30d',
-    activation24h: 'Activación 24-48h',
+    sslEncrypted: 'Sin tarjeta',
+    refund30d: 'Reembolso si falla en 30 días',
+    activation24h: 'Activo en 24 a 48 horas',
     footerTerms: 'Al ordenar, aceptas los',
     footerPrivacy: 'política de privacidad',
-    footerCopyright: '© 2026 Kareer · Tus datos están protegidos'
+    footerCopyright: 'Kareer es un servicio independiente, sin relación con LinkedIn Corporation.'
   },
   de: {
     backToOffers: 'Zurück zu Angeboten',
     step1: 'Ihr Konto', step2: 'WhatsApp Zahlung', step3: 'Aktivierung',
-    secureData: 'Sicherer Link nach Zahlung',
+    secureData: 'Hier keine Karte: Bezahlt wird per WhatsApp',
     orderSummary: 'Bestellübersicht',
     subscription1y: '1-Jahres-Abonnement',
     officialPrice: 'Offizieller LinkedIn-Preis',
@@ -563,22 +403,22 @@ const checkoutTranslations = {
     emailPlaceholder: 'ihre@email.com',
     emailHint: 'Die E-Mail Ihres LinkedIn-Kontos, auf dem Premium aktiviert werden soll',
     contactEmail: 'Kontakt-E-Mail (optional)',
-    contactHint: 'Fuer Bestaetigung und sicheren Link nach Zahlung',
+    contactHint: 'Für die Bestätigung und den sicheren Link nach der Zahlung.',
     referralCode: 'Empfehlungscode (optional)',
-    referralHint: '👥 Wurden Sie empfohlen? Geben Sie den Code ein, um 10€ Rabatt zu erhalten!',
+    referralHint: 'Wenn Sie jemand empfohlen hat, bringt dessen Code 10 € Rabatt.',
     promoCode: 'Aktionscode (optional)',
     promoPlaceholder: 'Z.B.: WILLKOMMEN10',
     applyBtn: 'Anwenden',
-    submitBtn: '📩 Bestätigen und zu WhatsApp fortfahren',
-    orderSaved: 'Bestellung gespeichert!',
-    redirectMsg: 'Sie werden zu WhatsApp weitergeleitet, um die Zahlung abzuschliessen. Nach Validierung erhalten Sie einen sicheren Link.',
+    submitBtn: 'Weiter zu WhatsApp',
+    orderSaved: 'Bestellung gespeichert.',
+    redirectMsg: 'WhatsApp öffnet sich für die Zahlung. Nach der Bestätigung erhalten Sie einen sicheren Link für Ihre Zugangsdaten.',
     clickHere: 'hier klicken',
-    sslEncrypted: 'SSL-verschlüsselt',
-    refund30d: 'Rückerstattung 30T',
-    activation24h: 'Aktivierung 24-48h',
+    sslEncrypted: 'Keine Karte nötig',
+    refund30d: 'Erstattung, falls es in 30 Tagen nicht klappt',
+    activation24h: 'Aktiv in 24 bis 48 Stunden',
     footerTerms: 'Mit der Bestellung akzeptieren Sie die',
     footerPrivacy: 'Datenschutzrichtlinie',
-    footerCopyright: '© 2026 Kareer · Ihre Daten sind geschützt'
+    footerCopyright: 'Kareer ist ein unabhängiger Dienst ohne Verbindung zur LinkedIn Corporation.'
   }
 };
 
@@ -638,7 +478,7 @@ document.getElementById('totalPrice').textContent = plan.price.toFixed(2).replac
 
 const savings = plan.official - plan.price;
 const pct = Math.round((savings / plan.official) * 100);
-document.getElementById('savingsBadge').textContent = `↓ ${t.youSave} ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
+document.getElementById('savingsBadge').textContent = `${t.youSave} ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
 
 const featList = document.getElementById('featList');
 const features = planFeatures[userLang] ? planFeatures[userLang][plan.featureKey] : planFeatures.fr[plan.featureKey];
@@ -669,7 +509,7 @@ async function applyPromoCode() {
     if (!code) {
         result.style.display = 'block';
         result.style.color = 'var(--error)';
-        result.textContent = userLang === 'fr' ? '⚠️ Veuillez entrer un code promo' : userLang === 'es' ? '⚠️ Por favor ingresa un código' : userLang === 'de' ? '⚠️ Bitte Code eingeben' : '⚠️ Please enter a code';
+        result.textContent = userLang === 'fr' ? 'Veuillez entrer un code promo' : userLang === 'es' ? 'Por favor ingresa un código' : userLang === 'de' ? 'Bitte Code eingeben' : 'Please enter a code';
         return;
     }
 
@@ -722,7 +562,7 @@ async function applyPromoCode() {
         result.style.display = 'block';
         result.style.color = 'var(--success)';
         const appliedMsg = userLang === 'fr' ? 'Code appliqué !' : userLang === 'es' ? '¡Código aplicado!' : userLang === 'de' ? 'Code angewendet!' : 'Code applied!';
-        result.innerHTML = `✅ ${appliedMsg} -${discount}€ ${data.description ? `(${data.description})` : ''}`;
+        result.innerHTML = `${appliedMsg} -${discount}€ ${data.description ? `(${data.description})` : ''}`;
 
         // Désactiver l'input et le bouton
         input.disabled = true;
@@ -732,7 +572,7 @@ async function applyPromoCode() {
     } catch (error) {
         result.style.display = 'block';
         result.style.color = 'var(--error)';
-        result.textContent = '❌ ' + error.message;
+        result.textContent = '' + error.message;
         btn.disabled = false;
         btn.textContent = t.applyBtn;
     }
