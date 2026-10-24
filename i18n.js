@@ -4,7 +4,7 @@
 const translations = {
     fr: {
         page_title: "Kareer · LinkedIn Premium pour un an, moins cher",
-        meta_description: "LinkedIn Career, Business, Sales Navigator Core et Recruiter Lite pour 12 mois, activés sur votre propre compte en 24 à 48 h. Vous payez sur WhatsApp, une fois Premium actif. Prix spécial étudiants et jeunes diplômés.",
+        meta_description: "LinkedIn Career, Business, Sales Navigator Core et Recruiter Lite pour 12 mois, activés sur votre propre compte en 30 minutes maximum une fois vos identifiants reçus. Vous payez sur WhatsApp, une fois Premium actif. Prix spécial étudiants et jeunes diplômés.",
         skip_to_pricing: "Aller aux tarifs",
         nav_label: "Navigation principale",
         nav_pricing: "Tarifs",
@@ -17,7 +17,7 @@ const translations = {
 
         hero_eyebrow: "LinkedIn Premium · abonnement de 12 mois",
         hero_title: "Un an de LinkedIn Premium à partir de <span class=\"nowrap\">60&nbsp;€</span>.",
-        hero_lede: "Career, Business, Sales Navigator ou Recruiter Lite, activé sur votre propre compte LinkedIn en 24 à 48&nbsp;h. Vous ne payez qu'une fois Premium actif, sur WhatsApp, avec quelqu'un de l'équipe.",
+        hero_lede: "Career, Business, Sales Navigator ou Recruiter Lite, activé sur votre propre compte LinkedIn en 30 minutes maximum une fois vos identifiants reçus. Vous ne payez qu'une fois Premium actif, sur WhatsApp, avec quelqu'un de l'équipe.",
         hero_cta: "Voir les tarifs",
         hero_wa: "Poser une question sur WhatsApp",
         hero_note: "Aucune carte bancaire n'est demandée sur le site. Si l'activation n'aboutit pas, vous ne payez rien.",
@@ -98,7 +98,7 @@ const translations = {
         step3_t: "Vous transmettez vos accès par ce lien.",
         step3_d: "Le lien est personnel et expire. Le mot de passe est chiffré, puis effacé quand l'activation est terminée. Vous pouvez le changer juste après.",
         step4_t: "Premium est activé sur votre compte.",
-        step4_d: "Comptez 24 à 48&nbsp;h. Chaque e-mail de mise à jour contient un lien de suivi.",
+        step4_d: "Comptez entre 5 et 30 minutes après réception de vos identifiants, pendant nos horaires d'ouverture. Chaque e-mail de mise à jour contient un lien de suivi.",
         step5_t: "Vous payez sur WhatsApp.",
         step5_d: "Une fois Premium visible sur votre compte, on vous indique le montant et le moyen de paiement. Si l'activation n'aboutit pas, vous ne payez rien.",
 
@@ -157,7 +157,7 @@ const translations = {
         merci_step1_t: "Commande reçue",
         merci_step1_d: "Votre commande est enregistrée et l'équipe la voit dans WhatsApp.",
         merci_step2_t: "Lien sécurisé et activation",
-        merci_step2_d: "On vous envoie un lien pour transmettre vos accès. Premium est actif sous 24 à 48&nbsp;h.",
+        merci_step2_d: "On vous envoie un lien pour transmettre vos identifiants. Une fois reçus, Premium est actif en 5 à 30 minutes (pendant nos horaires).",
         merci_step3_t: "Paiement",
         merci_step3_d: "Vous réglez sur WhatsApp une fois Premium actif sur votre compte.",
         merci_guarantee: "Si l'activation n'aboutit pas, vous ne payez rien.",
@@ -167,7 +167,7 @@ const translations = {
 
     en: {
         page_title: "Kareer · A year of LinkedIn Premium for less",
-        meta_description: "LinkedIn Career, Business, Sales Navigator Core and Recruiter Lite for 12 months, activated on your own account within 24 to 48 hours. You pay on WhatsApp once Premium is live. Special price for students and recent graduates.",
+        meta_description: "LinkedIn Career, Business, Sales Navigator Core and Recruiter Lite for 12 months, activated on your own account within 30 minutes of receiving your login details. You pay on WhatsApp once Premium is live. Special price for students and recent graduates.",
         skip_to_pricing: "Skip to prices",
         nav_label: "Main navigation",
         nav_pricing: "Prices",
@@ -180,7 +180,7 @@ const translations = {
 
         hero_eyebrow: "LinkedIn Premium · 12-month subscription",
         hero_title: "A year of LinkedIn Premium from <span class=\"nowrap\">€60</span>.",
-        hero_lede: "Career, Business, Sales Navigator or Recruiter Lite, switched on for your own LinkedIn account within 24 to 48 hours. You only pay once Premium is live, on WhatsApp, with someone from the team.",
+        hero_lede: "Career, Business, Sales Navigator or Recruiter Lite, switched on for your own LinkedIn account within 30 minutes of receiving your login details. You only pay once Premium is live, on WhatsApp, with someone from the team.",
         hero_cta: "See prices",
         hero_wa: "Ask a question on WhatsApp",
         hero_note: "The site never asks for a card. If activation doesn't work out, you pay nothing.",
@@ -261,7 +261,7 @@ const translations = {
         step3_t: "You send your login details through that link.",
         step3_d: "The link is personal and expires. Your password is encrypted, then deleted once activation is done. You can change it right after.",
         step4_t: "Premium is switched on for your account.",
-        step4_d: "Allow 24 to 48 hours. Every update email includes a tracking link.",
+        step4_d: "Allow 5 to 30 minutes after we receive your login details, during our opening hours. Every update email includes a tracking link.",
         step5_t: "You pay on WhatsApp.",
         step5_d: "Once you can see Premium on your account, we tell you the amount and how to pay. If activation doesn't work out, you pay nothing.",
 
@@ -320,7 +320,7 @@ const translations = {
         merci_step1_t: "Order received",
         merci_step1_d: "Your order is saved and the team can see it on WhatsApp.",
         merci_step2_t: "Secure link and activation",
-        merci_step2_d: "We send you a link to submit your login details. Premium is live within 24 to 48 hours.",
+        merci_step2_d: "We send you a link to submit your login details. Once we have them, Premium is live in 5 to 30 minutes (during our opening hours).",
         merci_step3_t: "Payment",
         merci_step3_d: "You pay on WhatsApp once Premium is live on your account.",
         merci_guarantee: "If activation doesn't work out, you pay nothing.",
@@ -330,7 +330,7 @@ const translations = {
 
     es: {
         page_title: "Kareer · Un año de LinkedIn Premium por menos",
-        meta_description: "LinkedIn Career, Business, Sales Navigator Core y Recruiter Lite durante 12 meses, activados en tu propia cuenta en 24 a 48 horas. Pagas por WhatsApp cuando Premium ya está activo. Precio especial para estudiantes y recién titulados.",
+        meta_description: "LinkedIn Career, Business, Sales Navigator Core y Recruiter Lite durante 12 meses, activados en tu propia cuenta en 30 minutos como máximo tras recibir tus datos de acceso. Pagas por WhatsApp cuando Premium ya está activo. Precio especial para estudiantes y recién titulados.",
         skip_to_pricing: "Ir a los precios",
         nav_label: "Navegación principal",
         nav_pricing: "Precios",
@@ -343,7 +343,7 @@ const translations = {
 
         hero_eyebrow: "LinkedIn Premium · suscripción de 12 meses",
         hero_title: "Un año de LinkedIn Premium desde <span class=\"nowrap\">60&nbsp;€</span>.",
-        hero_lede: "Career, Business, Sales Navigator o Recruiter Lite, activado en tu propia cuenta de LinkedIn en 24 a 48 horas. Solo pagas cuando Premium ya está activo, por WhatsApp, con alguien del equipo.",
+        hero_lede: "Career, Business, Sales Navigator o Recruiter Lite, activado en tu propia cuenta de LinkedIn en 30 minutos como máximo tras recibir tus datos de acceso. Solo pagas cuando Premium ya está activo, por WhatsApp, con alguien del equipo.",
         hero_cta: "Ver precios",
         hero_wa: "Preguntar por WhatsApp",
         hero_note: "La web nunca te pide una tarjeta. Si la activación no sale bien, no pagas nada.",
@@ -424,7 +424,7 @@ const translations = {
         step3_t: "Envías tus datos de acceso por ese enlace.",
         step3_d: "El enlace es personal y caduca. La contraseña se cifra y se borra al terminar la activación. Puedes cambiarla justo después.",
         step4_t: "Premium se activa en tu cuenta.",
-        step4_d: "Cuenta con 24 a 48 horas. Cada correo de actualización incluye un enlace de seguimiento.",
+        step4_d: "Cuenta entre 5 y 30 minutos desde que recibimos tus datos de acceso, en nuestro horario de atención. Cada correo de actualización incluye un enlace de seguimiento.",
         step5_t: "Pagas por WhatsApp.",
         step5_d: "Cuando ves Premium en tu cuenta, te indicamos el importe y la forma de pago. Si la activación no sale bien, no pagas nada.",
 
@@ -483,7 +483,7 @@ const translations = {
         merci_step1_t: "Pedido recibido",
         merci_step1_d: "Tu pedido está registrado y el equipo lo ve en WhatsApp.",
         merci_step2_t: "Enlace seguro y activación",
-        merci_step2_d: "Te enviamos un enlace para enviar tus datos de acceso. Premium queda activo en 24 a 48 horas.",
+        merci_step2_d: "Te enviamos un enlace para enviar tus datos de acceso. Una vez recibidos, Premium queda activo en 5 a 30 minutos (en nuestro horario).",
         merci_step3_t: "Pago",
         merci_step3_d: "Pagas por WhatsApp cuando Premium ya está activo en tu cuenta.",
         merci_guarantee: "Si la activación no sale bien, no pagas nada.",
@@ -493,7 +493,7 @@ const translations = {
 
     de: {
         page_title: "Kareer · Ein Jahr LinkedIn Premium für weniger Geld",
-        meta_description: "LinkedIn Career, Business, Sales Navigator Core und Recruiter Lite für 12 Monate, aktiviert auf Ihrem eigenen Konto innerhalb von 24 bis 48 Stunden. Sie zahlen per WhatsApp, sobald Premium aktiv ist. Sonderpreis für Studierende und Absolventen.",
+        meta_description: "LinkedIn Career, Business, Sales Navigator Core und Recruiter Lite für 12 Monate, aktiviert auf Ihrem eigenen Konto innerhalb von 30 Minuten nach Erhalt Ihrer Zugangsdaten. Sie zahlen per WhatsApp, sobald Premium aktiv ist. Sonderpreis für Studierende und Absolventen.",
         skip_to_pricing: "Zu den Preisen",
         nav_label: "Hauptnavigation",
         nav_pricing: "Preise",
@@ -506,7 +506,7 @@ const translations = {
 
         hero_eyebrow: "LinkedIn Premium · Abo für 12 Monate",
         hero_title: "Ein Jahr LinkedIn Premium ab <span class=\"nowrap\">60&nbsp;€</span>.",
-        hero_lede: "Career, Business, Sales Navigator oder Recruiter Lite, freigeschaltet auf Ihrem eigenen LinkedIn-Konto innerhalb von 24 bis 48 Stunden. Sie zahlen erst, wenn Premium aktiv ist, per WhatsApp bei jemandem aus dem Team.",
+        hero_lede: "Career, Business, Sales Navigator oder Recruiter Lite, freigeschaltet auf Ihrem eigenen LinkedIn-Konto innerhalb von 30 Minuten nach Erhalt Ihrer Zugangsdaten. Sie zahlen erst, wenn Premium aktiv ist, per WhatsApp bei jemandem aus dem Team.",
         hero_cta: "Preise ansehen",
         hero_wa: "Frage per WhatsApp stellen",
         hero_note: "Die Website fragt nie nach einer Karte. Klappt die Aktivierung nicht, zahlen Sie nichts.",
@@ -587,7 +587,7 @@ const translations = {
         step3_t: "Sie übermitteln Ihre Zugangsdaten über diesen Link.",
         step3_d: "Der Link ist persönlich und läuft ab. Das Passwort wird verschlüsselt und nach der Aktivierung gelöscht. Sie können es direkt danach ändern.",
         step4_t: "Premium wird auf Ihrem Konto freigeschaltet.",
-        step4_d: "Rechnen Sie mit 24 bis 48 Stunden. Jede Status-E-Mail enthält einen Link, über den Sie den Stand verfolgen.",
+        step4_d: "Rechnen Sie mit 5 bis 30 Minuten nach Erhalt Ihrer Zugangsdaten, während unserer Geschäftszeiten. Jede Status-E-Mail enthält einen Link, über den Sie den Stand verfolgen.",
         step5_t: "Sie bezahlen per WhatsApp.",
         step5_d: "Sobald Sie Premium auf Ihrem Konto sehen, nennen wir Ihnen Betrag und Zahlungsweg. Klappt die Aktivierung nicht, zahlen Sie nichts.",
 
@@ -646,7 +646,7 @@ const translations = {
         merci_step1_t: "Bestellung erhalten",
         merci_step1_d: "Ihre Bestellung ist gespeichert und das Team sieht sie in WhatsApp.",
         merci_step2_t: "Sicherer Link und Aktivierung",
-        merci_step2_d: "Wir schicken Ihnen einen Link für Ihre Zugangsdaten. Premium ist innerhalb von 24 bis 48 Stunden aktiv.",
+        merci_step2_d: "Wir schicken Ihnen einen Link für Ihre Zugangsdaten. Sobald wir sie haben, ist Premium in 5 bis 30 Minuten aktiv (während unserer Geschäftszeiten).",
         merci_step3_t: "Zahlung",
         merci_step3_d: "Sie zahlen per WhatsApp, sobald Premium auf Ihrem Konto aktiv ist.",
         merci_guarantee: "Klappt die Aktivierung nicht, zahlen Sie nichts.",

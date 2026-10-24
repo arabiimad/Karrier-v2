@@ -244,7 +244,7 @@ async function sendWelcomeEmail(order) {
         'Vous transmettez vos identifiants, puis nous lançons l’activation.',
         'Une fois Premium actif, vous réglez sur WhatsApp.'
       ],
-      delay: 'Délai estimé : 24 à 48 heures après réception des identifiants.',
+      delay: 'Délai : 5 à 30 minutes après réception de vos identifiants, pendant nos horaires.',
       amount: 'Montant',
       order: 'Commande',
       contact: 'Écrire sur WhatsApp',
@@ -260,7 +260,7 @@ async function sendWelcomeEmail(order) {
         'Envías tus credenciales y empezamos la activación.',
         'Cuando Premium esté activo, pagas por WhatsApp.'
       ],
-      delay: 'Tiempo estimado: 24 a 48 horas después de recibir tus credenciales.',
+      delay: 'Plazo: de 5 a 30 minutos después de recibir tus credenciales, en nuestro horario.',
       amount: 'Monto',
       order: 'Pedido',
       contact: 'Escribir por WhatsApp',
@@ -276,7 +276,7 @@ async function sendWelcomeEmail(order) {
         'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.',
         'Sobald Premium aktiv ist, zahlen Sie per WhatsApp.'
       ],
-      delay: 'Geschätzte Zeit: 24 bis 48 Stunden nach Erhalt der Zugangsdaten.',
+      delay: 'Dauer: 5 bis 30 Minuten nach Erhalt Ihrer Zugangsdaten, während unserer Geschäftszeiten.',
       amount: 'Betrag',
       order: 'Bestellung',
       contact: 'Per WhatsApp schreiben',
@@ -292,7 +292,7 @@ async function sendWelcomeEmail(order) {
         'You submit your credentials, then we start activation.',
         'Once Premium is live, you pay on WhatsApp.'
       ],
-      delay: 'Estimated time: 24 to 48 hours after receiving your credentials.',
+      delay: 'Timing: 5 to 30 minutes after we receive your credentials, during our opening hours.',
       amount: 'Amount',
       order: 'Order',
       contact: 'Message us on WhatsApp',

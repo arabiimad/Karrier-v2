@@ -130,7 +130,7 @@
             } else if (order.status === 'awaiting_credentials') {
                 etaText = 'En attente de vos accès';
             } else if (order.status === 'activating') {
-                etaText = 'Activation en cours, sous 24 à 48 h';
+                etaText = 'Activation en cours, 30 minutes maximum';
             } else if (order.status === 'done') {
                 etaText = 'Premium est actif';
             } else if (order.status === 'refunded') {
@@ -153,7 +153,7 @@
                 steps = [
                     { key: 'pending_payment', icon: '1', title: 'Commande reçue', desc: 'Nous préparons le lien sécurisé pour vos accès.' },
                     { key: 'awaiting_credentials', icon: '2', title: 'Accès demandés', desc: 'Un lien sécurisé vous permet de transmettre votre mot de passe LinkedIn.' },
-                    { key: 'activating', icon: '3', title: 'Activation en cours', desc: 'Premium est en cours d\'activation sur votre compte LinkedIn.' },
+                    { key: 'activating', icon: '3', title: 'Activation en cours', desc: 'Premium est en cours d\'activation sur votre compte LinkedIn, en 5 à 30 minutes.' },
                     { key: 'done', icon: '4', title: 'Actif', desc: 'Votre LinkedIn Premium est opérationnel. Le règlement se fait sur WhatsApp, si ce n\'est pas déjà fait.' }
                 ];
             }

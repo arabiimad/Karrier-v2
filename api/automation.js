@@ -543,7 +543,7 @@ async function sendRenewalReminders(daysBefore) {
         title: 'Renouvelez votre LinkedIn Premium',
         body: `Votre abonnement LinkedIn Premium (${order.planLabel || order.plan}) arrive bientôt à expiration. Renouvelez maintenant pour continuer à profiter de toutes les fonctionnalités Premium sans interruption.`,
         benefit1: 'Même prix avantageux garanti',
-        benefit2: 'Activation rapide (24-48h)',
+        benefit2: 'Activation en 30 minutes maximum après réception des identifiants',
         benefit3: 'Support WhatsApp dédié',
         cta: 'Renouveler maintenant',
         footer: 'Cet email vous est envoyé car votre abonnement arrive à échéance.'
@@ -552,7 +552,7 @@ async function sendRenewalReminders(daysBefore) {
         title: 'Renueva tu LinkedIn Premium',
         body: `Tu suscripción LinkedIn Premium (${order.planLabel || order.plan}) está por vencer. Renueva ahora para seguir disfrutando de todas las funciones Premium sin interrupción.`,
         benefit1: 'Mismo precio ventajoso garantizado',
-        benefit2: 'Activación rápida (24-48h)',
+        benefit2: 'Activación en 30 minutos como máximo tras recibir tus datos',
         benefit3: 'Soporte WhatsApp dedicado',
         cta: 'Renovar ahora',
         footer: 'Este email se envía porque tu suscripción está por vencer.'
@@ -561,7 +561,7 @@ async function sendRenewalReminders(daysBefore) {
         title: 'Erneuern Sie Ihr LinkedIn Premium',
         body: `Ihr LinkedIn Premium-Abonnement (${order.planLabel || order.plan}) läuft bald ab. Erneuern Sie jetzt, um alle Premium-Funktionen ohne Unterbrechung zu nutzen.`,
         benefit1: 'Gleicher günstiger Preis garantiert',
-        benefit2: 'Schnelle Aktivierung (24-48h)',
+        benefit2: 'Aktivierung in höchstens 30 Minuten nach Erhalt der Zugangsdaten',
         benefit3: 'Persönlicher WhatsApp-Support',
         cta: 'Jetzt erneuern',
         footer: 'Diese E-Mail wird gesendet, weil Ihr Abonnement bald abläuft.'
@@ -570,7 +570,7 @@ async function sendRenewalReminders(daysBefore) {
         title: 'Renew your LinkedIn Premium',
         body: `Your LinkedIn Premium subscription (${order.planLabel || order.plan}) is about to expire. Renew now to continue enjoying all Premium features without interruption.`,
         benefit1: 'Same great price guaranteed',
-        benefit2: 'Fast activation (24-48h)',
+        benefit2: 'Activation within 30 minutes of receiving your credentials',
         benefit3: 'Dedicated WhatsApp support',
         cta: 'Renew now',
         footer: 'This email is sent because your subscription is about to expire.'

@@ -450,25 +450,25 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
 
     const messages = {
       fr: {
-        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu vos accès et votre LinkedIn Premium est en cours d\'activation. Vous recevrez une confirmation dès que ce sera terminé. Le paiement se fait ensuite sur WhatsApp.' },
+        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu vos accès et votre LinkedIn Premium est en cours d\'activation (5 à 30 minutes). Vous recevrez une confirmation dès que ce sera terminé. Le paiement se fait ensuite sur WhatsApp.' },
         done: { subject: 'Votre compte LinkedIn Premium est activé !', title: 'C\'est fait !', body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant profiter de toutes les fonctionnalités Premium sur LinkedIn. Si ce n\'est pas déjà fait, le règlement se fait sur WhatsApp avec notre équipe.' },
         refunded: { subject: 'Votre remboursement a été effectué', title: 'Remboursement confirmé', body: 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans 5-10 jours ouvrés.' },
         pending: { subject: 'Commande reçue', title: 'Commande reçue', body: 'Nous avons bien reçu votre commande. Vous allez recevoir un lien sécurisé pour transmettre vos accès LinkedIn. Le paiement se fait une fois Premium actif.' }
       },
       en: {
-        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your login details and your LinkedIn Premium is being activated. You will receive a confirmation once it\'s done. Payment comes after, on WhatsApp.' },
+        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your login details and your LinkedIn Premium is being activated (5 to 30 minutes). You will receive a confirmation once it\'s done. Payment comes after, on WhatsApp.' },
         done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn. If you haven\'t paid yet, payment is done on WhatsApp with our team.' },
         refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
         pending: { subject: 'Order received', title: 'Order received', body: 'We have received your order. You will get a secure link to submit your LinkedIn login details. Payment comes once Premium is live.' }
       },
       es: {
-        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tus datos de acceso y tu LinkedIn Premium está siendo activado. Recibirás una confirmación cuando esté listo. El pago se hace después, por WhatsApp.' },
+        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tus datos de acceso y tu LinkedIn Premium está siendo activado (de 5 a 30 minutos). Recibirás una confirmación cuando esté listo. El pago se hace después, por WhatsApp.' },
         done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn. Si aún no has pagado, el pago se hace por WhatsApp con nuestro equipo.' },
         refunded: { subject: 'Tu reembolso ha sido procesado', title: 'Reembolso confirmado', body: 'Tu pedido ha sido reembolsado. El monto será acreditado en tu cuenta en 5-10 días hábiles.' },
         pending: { subject: 'Pedido recibido', title: 'Pedido recibido', body: 'Hemos recibido tu pedido. Recibirás un enlace seguro para enviar tus datos de acceso de LinkedIn. El pago se hace cuando Premium esté activo.' }
       },
       de: {
-        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zugangsdaten erhalten und Ihr LinkedIn Premium wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist. Bezahlt wird danach per WhatsApp.' },
+        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zugangsdaten erhalten und Ihr LinkedIn Premium wird aktiviert (5 bis 30 Minuten). Sie erhalten eine Bestätigung, sobald es fertig ist. Bezahlt wird danach per WhatsApp.' },
         done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen. Falls noch nicht geschehen, erfolgt die Zahlung per WhatsApp mit unserem Team.' },
         refunded: { subject: 'Ihre Rückerstattung wurde bearbeitet', title: 'Rückerstattung bestätigt', body: 'Ihre Bestellung wurde erstattet. Der Betrag wird innerhalb von 5-10 Werktagen auf Ihrem Konto gutgeschrieben.' },
         pending: { subject: 'Bestellung erhalten', title: 'Bestellung erhalten', body: 'Wir haben Ihre Bestellung erhalten. Sie bekommen einen sicheren Link für Ihre LinkedIn-Zugangsdaten. Bezahlt wird, sobald Premium aktiv ist.' }

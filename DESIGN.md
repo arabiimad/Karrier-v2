@@ -73,7 +73,7 @@ Spacing runs on a 4px base. Sections are separated by a 1px `--rule` line and
 
 These apply to every language.
 
-- Say what happens, with numbers. "Actif sous 24 à 48 h" beats "activation
+- Say what happens, with numbers. "Actif en 30 minutes maximum" beats "activation
   ultra-rapide".
 - No em dashes. Use a comma, a colon, a period or parentheses.
 - Do not default to lists of three. Use the number of items the content has.
