@@ -118,7 +118,7 @@ const translations = {
         faq6_a: "Ce sont les tarifs publics de LinkedIn Premium en France, en facturation annuelle&nbsp;: Career 29,99&nbsp;€ par mois, Business 55&nbsp;€ par mois, Sales Navigator Core 89,99&nbsp;€ par mois et Recruiter Lite 123,96&nbsp;€ par mois.",
         faq7_q: "Kareer fait-il partie de LinkedIn&nbsp;?",
         faq7_a: "Non. Kareer est un service indépendant, sans lien avec LinkedIn Corporation.",
-        faq8_a: "Oui, de deux façons. <strong>Clients</strong> : votre code de parrainage arrive à l'activation de votre commande ; la personne qui commande avec paie 10&nbsp;€ de moins et vous gagnez 10&nbsp;€ dès qu'elle a réglé (<a href=\"parrainage\">page parrainage</a>). <strong>Tout le monde</strong>, client ou non (étudiants, créateurs de contenu, salariés) : devenez ambassadeur avec votre propre code, sur validation de l'équipe (<a href=\"ambassadeur\">programme ambassadeur</a>). Dans les deux cas, le solde se vire sur votre compte ou paie votre propre abonnement.",
+        faq8_a: "Oui, de deux façons. <strong>Clients</strong> : votre code de parrainage arrive à l'activation de votre commande ; la personne qui commande avec paie 10&nbsp;€ de moins et vous gagnez 10&nbsp;€ dès qu'elle a réglé (<a href=\"/parrainage\">page parrainage</a>). <strong>Tout le monde</strong>, client ou non (étudiants, créateurs de contenu, salariés) : devenez ambassadeur avec votre propre code, sur validation de l'équipe (<a href=\"/ambassadeur\">programme ambassadeur</a>). Dans les deux cas, le solde se vire sur votre compte ou paie votre propre abonnement.",
         faq8_q: "Puis-je gagner de l'argent en recommandant Kareer&nbsp;?",
 
         talk_title: "Parler à quelqu'un de l'équipe",
@@ -133,7 +133,7 @@ const translations = {
         footer_legal: "Mentions légales",
         footer_disclaimer: "Kareer est un service indépendant, sans lien avec LinkedIn Corporation. LinkedIn est une marque déposée de LinkedIn Corporation.",
 
-        cookie_text: "Ce site n'utilise que des cookies techniques (langue, choix ci-dessous). Aucun cookie publicitaire ni de mesure d'audience. <a href=\"confidentialite.html\">Détails</a>",
+        cookie_text: "Ce site n'utilise que des cookies techniques (langue, choix ci-dessous). Aucun cookie publicitaire ni de mesure d'audience. <a href=\"/confidentialite\">Détails</a>",
         cookie_ok: "D'accord",
         cookie_no: "Refuser",
 
@@ -141,6 +141,9 @@ const translations = {
         wa_order: "Bonjour, j'ai une question sur ma commande Kareer.",
 
         contact_page_title: "Contact · Kareer",
+        footer_blog: "Blog",
+        nav_blog: "Blog",
+        contact_meta_description: "Contacter Kareer sur WhatsApp ou par e-mail : une question sur une offre LinkedIn Premium, une commande en cours ou un remboursement.",
         contact_title: "Nous contacter",
         contact_subtitle: "Une question sur une offre, une commande en cours ou un remboursement&nbsp;: écrivez-nous. Sur WhatsApp, vous parlez directement à l'équipe.",
         contact_wa_title: "WhatsApp",
@@ -291,7 +294,7 @@ const translations = {
         faq6_a: "They are LinkedIn Premium's public prices in France on annual billing: Career €29.99 a month, Business €55 a month, Sales Navigator Core €89.99 a month and Recruiter Lite €123.96 a month.",
         faq7_q: "Is Kareer part of LinkedIn?",
         faq7_a: "No. Kareer is an independent service with no connection to LinkedIn Corporation.",
-        faq8_a: "Yes, in two ways. <strong>Customers</strong>: your referral code arrives when your order is activated; whoever orders with it pays €10 less and you earn €10 as soon as they have paid (<a href=\"parrainage\">referral page</a>). <strong>Anyone</strong>, customer or not (students, content creators, employees): become an ambassador with your own code, once the team accepts you (<a href=\"ambassadeur\">ambassador programme</a>). Either way, your balance is transferred to you or pays for your own subscription.",
+        faq8_a: "Yes, in two ways. <strong>Customers</strong>: your referral code arrives when your order is activated; whoever orders with it pays €10 less and you earn €10 as soon as they have paid (<a href=\"/parrainage\">referral page</a>). <strong>Anyone</strong>, customer or not (students, content creators, employees): become an ambassador with your own code, once the team accepts you (<a href=\"/ambassadeur\">ambassador programme</a>). Either way, your balance is transferred to you or pays for your own subscription.",
         faq8_q: "Can I earn money by recommending Kareer?",
 
         talk_title: "Talk to someone on the team",
@@ -306,7 +309,7 @@ const translations = {
         footer_legal: "Legal notice",
         footer_disclaimer: "Kareer is an independent service with no connection to LinkedIn Corporation. LinkedIn is a registered trademark of LinkedIn Corporation.",
 
-        cookie_text: "This site only uses technical cookies (language and the choice below). No advertising or analytics cookies. <a href=\"confidentialite.html\">Details</a>",
+        cookie_text: "This site only uses technical cookies (language and the choice below). No advertising or analytics cookies. <a href=\"/confidentialite\">Details</a>",
         cookie_ok: "OK",
         cookie_no: "Decline",
 
@@ -314,6 +317,9 @@ const translations = {
         wa_order: "Hi, I have a question about my Kareer order.",
 
         contact_page_title: "Contact · Kareer",
+        footer_blog: "Blog",
+        nav_blog: "Blog",
+        contact_meta_description: "Contact Kareer on WhatsApp or by email: a question about a LinkedIn Premium offer, an order in progress or a refund.",
         contact_title: "Contact us",
         contact_subtitle: "A question about a plan, an order in progress or a refund: get in touch. On WhatsApp you talk straight to the team.",
         contact_wa_title: "WhatsApp",
@@ -464,7 +470,7 @@ const translations = {
         faq6_a: "Son las tarifas públicas de LinkedIn Premium en Francia con facturación anual: Career 29,99&nbsp;€ al mes, Business 55&nbsp;€ al mes, Sales Navigator Core 89,99&nbsp;€ al mes y Recruiter Lite 123,96&nbsp;€ al mes.",
         faq7_q: "¿Kareer forma parte de LinkedIn?",
         faq7_a: "No. Kareer es un servicio independiente, sin relación con LinkedIn Corporation.",
-        faq8_a: "Sí, de dos maneras. <strong>Clientes</strong>: tu código de recomendación llega al activarse tu pedido; quien pida con él paga 10&nbsp;€ menos y tú ganas 10&nbsp;€ en cuanto haya pagado (<a href=\"parrainage\">página de recomendaciones</a>). <strong>Cualquier persona</strong>, cliente o no (estudiantes, creadores de contenido, asalariados): hazte embajador con tu propio código, con validación del equipo (<a href=\"ambassadeur\">programa de embajadores</a>). En ambos casos, el saldo se transfiere a tu cuenta o paga tu propia suscripción.",
+        faq8_a: "Sí, de dos maneras. <strong>Clientes</strong>: tu código de recomendación llega al activarse tu pedido; quien pida con él paga 10&nbsp;€ menos y tú ganas 10&nbsp;€ en cuanto haya pagado (<a href=\"/parrainage\">página de recomendaciones</a>). <strong>Cualquier persona</strong>, cliente o no (estudiantes, creadores de contenido, asalariados): hazte embajador con tu propio código, con validación del equipo (<a href=\"/ambassadeur\">programa de embajadores</a>). En ambos casos, el saldo se transfiere a tu cuenta o paga tu propia suscripción.",
         faq8_q: "¿Puedo ganar dinero recomendando Kareer?",
 
         talk_title: "Habla con alguien del equipo",
@@ -479,7 +485,7 @@ const translations = {
         footer_legal: "Aviso legal",
         footer_disclaimer: "Kareer es un servicio independiente, sin relación con LinkedIn Corporation. LinkedIn es una marca registrada de LinkedIn Corporation.",
 
-        cookie_text: "Esta web solo usa cookies técnicas (idioma y la elección de abajo). Ninguna cookie publicitaria ni de analítica. <a href=\"confidentialite.html\">Detalles</a>",
+        cookie_text: "Esta web solo usa cookies técnicas (idioma y la elección de abajo). Ninguna cookie publicitaria ni de analítica. <a href=\"/confidentialite\">Detalles</a>",
         cookie_ok: "De acuerdo",
         cookie_no: "Rechazar",
 
@@ -487,6 +493,9 @@ const translations = {
         wa_order: "Hola, tengo una pregunta sobre mi pedido de Kareer.",
 
         contact_page_title: "Contacto · Kareer",
+        footer_blog: "Blog",
+        nav_blog: "Blog",
+        contact_meta_description: "Contacta con Kareer por WhatsApp o por correo: una pregunta sobre una oferta de LinkedIn Premium, un pedido en curso o un reembolso.",
         contact_title: "Contacto",
         contact_subtitle: "Una pregunta sobre un plan, un pedido en curso o un reembolso: escríbenos. Por WhatsApp hablas directamente con el equipo.",
         contact_wa_title: "WhatsApp",
@@ -637,7 +646,7 @@ const translations = {
         faq6_a: "Es sind die öffentlichen Preise von LinkedIn Premium in Frankreich bei jährlicher Abrechnung: Career 29,99&nbsp;€ pro Monat, Business 55&nbsp;€ pro Monat, Sales Navigator Core 89,99&nbsp;€ pro Monat und Recruiter Lite 123,96&nbsp;€ pro Monat.",
         faq7_q: "Gehört Kareer zu LinkedIn?",
         faq7_a: "Nein. Kareer ist ein unabhängiger Dienst ohne Verbindung zur LinkedIn Corporation.",
-        faq8_a: "Ja, auf zwei Wegen. <strong>Kunden</strong>: Ihr Empfehlungscode kommt mit der Aktivierung Ihrer Bestellung; wer damit bestellt, zahlt 10&nbsp;€ weniger, und Sie verdienen 10&nbsp;€, sobald die Person bezahlt hat (<a href=\"parrainage\">Empfehlungsseite</a>). <strong>Alle</strong>, ob Kunde oder nicht (Studierende, Content-Creator, Angestellte): Werden Sie Botschafter mit Ihrem eigenen Code, nach Prüfung durch das Team (<a href=\"ambassadeur\">Botschafterprogramm</a>). In beiden Fällen wird Ihr Guthaben überwiesen oder bezahlt Ihr eigenes Abo.",
+        faq8_a: "Ja, auf zwei Wegen. <strong>Kunden</strong>: Ihr Empfehlungscode kommt mit der Aktivierung Ihrer Bestellung; wer damit bestellt, zahlt 10&nbsp;€ weniger, und Sie verdienen 10&nbsp;€, sobald die Person bezahlt hat (<a href=\"/parrainage\">Empfehlungsseite</a>). <strong>Alle</strong>, ob Kunde oder nicht (Studierende, Content-Creator, Angestellte): Werden Sie Botschafter mit Ihrem eigenen Code, nach Prüfung durch das Team (<a href=\"/ambassadeur\">Botschafterprogramm</a>). In beiden Fällen wird Ihr Guthaben überwiesen oder bezahlt Ihr eigenes Abo.",
         faq8_q: "Kann ich mit Empfehlungen Geld verdienen?",
 
         talk_title: "Mit jemandem aus dem Team sprechen",
@@ -652,7 +661,7 @@ const translations = {
         footer_legal: "Impressum",
         footer_disclaimer: "Kareer ist ein unabhängiger Dienst ohne Verbindung zur LinkedIn Corporation. LinkedIn ist eine eingetragene Marke der LinkedIn Corporation.",
 
-        cookie_text: "Diese Website verwendet nur technische Cookies (Sprache und die Auswahl unten). Keine Werbe- oder Analyse-Cookies. <a href=\"confidentialite.html\">Details</a>",
+        cookie_text: "Diese Website verwendet nur technische Cookies (Sprache und die Auswahl unten). Keine Werbe- oder Analyse-Cookies. <a href=\"/confidentialite\">Details</a>",
         cookie_ok: "Einverstanden",
         cookie_no: "Ablehnen",
 
@@ -660,6 +669,9 @@ const translations = {
         wa_order: "Hallo, ich habe eine Frage zu meiner Kareer-Bestellung.",
 
         contact_page_title: "Kontakt · Kareer",
+        footer_blog: "Blog",
+        nav_blog: "Blog",
+        contact_meta_description: "Kontakt zu Kareer per WhatsApp oder E-Mail: eine Frage zu einem LinkedIn-Premium-Angebot, einer laufenden Bestellung oder einer Erstattung.",
         contact_title: "Kontakt",
         contact_subtitle: "Eine Frage zu einem Angebot, einer laufenden Bestellung oder einer Erstattung: Schreiben Sie uns. Per WhatsApp sprechen Sie direkt mit dem Team.",
         contact_wa_title: "WhatsApp",
@@ -707,9 +719,24 @@ function detectUrlLang() {
     return null;
 }
 
+// Pages built per language (/, /en/, /es/, /de/) carry their language and link to the other
+// versions with hreflang. There the address decides the language.
+const PAGE_LANG = document.documentElement.getAttribute('data-page-lang');
+
+function alternateUrl(lang) {
+    const link = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
+    return link ? new URL(link.href).pathname : null;
+}
+
 // URL first, then the visitor's last choice, then French.
 window.currentLang = (function () {
     const urlLang = detectUrlLang();
+    if (PAGE_LANG && translations[PAGE_LANG]) {
+        // An old ?lang= link opens the version in that language.
+        const target = urlLang && urlLang !== PAGE_LANG ? alternateUrl(urlLang) : null;
+        if (target) location.replace(target + location.hash);
+        return PAGE_LANG;
+    }
     if (urlLang) return urlLang;
     try {
         const saved = localStorage.getItem('kareer_lang');
@@ -734,8 +761,9 @@ function setLanguage(lang) {
     const dict = translations[lang];
     const titleKey = document.body.getAttribute('data-title-key') || 'page_title';
     if (dict[titleKey]) document.title = dict[titleKey].replace(/&nbsp;/g, ' ');
+    const metaKey = document.body.getAttribute('data-meta-key') || (titleKey === 'page_title' ? 'meta_description' : null);
     const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && titleKey === 'page_title' && dict.meta_description) metaDesc.setAttribute('content', dict.meta_description);
+    if (metaDesc && metaKey && dict[metaKey]) metaDesc.setAttribute('content', dict[metaKey]);
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const value = dict[el.getAttribute('data-i18n')];

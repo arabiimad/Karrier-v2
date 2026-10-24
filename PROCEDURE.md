@@ -118,3 +118,20 @@ Depuis sa page, la personne choisit :
 | `CRON_SECRET` | Protège les tâches planifiées. |
 
 Les e-mails partent de `notifications@kareer.pro` ; quand un client y répond, la réponse arrive sur `contact@kareer.pro` et dans l'onglet Messages du tableau de bord.
+
+## 12. Langues, blog et référencement
+
+Le site existe en quatre adresses : `kareer.pro` (français), `/en`, `/es` et `/de`. Les versions anglaise, espagnole et allemande de l'accueil et de la page contact, ainsi que tout le blog (`/blog`, `/en/blog`…), sont des pages **générées** : on ne les modifie jamais à la main.
+
+**Modifier un texte du site** : changer `index.html`, `contact.html` ou `i18n.js`, puis lancer `npm run build:pages` et publier les fichiers produits avec le reste.
+
+**Ajouter un article** :
+1. Copier un fichier de `content/blog/` (par exemple `inmail.js`), changer `id`, la date `published` et l'offre mise en avant (`plan` : career, business, sales ou recruiter).
+2. Écrire les quatre versions (`fr`, `en`, `es`, `de`) : une adresse courte (`slug`), un titre, une description d'une ou deux phrases (c'est elle qui s'affiche dans Google) et le texte en HTML simple (`h2`, `p`, `ul`, tableaux).
+3. Lancer `npm run build:pages` : l'article, la liste des articles, les liens entre langues et `sitemap.xml` sont mis à jour.
+
+Pour corriger un article déjà publié, ajouter une date `updated` à côté de `published`.
+
+**Règles pour les articles** : ne pas citer de prix LinkedIn (ils changent selon le pays et le compte), rester sur des informations vérifiables, pas de tirets longs ni d'emojis, et garder la mention « Kareer est un service indépendant » (elle est dans le pied de page).
+
+**Après la mise en ligne** : déclarer `https://kareer.pro/sitemap.xml` dans Google Search Console, puis surveiller la rubrique « Pages » pour voir les versions /en, /es, /de et les articles indexés.

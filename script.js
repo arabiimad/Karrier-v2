@@ -67,7 +67,7 @@ function renderPrices() {
 
     document.querySelectorAll('[data-order]').forEach(link => {
         const ids = PLAN_IDS[link.dataset.order];
-        if (ids) link.href = 'checkout.html?plan=' + ids[audience] + '&lang=' + pageLang();
+        if (ids) link.href = '/checkout?plan=' + ids[audience] + '&lang=' + pageLang();
     });
 }
 
@@ -87,14 +87,22 @@ document.querySelectorAll('[data-audience]').forEach(btn => {
 // Kept for any old link that still calls it.
 window.allerCheckout = function (planType) {
     const ids = PLAN_IDS[planType];
-    window.location.href = 'checkout.html?plan=' + (ids ? ids[audience] : planType) + '&lang=' + pageLang();
+    window.location.href = '/checkout?plan=' + (ids ? ids[audience] : planType) + '&lang=' + pageLang();
 };
 
 // ----- Language -----
 
 document.querySelectorAll('button[data-lang]').forEach(btn => {
     btn.addEventListener('click', () => {
-        if (typeof setLanguage === 'function') setLanguage(btn.dataset.lang);
+        // Pages that exist in each language: go to that version instead of translating in place.
+        const lang = btn.dataset.lang;
+        const target = document.documentElement.hasAttribute('data-page-lang') && typeof alternateUrl === 'function' ? alternateUrl(lang) : null;
+        if (target && lang !== pageLang()) {
+            safeSet('kareer_lang', lang);
+            window.location.href = target + window.location.hash;
+            return;
+        }
+        if (typeof setLanguage === 'function') setLanguage(lang);
         const menu = btn.closest('details');
         if (menu) menu.open = false;
     });

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "build:pages": "node scripts/build-pages.js"
   },
   "dependencies": {
     "@vercel/kv": "^1.0.1",
@@ -16,5 +17,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "linkedom": "^0.18.14"
   }
 }

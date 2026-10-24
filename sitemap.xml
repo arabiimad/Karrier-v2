@@ -4,34 +4,332 @@
   <url>
     <loc>https://kareer.pro/</loc>
     <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/?lang=es"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/?lang=de"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/contact</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/contact"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/contact"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/contact</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/contact"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/contact"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/contact</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/contact"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/contact"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/contact</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/contact"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/contact"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/contact"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/contact"/>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/linkedin-premium-career-ou-business</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-career-vs-business"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-career-o-business"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-career-oder-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/linkedin-premium-career-vs-business</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-career-vs-business"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-career-o-business"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-career-oder-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/linkedin-premium-career-o-business</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-career-vs-business"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-career-o-business"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-career-oder-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/linkedin-premium-career-oder-business</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-career-vs-business"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-career-o-business"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-career-oder-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-career-ou-business"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-inmail-messages-that-get-replies"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/inmail-linkedin-mensajes-que-reciben-respuesta"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-inmail-nachrichten-die-beantwortet-werden"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/linkedin-inmail-messages-that-get-replies</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-inmail-messages-that-get-replies"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/inmail-linkedin-mensajes-que-reciben-respuesta"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-inmail-nachrichten-die-beantwortet-werden"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/inmail-linkedin-mensajes-que-reciben-respuesta</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-inmail-messages-that-get-replies"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/inmail-linkedin-mensajes-que-reciben-respuesta"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-inmail-nachrichten-die-beantwortet-werden"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/linkedin-inmail-nachrichten-die-beantwortet-werden</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-inmail-messages-that-get-replies"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/inmail-linkedin-mensajes-que-reciben-respuesta"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-inmail-nachrichten-die-beantwortet-werden"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/inmail-linkedin-message-qui-obtient-une-reponse"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/trouver-un-emploi-sur-linkedin</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/finding-a-job-on-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/encontrar-trabajo-en-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/job-finden-auf-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/finding-a-job-on-linkedin</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/finding-a-job-on-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/encontrar-trabajo-en-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/job-finden-auf-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/encontrar-trabajo-en-linkedin</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/finding-a-job-on-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/encontrar-trabajo-en-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/job-finden-auf-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/job-finden-auf-linkedin</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/finding-a-job-on-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/encontrar-trabajo-en-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/job-finden-auf-linkedin"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/trouver-un-emploi-sur-linkedin"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/recruiter-lite-recruter-sans-agence</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/recruiter-lite-hiring-without-an-agency"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/recruiter-lite-contratar-sin-agencia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/recruiter-lite-ohne-agentur-einstellen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/recruiter-lite-hiring-without-an-agency</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/recruiter-lite-hiring-without-an-agency"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/recruiter-lite-contratar-sin-agencia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/recruiter-lite-ohne-agentur-einstellen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/recruiter-lite-contratar-sin-agencia</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/recruiter-lite-hiring-without-an-agency"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/recruiter-lite-contratar-sin-agencia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/recruiter-lite-ohne-agentur-einstellen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/recruiter-lite-ohne-agentur-einstellen</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/recruiter-lite-hiring-without-an-agency"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/recruiter-lite-contratar-sin-agencia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/recruiter-lite-ohne-agentur-einstellen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/recruiter-lite-recruter-sans-agence"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/sales-navigator-core-what-it-is-for"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/sales-navigator-core-para-que-sirve"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/sales-navigator-core-wofuer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/sales-navigator-core-what-it-is-for</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/sales-navigator-core-what-it-is-for"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/sales-navigator-core-para-que-sirve"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/sales-navigator-core-wofuer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/sales-navigator-core-para-que-sirve</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/sales-navigator-core-what-it-is-for"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/sales-navigator-core-para-que-sirve"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/sales-navigator-core-wofuer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/sales-navigator-core-wofuer</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/sales-navigator-core-what-it-is-for"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/sales-navigator-core-para-que-sirve"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/sales-navigator-core-wofuer"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/sales-navigator-core-a-quoi-ca-sert"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/blog/linkedin-premium-etudiant</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-for-students"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-para-estudiantes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-fuer-studierende"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/en/blog/linkedin-premium-for-students</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-for-students"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-para-estudiantes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-fuer-studierende"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/es/blog/linkedin-premium-para-estudiantes</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-for-students"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-para-estudiantes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-fuer-studierende"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://kareer.pro/de/blog/linkedin-premium-fuer-studierende</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://kareer.pro/en/blog/linkedin-premium-for-students"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://kareer.pro/es/blog/linkedin-premium-para-estudiantes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://kareer.pro/de/blog/linkedin-premium-fuer-studierende"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kareer.pro/blog/linkedin-premium-etudiant"/>
     <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://kareer.pro/ambassadeur</loc>
-    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://kareer.pro/parrainage</loc>
-    <lastmod>2026-10-24</lastmod>
-  </url>
-  <url>
-    <loc>https://kareer.pro/contact</loc>
-    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://kareer.pro/cgv</loc>
-    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://kareer.pro/confidentialite</loc>
-    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://kareer.pro/mentions-legales</loc>
-    <lastmod>2026-10-24</lastmod>
   </url>
 </urlset>
