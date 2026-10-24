@@ -1,13 +1,13 @@
 /* Kareer. See DESIGN.md for the rules behind these values. */
 
 :root {
-    --paper: #F4F1EA;
-    --paper-2: #ECE7DC;
-    --card: #FFFDF8;
+    --paper: #EEF1F4;
+    --paper-2: #E4E8EE;
+    --card: #FFFFFF;
     --ink: #16181B;
     --ink-2: #4B5058;
-    --ink-3: #80848B;
-    --rule: #D8D1C3;
+    --ink-3: #6B717A;
+    --rule: #CBD2DB;
     --blue: #1B4DB8;
     --blue-ink: #133A8C;
     --on-blue: #FFFFFF;
@@ -99,7 +99,7 @@ s { text-decoration-thickness: 1.5px; }
 
 /* ---------- Header ---------- */
 .site-header {
-    position: sticky; top: 0; z-index: 50;
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
     background: color-mix(in srgb, var(--paper) 94%, transparent);
     border-bottom: 1px solid transparent;
     transition: border-color .2s;
@@ -173,7 +173,7 @@ s { text-decoration-thickness: 1.5px; }
     position: relative; background: var(--card); color: var(--ink);
     padding: 28px 28px 34px; border-radius: var(--r-md) var(--r-md) 0 0;
     font-family: var(--mono); font-size: 14px;
-    box-shadow: 0 1px 0 var(--rule), 0 30px 50px -36px rgba(40, 30, 10, .45);
+    box-shadow: 0 1px 0 var(--rule), 0 30px 50px -36px rgba(20, 30, 50, .35);
     transform: rotate(1.2deg);
 }
 .receipt::after {

@@ -10,7 +10,8 @@ less than LinkedIn charges, paid over WhatsApp. The site's job is to look like
 a small, real shop that tells you exactly what happens, not like a startup
 template.
 
-So the page is built like a price sheet. Warm paper background, black ink,
+So the page is built like a price sheet. A cool off-white background tinted
+toward the logo blue, black ink,
 one blue taken from the logo, hairline rules between sections, prices set in
 a monospace face so they read like a receipt. No gradients, glows, particles,
 loaders, counters or scroll effects.
@@ -26,13 +27,13 @@ follows `prefers-color-scheme` and only swaps the tokens.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--paper` | `#F4F1EA` | `#121314` | page background |
-| `--paper-2` | `#ECE7DC` | `#18191B` | alternate band |
-| `--card` | `#FFFDF8` | `#1C1D20` | receipt, panels |
+| `--paper` | `#EEF1F4` | `#121314` | page background |
+| `--paper-2` | `#E4E8EE` | `#18191B` | alternate band |
+| `--card` | `#FFFFFF` | `#1C1D20` | receipt, panels |
 | `--ink` | `#16181B` | `#EDEAE3` | main text |
 | `--ink-2` | `#4B5058` | `#B3AFA7` | secondary text |
-| `--ink-3` | `#80848B` | `#86837D` | captions, struck prices |
-| `--rule` | `#D8D1C3` | `#2D2F33` | hairlines, borders |
+| `--ink-3` | `#6B717A` | `#86837D` | captions, struck prices |
+| `--rule` | `#CBD2DB` | `#2D2F33` | hairlines, borders |
 | `--blue` | `#1B4DB8` | `#86A6FF` | brand, primary buttons, links |
 | `--blue-ink` | `#133A8C` | `#A9C0FF` | hover |
 | `--mark` | `#FFE36E` | `#4A3F0A` | highlighter behind savings |
