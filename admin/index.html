@@ -49,7 +49,7 @@
                 <button type="button" class="nav-item" data-section="inbox"><svg aria-hidden="true"><use href="#i-mail"/></svg><span>Messages</span><span class="nav-count" id="navCountInbox" hidden></span></button>
                 <button type="button" class="nav-item" data-section="analytics"><svg aria-hidden="true"><use href="#i-chart"/></svg><span>Statistiques</span></button>
                 <button type="button" class="nav-item nav-secondary" data-section="promos"><svg aria-hidden="true"><use href="#i-tag"/></svg><span>Codes promo</span></button>
-                <button type="button" class="nav-item nav-secondary" data-section="referrals"><svg aria-hidden="true"><use href="#i-users"/></svg><span>Parrainage</span></button>
+                <button type="button" class="nav-item nav-secondary" data-section="referrals"><svg aria-hidden="true"><use href="#i-users"/></svg><span>Parrainage</span><span class="nav-count" id="navCountReferrals" hidden></span></button>
                 <button type="button" class="nav-item nav-secondary" data-section="tools"><svg aria-hidden="true"><use href="#i-tools"/></svg><span>Outils</span></button>
                 <button type="button" class="nav-item nav-more" id="navMore" aria-expanded="false" aria-controls="moreSheet"><svg aria-hidden="true"><use href="#i-more"/></svg><span>Plus</span></button>
             </nav>
@@ -274,13 +274,18 @@
                 <header class="page-head">
                     <div>
                         <h1 id="h-referrals">Parrainage</h1>
-                        <p class="page-sub">10 € pour le parrain par commande terminée avec son code.</p>
+                        <p class="page-sub">10 € sur le solde du parrain quand une commande passée avec son code est réglée.</p>
                     </div>
                 </header>
+                <section class="ref-section" id="applicationsBox" hidden>
+                    <h2 class="card-title">Demandes à valider</h2>
+                    <p class="card-text">Personnes qui ne sont pas encore clientes. Leur code ne donne aucune réduction tant que vous ne l'acceptez pas.</p>
+                    <div class="promo-list" id="applicationsList"></div>
+                </section>
                 <div class="kpis kpis-3">
-                    <div class="kpi"><p class="kpi-label">Parrains</p><p class="kpi-value" id="totalReferrers">0</p></div>
-                    <div class="kpi"><p class="kpi-label">Filleuls</p><p class="kpi-value" id="totalReferrals">0</p></div>
-                    <div class="kpi"><p class="kpi-label">Récompenses</p><p class="kpi-value" id="totalReferralEarnings">0 €</p></div>
+                    <div class="kpi"><p class="kpi-label">Parrains actifs</p><p class="kpi-value" id="totalReferrers">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Commandes parrainées réglées</p><p class="kpi-value" id="totalReferrals">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Soldes à verser</p><p class="kpi-value" id="totalReferralEarnings">0 €</p><p class="kpi-sub" id="totalReferralTransfers"></p></div>
                 </div>
                 <div class="promo-list" id="referralsList"><p class="empty">Chargement…</p></div>
             </section>

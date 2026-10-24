@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
 const { alertTeam, newReference } = require('./_orders');
+const { getReferral, isActive } = require('./_referrals');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -89,6 +90,12 @@ module.exports = async (req, res) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    // Fully covered by a code (for example a referral balance): nothing will be due.
+    if (order.amount === 0) {
+      order.paid = true;
+      order.paidAt = order.createdAt;
+      order.paymentMethod = 'Code de réduction';
+    }
 
     await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
     await kvStore.set(`order-ref:${reference}`, sessionId);
@@ -194,14 +201,14 @@ async function applyPromoCode({ code, plan, orderId, amount }) {
 
 async function validateReferralCode(code, customerEmail) {
   const referralCode = String(code || '').toUpperCase().trim();
-  const referralData = await kvStore.get(`referral:${referralCode}`);
-  if (!referralData) {
+  const referral = await getReferral(referralCode);
+  // Codes waiting for the team's approval (or refused) do not give the discount.
+  if (!referral || !isActive(referral)) {
     const error = new Error('Invalid referral code');
     error.statusCode = 400;
     throw error;
   }
 
-  const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
   const email = String(customerEmail || '').toLowerCase();
   if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === email) {
     const error = new Error('Self-referral is not allowed');

@@ -197,6 +197,7 @@
                 <label class="form-label" for="referralCodeInput">Code de parrainage (optionnel)</label>
                 <input type="text" id="referralCodeInput" class="form-input" placeholder="Ex: REF12AB34CD" style="text-transform:uppercase">
                 <div class="form-hint">Si quelqu'un vous a parrainé, son code vous donne 10 € de réduction.</div>
+                <div class="form-hint" id="referralResult" style="display:none" role="status"></div>
             </div>
 
             <div class="promo-section">
@@ -300,6 +301,8 @@ const checkoutTranslations = {
     contactHint: 'Pour recevoir la confirmation et le lien sécurisé.',
     referralCode: 'Code de parrainage (optionnel)',
     referralHint: 'Si quelqu\'un vous a parrainé, son code vous donne 10 € de réduction.',
+    refValid: 'Code de parrainage valide : 10 € de moins.',
+    refInvalid: 'Ce code de parrainage n\'est pas valide.',
     promoCode: 'Code promo (optionnel)',
     promoPlaceholder: 'Ex: BIENVENUE10',
     applyBtn: 'Appliquer',
@@ -333,6 +336,8 @@ const checkoutTranslations = {
     contactHint: 'To receive the confirmation and the secure link.',
     referralCode: 'Referral code (optional)',
     referralHint: 'If someone referred you, their code takes €10 off.',
+    refValid: 'Valid referral code: €10 off.',
+    refInvalid: 'This referral code is not valid.',
     promoCode: 'Promo code (optional)',
     promoPlaceholder: 'Ex: WELCOME10',
     applyBtn: 'Apply',
@@ -366,6 +371,8 @@ const checkoutTranslations = {
     contactHint: 'Para recibir la confirmación y el enlace seguro.',
     referralCode: 'Código de referido (opcional)',
     referralHint: 'Si alguien te recomendó, su código te descuenta 10 €.',
+    refValid: 'Código de recomendación válido: 10 € menos.',
+    refInvalid: 'Este código de recomendación no es válido.',
     promoCode: 'Código promocional (opcional)',
     promoPlaceholder: 'Ej: BIENVENIDO10',
     applyBtn: 'Aplicar',
@@ -399,6 +406,8 @@ const checkoutTranslations = {
     contactHint: 'Für die Bestätigung und den sicheren Link.',
     referralCode: 'Empfehlungscode (optional)',
     referralHint: 'Wenn Sie jemand empfohlen hat, bringt dessen Code 10 € Rabatt.',
+    refValid: 'Gültiger Empfehlungscode: 10 € Rabatt.',
+    refInvalid: 'Dieser Empfehlungscode ist ungültig.',
     promoCode: 'Aktionscode (optional)',
     promoPlaceholder: 'Z.B.: WILLKOMMEN10',
     applyBtn: 'Anwenden',
@@ -490,6 +499,51 @@ features.forEach(f => {
 // Appliquer les traductions au chargement
 applyTranslations();
 
+// Referral code: from the link (?ref=), from an earlier visit (saved by the home page), or typed.
+let referralOk = false;
+function referralDiscount() { return referralOk ? 10 : 0; }
+function updateTotal() {
+    const base = Math.max(0, plan.price - referralDiscount());
+    let promo = 0;
+    if (appliedPromo) {
+        promo = appliedPromo.type === 'percentage' ? Math.round((base * appliedPromo.value) / 100) : appliedPromo.value;
+        promo = Math.min(promo, base);
+        appliedPromo.discount = promo;
+    }
+    document.getElementById('totalPrice').textContent = (base - promo).toFixed(2).replace('.', ',') + '€';
+}
+async function checkReferral() {
+    const input = document.getElementById('referralCodeInput');
+    const box = document.getElementById('referralResult');
+    const code = input.value.trim().toUpperCase();
+    referralOk = false;
+    if (!code) { box.style.display = 'none'; updateTotal(); return; }
+    try {
+        const res = await fetch('/api/rewards?type=referral&code=' + encodeURIComponent(code));
+        referralOk = res.ok;
+    } catch (e) {
+        referralOk = false;
+    }
+    box.style.display = 'block';
+    box.style.color = referralOk ? 'var(--success)' : 'var(--error)';
+    box.textContent = referralOk ? t.refValid : t.refInvalid;
+    updateTotal();
+}
+(function prefillReferral() {
+    const input = document.getElementById('referralCodeInput');
+    let code = (params.get('ref') || '').trim().toUpperCase();
+    if (!code) {
+        try {
+            const saved = JSON.parse(localStorage.getItem('kareer_ref') || 'null');
+            if (saved && saved.code && Date.now() - saved.at < 30 * 24 * 3600 * 1000) code = saved.code;
+        } catch (e) {}
+    }
+    if (/^REF[A-Z0-9]{4,}$/.test(code)) { input.value = code; checkReferral(); }
+    let timer = null;
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(checkReferral, 500); });
+    input.addEventListener('change', checkReferral);
+})();
+
 // Apply promo code
 async function applyPromoCode() {
     const input = document.getElementById('promoCodeInput');
@@ -527,9 +581,7 @@ async function applyPromoCode() {
         }
 
         // Calculer la réduction du code promo
-        const promoReferralInput = document.getElementById('referralCodeInput');
-        const promoReferralDiscount = promoReferralInput && promoReferralInput.value.trim() ? 10 : 0;
-        const promoBaseAmount = Math.max(0, plan.price - promoReferralDiscount);
+        const promoBaseAmount = Math.max(0, plan.price - referralDiscount());
 
         let discount = 0;
         if (data.type === 'percentage') {
@@ -542,12 +594,7 @@ async function applyPromoCode() {
         // Appliquer le code
         appliedPromo = { code, discount, type: data.type, value: data.value };
 
-        // Calculer le total avec réduction parrainage (10€) + code promo
-        const referralInput = document.getElementById('referralCodeInput');
-        const referralDiscount = referralInput && referralInput.value.trim() ? 10 : 0;
-        const newTotal = Math.max(0, promoBaseAmount - discount);
-        
-        document.getElementById('totalPrice').textContent = newTotal.toFixed(2).replace('.', ',') + '€';
+        updateTotal();
         
         // Afficher le message de succès
         result.style.display = 'block';
@@ -587,7 +634,8 @@ async function submitOrder() {
     spinner.style.display = 'block';
     hideError();
 
-    const referralCode = document.getElementById('referralCodeInput')?.value.trim().toUpperCase();
+    // Only a code checked as valid is sent; an unknown one never blocks the order.
+    const referralCode = referralOk ? document.getElementById('referralCodeInput').value.trim().toUpperCase() : null;
     const orderData = {
         planId,
         linkedinEmail,

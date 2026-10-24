@@ -118,12 +118,15 @@ const translations = {
         faq6_a: "Ce sont les tarifs publics de LinkedIn Premium en France, en facturation annuelle&nbsp;: Career 29,99&nbsp;€ par mois, Business 55&nbsp;€ par mois, Sales Navigator Core 89,99&nbsp;€ par mois et Recruiter Lite 123,96&nbsp;€ par mois.",
         faq7_q: "Kareer fait-il partie de LinkedIn&nbsp;?",
         faq7_a: "Non. Kareer est un service indépendant, sans lien avec LinkedIn Corporation.",
+        faq8_a: "Oui. Chaque personne qui commande avec votre code paie 10&nbsp;€ de moins, et vous gagnez 10&nbsp;€ dès qu'elle a réglé. Votre solde se vire sur votre compte ou paie votre propre abonnement. Les clients reçoivent leur code à l'activation de leur commande&nbsp;; les autres, étudiants compris, en font la demande sur la <a href=\"parrainage.html\">page parrainage</a>.",
+        faq8_q: "Puis-je gagner de l'argent en recommandant Kareer&nbsp;?",
 
         talk_title: "Parler à quelqu'un de l'équipe",
         talk_body: "Sur WhatsApp, on répond du lundi au vendredi de 9&nbsp;h à 20&nbsp;h et le samedi de 10&nbsp;h à 18&nbsp;h. Par e-mail, comptez un jour ouvré.",
 
         footer_nav_label: "Liens utiles",
         footer_track: "Suivre une commande",
+        footer_referral: "Parrainage",
         footer_terms: "CGV",
         footer_privacy: "Confidentialité",
         footer_legal: "Mentions légales",
@@ -287,12 +290,15 @@ const translations = {
         faq6_a: "They are LinkedIn Premium's public prices in France on annual billing: Career €29.99 a month, Business €55 a month, Sales Navigator Core €89.99 a month and Recruiter Lite €123.96 a month.",
         faq7_q: "Is Kareer part of LinkedIn?",
         faq7_a: "No. Kareer is an independent service with no connection to LinkedIn Corporation.",
+        faq8_a: "Yes. Everyone who orders with your code pays €10 less, and you earn €10 as soon as they have paid. Your balance is transferred to you or pays for your own subscription. Customers get their code when their order is activated; anyone else, students included, can apply on the <a href=\"parrainage.html\">referral page</a>.",
+        faq8_q: "Can I earn money by recommending Kareer?",
 
         talk_title: "Talk to someone on the team",
         talk_body: "On WhatsApp we reply Monday to Friday from 9am to 8pm and on Saturday from 10am to 6pm. By email, allow one working day.",
 
         footer_nav_label: "Useful links",
         footer_track: "Track an order",
+        footer_referral: "Referrals",
         footer_terms: "Terms of sale",
         footer_privacy: "Privacy",
         footer_legal: "Legal notice",
@@ -456,12 +462,15 @@ const translations = {
         faq6_a: "Son las tarifas públicas de LinkedIn Premium en Francia con facturación anual: Career 29,99&nbsp;€ al mes, Business 55&nbsp;€ al mes, Sales Navigator Core 89,99&nbsp;€ al mes y Recruiter Lite 123,96&nbsp;€ al mes.",
         faq7_q: "¿Kareer forma parte de LinkedIn?",
         faq7_a: "No. Kareer es un servicio independiente, sin relación con LinkedIn Corporation.",
+        faq8_a: "Sí. Quien pida con tu código paga 10&nbsp;€ menos, y tú ganas 10&nbsp;€ en cuanto haya pagado. Tu saldo se transfiere a tu cuenta o paga tu propia suscripción. Los clientes reciben su código al activarse su pedido; los demás, estudiantes incluidos, lo piden en la <a href=\"parrainage.html\">página de recomendaciones</a>.",
+        faq8_q: "¿Puedo ganar dinero recomendando Kareer?",
 
         talk_title: "Habla con alguien del equipo",
         talk_body: "Por WhatsApp respondemos de lunes a viernes de 9:00 a 20:00 y los sábados de 10:00 a 18:00. Por correo, cuenta con un día laborable.",
 
         footer_nav_label: "Enlaces útiles",
         footer_track: "Seguir un pedido",
+        footer_referral: "Recomendaciones",
         footer_terms: "Condiciones de venta",
         footer_privacy: "Privacidad",
         footer_legal: "Aviso legal",
@@ -625,12 +634,15 @@ const translations = {
         faq6_a: "Es sind die öffentlichen Preise von LinkedIn Premium in Frankreich bei jährlicher Abrechnung: Career 29,99&nbsp;€ pro Monat, Business 55&nbsp;€ pro Monat, Sales Navigator Core 89,99&nbsp;€ pro Monat und Recruiter Lite 123,96&nbsp;€ pro Monat.",
         faq7_q: "Gehört Kareer zu LinkedIn?",
         faq7_a: "Nein. Kareer ist ein unabhängiger Dienst ohne Verbindung zur LinkedIn Corporation.",
+        faq8_a: "Ja. Wer mit Ihrem Code bestellt, zahlt 10&nbsp;€ weniger, und Sie verdienen 10&nbsp;€, sobald die Person bezahlt hat. Ihr Guthaben wird Ihnen überwiesen oder bezahlt Ihr eigenes Abo. Kunden erhalten ihren Code bei der Aktivierung ihrer Bestellung; alle anderen, auch Studierende, bewerben sich auf der <a href=\"parrainage.html\">Empfehlungsseite</a>.",
+        faq8_q: "Kann ich mit Empfehlungen Geld verdienen?",
 
         talk_title: "Mit jemandem aus dem Team sprechen",
         talk_body: "Per WhatsApp antworten wir montags bis freitags von 9 bis 20 Uhr und samstags von 10 bis 18 Uhr. Per E-Mail rechnen Sie mit einem Werktag.",
 
         footer_nav_label: "Nützliche Links",
         footer_track: "Bestellung verfolgen",
+        footer_referral: "Empfehlungen",
         footer_terms: "AGB",
         footer_privacy: "Datenschutz",
         footer_legal: "Impressum",

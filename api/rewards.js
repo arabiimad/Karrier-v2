@@ -1,37 +1,12 @@
 const kv = require('./_kv');
 const crypto = require('crypto');
 const { verifyAdminToken } = require('./_verify-admin');
-const { adminEmail, getSiteUrl, renderEmail, sendEmail } = require('./_email');
+const { adminEmail, getSiteUrl, notifyTelegram, renderEmail, sendEmail } = require('./_email');
+const { codeForEmail, createReferral, getReferral, isActive, parseValue, saveReferral } = require('./_referrals');
 const customerEmails = require('./_customer-emails');
 const rateLimit = require('./_rate-limit');
 const referralAuth = require('./_referral-auth');
 const checkCodeRate = rateLimit({ windowMs: 10 * 60 * 1000, max: 8 });
-
-function parseValue(data) {
-  if (!data) return null;
-  if (typeof data !== 'string') return data;
-  try { return JSON.parse(data); } catch (e) { return data; }
-}
-
-// referral:email:<email> should hold a code. An old bug stored the whole referral there;
-// find the real code again and repair the mapping.
-async function codeForEmail(email) {
-  const key = `referral:email:${String(email || '').toLowerCase()}`;
-  const value = parseValue(await kv.get(key));
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  if (value.code) return value.code;
-  const keys = await kv.keys('referral:REF*');
-  for (const refKey of keys) {
-    const referral = parseValue(await kv.get(refKey));
-    if (referral && String(referral.referrerEmail || '').toLowerCase() === String(email).toLowerCase()) {
-      const code = refKey.replace('referral:', '');
-      await kv.set(key, code);
-      return code;
-    }
-  }
-  return null;
-}
 
 function maskEmail(email) {
   const [name, domain] = String(email || '').split('@');
@@ -41,22 +16,44 @@ function maskEmail(email) {
 
 // What the owner sees: IBAN masked, referred people reduced to a masked email.
 function publicReferral(code, referral) {
-  const copy = { code, ...referral };
-  copy.referrals = (referral.referrals || []).map(r => ({
-    who: maskEmail(r.email),
-    usedAt: r.usedAt || null,
-    promoCode: r.referrerPromoCode || null
-  }));
-  if (copy.paymentInfo) {
-    copy.paymentInfo = {
-      accountName: copy.paymentInfo.accountName || '',
-      ibanMasked: customerEmails.maskIban(copy.paymentInfo.iban)
-    };
-  }
-  (copy.transferRequests || []).forEach(request => {
-    if (request.paymentInfo) request.paymentInfo = { accountName: request.paymentInfo.accountName, ibanMasked: customerEmails.maskIban(request.paymentInfo.iban) };
-  });
-  return copy;
+  const mask = info => info ? { accountName: info.accountName || '', ibanMasked: customerEmails.maskIban(info.iban) } : null;
+  return {
+    code,
+    status: referral.status || 'active',
+    source: referral.source || null,
+    referrerEmail: referral.referrerEmail,
+    referrerName: referral.referrerName || '',
+    referralCount: referral.referralCount || 0,
+    pendingBalance: Number(referral.pendingBalance || 0),
+    paymentInfo: mask(referral.paymentInfo),
+    referrals: (referral.referrals || []).map(r => ({
+      who: maskEmail(r.email),
+      usedAt: r.usedAt || null,
+      paidAt: r.paidAt || null,
+      reversed: !!r.reversedAt,
+      promoCode: r.referrerPromoCode || null
+    })),
+    transferRequests: (referral.transferRequests || []).map(t => ({ amount: t.amount, requestedAt: t.requestedAt, completedAt: t.completedAt || null, status: t.status, paymentInfo: mask(t.paymentInfo) })),
+    balanceCodes: referral.balanceCodes || [],
+    application: referral.application ? { name: referral.application.name, situation: referral.application.situation } : null,
+    createdAt: referral.createdAt || null
+  };
+}
+
+const SITUATIONS = ['student', 'graduate', 'creator', 'other'];
+const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+function clean(value, max) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+async function newBalancePromoCode() {
+  let code;
+  do {
+    code = 'SOLDE';
+    for (const byte of crypto.randomBytes(6)) code += CODE_ALPHABET[byte % CODE_ALPHABET.length];
+  } while (await kv.get(`promo:${code}`));
+  return code;
 }
 
 // Générer un code promo aléatoire
@@ -67,12 +64,6 @@ function generatePromoCode(prefix = 'KAREER') {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
-}
-
-// Générer un code de parrainage unique
-function generateReferralCode(email) {
-  const hash = crypto.createHash('md5').update(email + Date.now()).digest('hex');
-  return 'REF' + hash.substring(0, 8).toUpperCase();
 }
 
 module.exports = async (req, res) => {
@@ -120,7 +111,8 @@ module.exports = async (req, res) => {
             code: code.toUpperCase(),
             type: promo.type,
             value: promo.value,
-            description: promo.description,
+            // Referral codes carry an email in their description: keep it out of the public answer.
+            description: promo.referralType ? null : promo.description,
             minAmount: promo.minAmount || 0,
             applicablePlans: promo.applicablePlans || 'all'
           });
@@ -273,55 +265,44 @@ module.exports = async (req, res) => {
 
     // ============ ROUTES PARRAINAGE ============
     if (type === 'referral') {
-      // GET - Récupérer les infos de parrainage
-      if (req.method === 'GET') {
-        const { code, email } = req.query;
+      const action = req.query.action;
 
-        // Public check of a code: says whether it exists, nothing about its owner.
+      if (req.method === 'GET') {
+        const { code } = req.query;
+
+        // Public check of a code: says whether it works, nothing about its owner.
         if (code) {
-          const referralData = await kv.get(`referral:${code.toUpperCase()}`);
-          if (!referralData) {
+          const referral = await getReferral(code);
+          if (!isActive(referral)) {
             return res.status(404).json({ error: 'Code de parrainage invalide' });
           }
           return res.status(200).json({ code: code.toUpperCase(), valid: true });
         }
 
         // The owner's page: only after the emailed code was confirmed.
-        const sessionEmail = referralAuth.readSession(req);
-        if (email || req.query.me) {
-          if (!sessionEmail) {
-            return res.status(401).json({ error: 'auth_required' });
-          }
-          const code = await codeForEmail(sessionEmail);
-          const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
-          if (!referral) {
-            return res.status(404).json({ error: 'Aucun code de parrainage trouvé' });
-          }
-          return res.status(200).json(publicReferral(code, referral));
+        if (req.query.me || req.query.email) {
+          const sessionEmail = referralAuth.readSession(req);
+          if (!sessionEmail) return res.status(401).json({ error: 'auth_required' });
+          const own = await codeForEmail(sessionEmail);
+          const referral = own ? await getReferral(own) : null;
+          if (!referral) return res.status(404).json({ error: 'not_found', email: sessionEmail });
+          return res.status(200).json(publicReferral(own, referral));
         }
 
         if (isAdmin) {
           const keys = await kv.keys('referral:REF*');
           const referrals = [];
-          
           for (const key of keys) {
-            const data = await kv.get(key);
-            const referral = typeof data === 'string' ? JSON.parse(data) : data;
-            referrals.push({
-              code: key.replace('referral:', ''),
-              ...referral
-            });
+            const referral = parseValue(await kv.get(key));
+            if (referral && typeof referral === 'object') referrals.push({ code: key.replace('referral:', ''), ...referral });
           }
-
           return res.status(200).json({ referrals });
         }
 
         return res.status(400).json({ error: 'Paramètres manquants' });
       }
 
-      // POST - Connexion par code, création du code de parrainage
       if (req.method === 'POST') {
-        const { action } = req.query;
         const body = req.body || {};
 
         if (action === 'send_code' || action === 'verify_code') {
@@ -331,31 +312,29 @@ module.exports = async (req, res) => {
           }
         }
 
-        // Step 1: email a 6-digit code. The answer is the same whether or not the
-        // address has a referral page, so nobody can test which emails are customers.
+        // Step 1: email a 6-digit code. Anyone can ask: customers to open their page,
+        // other people to apply as a referrer.
         if (action === 'send_code') {
           const email = referralAuth.normalizeEmail(body.email);
           if (!email) return res.status(400).json({ error: 'invalid_email' });
 
-          const code = await codeForEmail(email);
-          const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
-          if (referral) {
-            const key = `referral-otp:${email}`;
-            const now = Date.now();
-            const previous = parseValue(await kv.get(key));
-            const sends = (previous && previous.sends ? previous.sends : []).filter(t => now - t < referralAuth.CODE_TTL_MS);
-            if (sends.length >= referralAuth.MAX_SENDS) {
-              return res.status(429).json({ error: 'too_many_codes' });
-            }
-            const otp = referralAuth.newCode();
-            await kv.set(key, JSON.stringify({
-              hash: referralAuth.hashCode(email, otp),
-              expiresAt: now + referralAuth.CODE_TTL_MS,
-              attempts: 0,
-              sends: sends.concat([now])
-            }));
-            await sendEmail({ to: email, ...customerEmails.referralAccessCode({ language: body.lang || referral.language, code: otp }) });
+          const key = `referral-otp:${email}`;
+          const now = Date.now();
+          const previous = parseValue(await kv.get(key));
+          const sends = (previous && previous.sends ? previous.sends : []).filter(t => now - t < referralAuth.CODE_TTL_MS);
+          if (sends.length >= referralAuth.MAX_SENDS) {
+            return res.status(429).json({ error: 'too_many_codes' });
           }
+          const own = await codeForEmail(email);
+          const referral = own ? await getReferral(own) : null;
+          const otp = referralAuth.newCode();
+          await kv.set(key, JSON.stringify({
+            hash: referralAuth.hashCode(email, otp),
+            expiresAt: now + referralAuth.CODE_TTL_MS,
+            attempts: 0,
+            sends: sends.concat([now])
+          }));
+          await sendEmail({ to: email, ...customerEmails.referralAccessCode({ language: body.lang || (referral && referral.language), code: otp }) });
           return res.status(200).json({ success: true });
         }
 
@@ -385,123 +364,159 @@ module.exports = async (req, res) => {
           return res.status(200).json({ success: true, token: referralAuth.signSession(email) });
         }
 
-        // Rewards are granted when the referred order is activated (api/update-order.js).
-        // The old public route let anyone add rewards without an order, so it is closed.
-        if (action === 'use') {
-          return res.status(410).json({ error: 'Route retirée : la récompense est attribuée à l\'activation de la commande.' });
-        }
+        // Someone who is not a customer asks for a code. It stays inactive until the team accepts it.
+        if (action === 'apply') {
+          const email = referralAuth.readSession(req);
+          if (!email) return res.status(401).json({ error: 'auth_required' });
+          const existing = await codeForEmail(email);
+          if (existing && await getReferral(existing)) return res.status(409).json({ error: 'already_exists' });
 
-        const sessionEmail = referralAuth.readSession(req);
-        const referrerEmail = sessionEmail;
-        const referrerName = body.referrerName;
-
-        if (action === 'create') {
-          if (!referrerEmail) {
-            return res.status(401).json({ error: 'auth_required' });
-          }
-
-          const emailKey = `referral:email:${referrerEmail.toLowerCase()}`;
-          const existingCode = await codeForEmail(referrerEmail);
-          const existingReferral = existingCode ? parseValue(await kv.get(`referral:${existingCode}`)) : null;
-
-          if (existingReferral) {
-            return res.status(200).json({
-              ...publicReferral(existingCode, existingReferral),
-              alreadyExists: true
-            });
-          }
-
-          const newCode = generateReferralCode(referrerEmail);
-          const referralData = {
-            referrerEmail: referrerEmail.toLowerCase(),
-            referrerName: referrerName || referrerEmail,
-            referralCount: 0,
-            createdAt: new Date().toISOString(),
-            referrals: [],
-            rewardMode: 'promo',
-            pendingBalance: 0,
-            transferRequests: []
+          const application = {
+            name: clean(body.name, 80),
+            situation: SITUATIONS.includes(body.situation) ? body.situation : '',
+            organisation: clean(body.organisation, 120),
+            link: clean(body.link, 200),
+            message: String(body.message || '').trim().slice(0, 600),
+            submittedAt: new Date().toISOString()
           };
-
-          await kv.set(`referral:${newCode}`, referralData);
-          await kv.set(emailKey, newCode);
-
-          return res.status(201).json({
-            code: newCode,
-            ...referralData
+          if (application.name.length < 2 || !application.situation) {
+            return res.status(400).json({ error: 'missing_fields' });
+          }
+          const language = ['fr', 'en', 'es', 'de'].includes(body.lang) ? body.lang : 'fr';
+          const { code, referral } = await createReferral(email, {
+            status: 'pending',
+            source: 'application',
+            language,
+            referrerName: application.name,
+            application
           });
+          await Promise.allSettled([
+            sendEmail({ to: email, ...customerEmails.referralApplicationReceived({ language, name: application.name }) }),
+            alertTeamApplication(email, code, application)
+          ]);
+          return res.status(201).json(publicReferral(code, referral));
         }
 
+        // Rewards come from paid orders (api/update-order.js); this old public route is closed.
+        if (action === 'use') {
+          return res.status(410).json({ error: 'Route retirée : la récompense est attribuée au paiement de la commande.' });
+        }
+
+        return res.status(400).json({ error: 'Action inconnue' });
       }
 
-      // PUT - Mettre à jour les préférences de récompense
       if (req.method === 'PUT') {
-        const { rewardMode, paymentInfo, requestTransfer } = req.body || {};
-        const email = referralAuth.readSession(req);
-        if (!email) {
-          return res.status(401).json({ error: 'auth_required' });
-        }
+        const body = req.body || {};
 
-        const code = await codeForEmail(email);
-        const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
-        if (!referral) {
-          return res.status(404).json({ error: 'Code de parrainage non trouvé' });
-        }
-
-        if (rewardMode) {
-          // The referral page calls the promo mode "discount".
-          const mode = rewardMode === 'discount' ? 'promo' : rewardMode;
-          if (!['promo', 'transfer'].includes(mode)) {
-            return res.status(400).json({ error: 'Mode de récompense invalide' });
+        // Team: accept or refuse an application.
+        if (action === 'review') {
+          if (!isAdmin) return res.status(401).json({ error: 'Non autorisé' });
+          const code = String(body.code || '').toUpperCase();
+          const referral = await getReferral(code);
+          if (!referral) return res.status(404).json({ error: 'Code introuvable' });
+          const name = (referral.application && referral.application.name) || referral.referrerName || '';
+          if (body.decision === 'approve') {
+            referral.status = 'active';
+            referral.approvedAt = new Date().toISOString();
+            await saveReferral(code, referral);
+            await sendEmail({ to: referral.referrerEmail, ...customerEmails.referralApplicationApproved({ language: referral.language, name, code }) });
+          } else if (body.decision === 'reject') {
+            referral.status = 'rejected';
+            referral.rejectedAt = new Date().toISOString();
+            await saveReferral(code, referral);
+            await sendEmail({ to: referral.referrerEmail, ...customerEmails.referralApplicationRejected({ language: referral.language, name }) });
+          } else {
+            return res.status(400).json({ error: 'Décision invalide' });
           }
-          referral.rewardMode = mode;
+          return res.status(200).json({ success: true, status: referral.status });
         }
 
-        if (paymentInfo) {
-          const iban = String(paymentInfo.iban || '').replace(/\s+/g, '').toUpperCase();
-          const accountName = String(paymentInfo.accountName || '').trim().slice(0, 120);
+        // Team: the transfer has been made.
+        if (action === 'transfer_done') {
+          if (!isAdmin) return res.status(401).json({ error: 'Non autorisé' });
+          const code = String(body.code || '').toUpperCase();
+          const referral = await getReferral(code);
+          const request = referral && (referral.transferRequests || []).find(t => t.requestedAt === body.requestedAt && t.status !== 'completed');
+          if (!request) return res.status(404).json({ error: 'Demande introuvable' });
+          request.status = 'completed';
+          request.completedAt = new Date().toISOString();
+          await saveReferral(code, referral);
+          await sendEmail({ to: referral.referrerEmail, ...customerEmails.referralTransferSent({ language: referral.language, amount: request.amount, iban: request.paymentInfo && request.paymentInfo.iban }) });
+          return res.status(200).json({ success: true });
+        }
+
+        // The owner, signed in with the emailed code.
+        const email = referralAuth.readSession(req);
+        if (!email) return res.status(401).json({ error: 'auth_required' });
+        const code = await codeForEmail(email);
+        const referral = code ? await getReferral(code) : null;
+        if (!referral) return res.status(404).json({ error: 'not_found' });
+        if (!isActive(referral)) return res.status(403).json({ error: 'not_active' });
+
+        let promoCode = null;
+
+        if (body.paymentInfo) {
+          const iban = String(body.paymentInfo.iban || '').replace(/\s+/g, '').toUpperCase();
+          const accountName = clean(body.paymentInfo.accountName, 120);
           if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban) || !accountName) {
-            return res.status(400).json({ error: 'IBAN ou titulaire invalide' });
+            return res.status(400).json({ error: 'invalid_bank_details' });
           }
           referral.paymentInfo = { iban, accountName };
         }
 
-        if (requestTransfer && referral.pendingBalance > 0) {
-          if (!referral.paymentInfo) {
-            return res.status(400).json({ error: 'Informations de paiement requises' });
-          }
-
-          const transferRequest = {
-            amount: referral.pendingBalance,
-            requestedAt: new Date().toISOString(),
-            status: 'pending',
-            paymentInfo: referral.paymentInfo
-          };
-
-          referral.transferRequests = referral.transferRequests || [];
-          referral.transferRequests.push(transferRequest);
-          
+        // Cash: the whole balance, no minimum.
+        if (body.requestTransfer) {
+          const amount = Number(referral.pendingBalance || 0);
+          if (!(amount > 0)) return res.status(400).json({ error: 'empty_balance' });
+          if (!referral.paymentInfo) return res.status(400).json({ error: 'missing_bank_details' });
+          const request = { amount, requestedAt: new Date().toISOString(), status: 'pending', paymentInfo: referral.paymentInfo };
+          referral.transferRequests = (referral.transferRequests || []).concat([request]);
+          referral.pendingBalance = 0;
+          await saveReferral(code, referral);
           await sendTransferRequestEmails({
             referrerEmail: referral.referrerEmail || email,
             language: referral.language,
             code,
-            amount: referral.pendingBalance,
+            amount,
             iban: referral.paymentInfo.iban,
             accountName: referral.paymentInfo.accountName
           });
-          
-          // IMPORTANT : Demander un virement réinitialise le solde de parrainage à 0
-          referral.pendingBalance = 0;
         }
 
-        await kv.set(`referral:${code}`, referral);
+        // Subscription: turn (part of) the balance into a single-use discount code.
+        if (body.useBalance) {
+          const balance = Number(referral.pendingBalance || 0);
+          const amount = Math.round(Number(body.amount || balance) * 100) / 100;
+          if (!(amount > 0) || amount > balance) return res.status(400).json({ error: 'invalid_amount' });
+          promoCode = await newBalancePromoCode();
+          const now = new Date().toISOString();
+          await kv.set(`promo:${promoCode}`, {
+            type: 'fixed',
+            value: amount,
+            description: 'Solde de parrainage',
+            ownerEmail: referral.referrerEmail,
+            maxUses: 1,
+            usedCount: 0,
+            minAmount: 0,
+            expiresAt: null,
+            applicablePlans: 'all',
+            active: true,
+            createdAt: now,
+            usageHistory: [],
+            referralCode: code,
+            referralType: 'balance'
+          });
+          referral.pendingBalance = Math.round((balance - amount) * 100) / 100;
+          referral.balanceCodes = (referral.balanceCodes || []).concat([{ code: promoCode, amount, createdAt: now }]);
+          await saveReferral(code, referral);
+          await sendEmail({ to: referral.referrerEmail || email, ...customerEmails.referralBalanceCode({ language: referral.language, promoCode, amount, balanceLeft: referral.pendingBalance }) });
+        }
 
-        return res.status(200).json({
-          success: true,
-          rewardMode: referral.rewardMode,
-          pendingBalance: referral.pendingBalance,
-          transferRequests: publicReferral(code, referral).transferRequests || []
-        });
+        if (body.paymentInfo && !body.requestTransfer && !body.useBalance) {
+          await saveReferral(code, referral);
+        }
+
+        return res.status(200).json({ success: true, promoCode, referral: publicReferral(code, referral) });
       }
     }
 
@@ -512,6 +527,35 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 };
+
+const SITUATION_LABELS = { student: 'Étudiant·e', graduate: 'Jeune diplômé·e', creator: 'Créateur·rice de contenu', other: 'Autre' };
+
+async function alertTeamApplication(email, code, application) {
+  const body = renderEmail({
+    lang: 'fr',
+    title: 'Nouvelle demande de parrain',
+    preheader: `${application.name} (${SITUATION_LABELS[application.situation]}) demande un code.`,
+    signature: false,
+    footer: 'Notification interne Kareer.',
+    blocks: [
+      { type: 'p', text: 'Une personne qui n\'est pas encore cliente demande un code de parrainage. Le code reste inactif tant qu\'il n\'est pas accepté.' },
+      { type: 'details', rows: [
+        { label: 'Nom', value: application.name },
+        { label: 'E-mail', value: email },
+        { label: 'Situation', value: SITUATION_LABELS[application.situation] },
+        { label: 'École ou activité', value: application.organisation },
+        { label: 'Lien', value: application.link },
+        { label: 'Code prévu', value: code, mono: true }
+      ] },
+      application.message ? { type: 'note', title: 'Comment elle compte partager le code', text: application.message } : null,
+      { type: 'button', label: 'Accepter ou refuser dans le tableau de bord', href: `${getSiteUrl()}/admin` }
+    ]
+  });
+  await Promise.all([
+    sendEmail({ to: adminEmail(), subject: `Demande de parrain : ${application.name}`, html: body.html, text: body.text, replyTo: email }),
+    notifyTelegram(`Demande de parrain : ${application.name} (${SITUATION_LABELS[application.situation]})\n${email}\n${getSiteUrl()}/admin`)
+  ]);
+}
 
 // Transfer request: confirmation to the customer, full details to the team.
 async function sendTransferRequestEmails(data) {

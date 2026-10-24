@@ -30,6 +30,7 @@ const L = {
     amountDue: 'Montant à régler',
     amountPaid: 'Montant réglé',
     afterActivation: 'à régler après activation',
+    nothingDue: 'rien à régler',
     discount: 'Réduction',
     order: 'Commande',
     activatedOn: 'Activé le',
@@ -42,7 +43,7 @@ const L = {
     codeTitle: 'Code de vérification LinkedIn',
     codeText: 'Au moment de la connexion, LinkedIn peut vous envoyer un code par e-mail ou par SMS. Si c\'est le cas, envoyez-le-nous sur WhatsApp : nous en avons besoin pour terminer.',
     referralLabel: 'Votre code de parrainage',
-    referralCaption: 'Une personne qui commande avec ce code paie 10 € de moins. Vous recevez 10 € dès que sa commande est activée.'
+    referralCaption: 'Une personne qui commande avec ce code paie 10 € de moins. Vous gagnez 10 € dès qu\'elle a réglé sa commande.'
   },
   en: {
     hello: 'Hello,',
@@ -52,6 +53,7 @@ const L = {
     amountDue: 'Amount due',
     amountPaid: 'Amount paid',
     afterActivation: 'payable after activation',
+    nothingDue: 'nothing to pay',
     discount: 'Discount',
     order: 'Order',
     activatedOn: 'Activated on',
@@ -64,7 +66,7 @@ const L = {
     codeTitle: 'LinkedIn verification code',
     codeText: 'When we sign in, LinkedIn may send you a code by email or text message. If it does, send it to us on WhatsApp: we need it to finish.',
     referralLabel: 'Your referral code',
-    referralCaption: 'Anyone who orders with this code pays €10 less. You get €10 as soon as their order is activated.'
+    referralCaption: 'Anyone who orders with this code pays €10 less. You earn €10 as soon as they have paid.'
   },
   es: {
     hello: 'Hola:',
@@ -74,6 +76,7 @@ const L = {
     amountDue: 'Importe a pagar',
     amountPaid: 'Importe pagado',
     afterActivation: 'a pagar tras la activación',
+    nothingDue: 'nada que pagar',
     discount: 'Descuento',
     order: 'Pedido',
     activatedOn: 'Activado el',
@@ -86,7 +89,7 @@ const L = {
     codeTitle: 'Código de verificación de LinkedIn',
     codeText: 'Al iniciar sesión, LinkedIn puede enviarte un código por correo o por SMS. Si ocurre, envíanoslo por WhatsApp: lo necesitamos para terminar.',
     referralLabel: 'Tu código de recomendación',
-    referralCaption: 'Quien pida con este código paga 10 € menos. Tú recibes 10 € en cuanto se active su pedido.'
+    referralCaption: 'Quien pida con este código paga 10 € menos. Tú ganas 10 € en cuanto haya pagado su pedido.'
   },
   de: {
     hello: 'Guten Tag,',
@@ -96,6 +99,7 @@ const L = {
     amountDue: 'Offener Betrag',
     amountPaid: 'Bezahlter Betrag',
     afterActivation: 'zahlbar nach der Aktivierung',
+    nothingDue: 'nichts zu zahlen',
     discount: 'Rabatt',
     order: 'Bestellung',
     activatedOn: 'Aktiviert am',
@@ -108,7 +112,7 @@ const L = {
     codeTitle: 'LinkedIn-Bestätigungscode',
     codeText: 'Bei der Anmeldung kann LinkedIn Ihnen einen Code per E-Mail oder SMS senden. Schicken Sie ihn uns dann bitte auf WhatsApp, wir brauchen ihn für den Abschluss.',
     referralLabel: 'Ihr Empfehlungscode',
-    referralCaption: 'Wer mit diesem Code bestellt, zahlt 10 € weniger. Sie erhalten 10 €, sobald diese Bestellung aktiviert ist.'
+    referralCaption: 'Wer mit diesem Code bestellt, zahlt 10 € weniger. Sie verdienen 10 €, sobald die Bestellung bezahlt ist.'
   }
 };
 
@@ -196,7 +200,9 @@ function orderReceived(order) {
       ],
       studentTitle: 'Tarif étudiant',
       student: 'Un justificatif peut vous être demandé : carte étudiante ou attestation de diplôme récente. Gardez-le sous la main, cela évite d\'attendre.',
-      wa: 'Confirmer sur WhatsApp'
+      wa: 'Confirmer sur WhatsApp',
+      freeIntro: 'merci pour votre commande. Votre code couvre tout le montant : vous n\'aurez rien à régler.',
+      freeStep: 'Vous vérifiez que Premium est bien actif. Rien à régler.'
     },
     en: {
       subject: `Order ${c.ref} received`,
@@ -211,7 +217,9 @@ function orderReceived(order) {
       ],
       studentTitle: 'Student price',
       student: 'We may ask for proof: a student card or a recent degree certificate. Having it ready saves time.',
-      wa: 'Confirm on WhatsApp'
+      wa: 'Confirm on WhatsApp',
+      freeIntro: 'thank you for your order. Your code covers the full amount: there will be nothing to pay.',
+      freeStep: 'You check that Premium is live. Nothing to pay.'
     },
     es: {
       subject: `Pedido ${c.ref} recibido`,
@@ -226,7 +234,9 @@ function orderReceived(order) {
       ],
       studentTitle: 'Precio para estudiantes',
       student: 'Podemos pedirte un justificante: carné de estudiante o un certificado de título reciente. Tenerlo a mano te ahorra tiempo.',
-      wa: 'Confirmar por WhatsApp'
+      wa: 'Confirmar por WhatsApp',
+      freeIntro: 'gracias por tu pedido. Tu código cubre todo el importe: no tendrás que pagar nada.',
+      freeStep: 'Compruebas que Premium está activo. Nada que pagar.'
     },
     de: {
       subject: `Bestellung ${c.ref} eingegangen`,
@@ -241,24 +251,27 @@ function orderReceived(order) {
       ],
       studentTitle: 'Studierendenpreis',
       student: 'Wir können einen Nachweis anfordern: Studierendenausweis oder ein aktuelles Abschlusszeugnis. Halten Sie ihn bereit, das spart Zeit.',
-      wa: 'Auf WhatsApp bestätigen'
+      wa: 'Auf WhatsApp bestätigen',
+      freeIntro: 'vielen Dank für Ihre Bestellung. Ihr Code deckt den gesamten Betrag: Sie müssen nichts zahlen.',
+      freeStep: 'Sie prüfen, ob Premium aktiv ist. Nichts zu zahlen.'
     }
   }[c.lang];
+  const free = Number(order.amount) === 0;
 
   return build(order, {
     subject: t.subject,
     preheader: t.preheader,
     title: t.title,
     blocks: [
-      ...greet(c, t.intro),
+      ...greet(c, free ? t.freeIntro : t.intro),
       { type: 'details', rows: [
         { label: c.l.offer, value: c.plan },
         { label: c.l.account, value: order.linkedinEmail },
         discountRow(order, c),
-        { label: c.l.amount, value: `${c.amount}, ${c.l.afterActivation}` },
+        { label: c.l.amount, value: `${c.amount}, ${free ? c.l.nothingDue : c.l.afterActivation}` },
         { label: c.l.order, value: c.ref, mono: true }
       ] },
-      { type: 'steps', title: t.stepsTitle, items: t.steps },
+      { type: 'steps', title: t.stepsTitle, items: free ? t.steps.slice(0, 2).concat([t.freeStep]) : t.steps },
       isStudent(order) ? { type: 'note', title: t.studentTitle, text: t.student, tone: 'highlight' } : null,
       { type: 'button', label: t.wa, href: whatsappUrl(waText(order, 'confirm')), variant: 'whatsapp' },
       { type: 'link', label: c.l.trackLine, href: trackingUrl(order) }
@@ -415,6 +428,7 @@ function activated(order) {
       pay: 'Le règlement se fait maintenant sur WhatsApp. Écrivez-nous avec le bouton ci-dessous, nous vous indiquons les moyens de paiement disponibles.',
       payButton: 'Régler sur WhatsApp',
       paid: `Votre paiement de ${c.amount} est déjà enregistré, vous n'avez rien d'autre à faire.`,
+      free: 'Votre commande est entièrement couverte par votre code : rien à régler.',
       password: 'Votre mot de passe a été supprimé de nos serveurs. Vous pouvez le changer dès maintenant si vous le souhaitez.'
     },
     en: {
@@ -426,6 +440,7 @@ function activated(order) {
       pay: 'Payment now happens on WhatsApp. Message us with the button below and we will send you the available payment methods.',
       payButton: 'Pay on WhatsApp',
       paid: `Your payment of ${c.amount} is already recorded. There is nothing else to do.`,
+      free: 'Your order is fully covered by your code: nothing to pay.',
       password: 'Your password has been deleted from our servers. You can change it now if you like.'
     },
     es: {
@@ -437,6 +452,7 @@ function activated(order) {
       pay: 'El pago se hace ahora por WhatsApp. Escríbenos con el botón de abajo y te indicamos los medios de pago disponibles.',
       payButton: 'Pagar por WhatsApp',
       paid: `Tu pago de ${c.amount} ya está registrado. No tienes que hacer nada más.`,
+      free: 'Tu pedido está cubierto por completo por tu código: nada que pagar.',
       password: 'Hemos borrado tu contraseña de nuestros servidores. Puedes cambiarla ahora si lo deseas.'
     },
     de: {
@@ -448,6 +464,7 @@ function activated(order) {
       pay: 'Die Zahlung erfolgt jetzt per WhatsApp. Schreiben Sie uns über die Schaltfläche unten, wir nennen Ihnen die verfügbaren Zahlungsmöglichkeiten.',
       payButton: 'Per WhatsApp bezahlen',
       paid: `Ihre Zahlung über ${c.amount} ist bereits verbucht. Sie müssen nichts weiter tun.`,
+      free: 'Ihre Bestellung ist vollständig durch Ihren Code gedeckt: nichts zu zahlen.',
       password: 'Ihr Passwort wurde von unseren Servern gelöscht. Sie können es jetzt ändern, wenn Sie möchten.'
     }
   }[c.lang];
@@ -462,9 +479,9 @@ function activated(order) {
         { label: c.l.offer, value: c.plan },
         { label: c.l.activatedOn, value: formatDate(order.activatedAt, c.lang, false) },
         { label: c.l.validUntil, value: formatDate(order.expiresAt, c.lang, false) },
-        { label: paid ? c.l.amountPaid : c.l.amountDue, value: c.amount }
+        { label: Number(order.amount) === 0 ? c.l.amount : paid ? c.l.amountPaid : c.l.amountDue, value: c.amount }
       ] },
-      { type: 'p', text: paid ? t.paid : t.pay },
+      { type: 'p', text: Number(order.amount) === 0 ? t.free : paid ? t.paid : t.pay },
       paid ? null : { type: 'button', label: t.payButton, href: whatsappUrl(waText(order, 'pay')), variant: 'whatsapp' },
       { type: 'note', text: t.password },
       order.referralCode ? { type: 'code', label: c.l.referralLabel, code: order.referralCode, caption: c.l.referralCaption } : null,
@@ -635,28 +652,117 @@ const REFERRAL_FOOTER = {
   de: 'Sie erhalten diese E-Mail zu Ihren Kareer-Empfehlungen.'
 };
 
-function referralReward({ language, code, mode, promoCode, balance }) {
-  const lang = langOf(language);
-  const t = {
-    fr: { subject: 'Parrainage validé : 10 € pour vous', title: 'Votre parrainage est validé', a: `Une personne a commandé avec votre code ${code} et son LinkedIn Premium est maintenant actif. Comme prévu, vous recevez 10 €.`, codeLabel: 'Votre code de réduction', codeCaption: '10 € de moins sur votre prochaine commande. Valable une fois.', offers: 'Voir les offres', balance: 'Solde disponible', transfer: 'Vous pouvez demander un virement depuis votre page de parrainage. Une demande de virement remet votre solde à zéro.', page: 'Ma page de parrainage' },
-    en: { subject: 'Referral confirmed: €10 for you', title: 'Your referral is confirmed', a: `Someone ordered with your code ${code} and their LinkedIn Premium is now live. As promised, you get €10.`, codeLabel: 'Your discount code', codeCaption: '€10 off your next order. Single use.', offers: 'See the offers', balance: 'Available balance', transfer: 'You can request a bank transfer from your referral page. Requesting a transfer resets your balance to zero.', page: 'My referral page' },
-    es: { subject: 'Recomendación confirmada: 10 € para ti', title: 'Tu recomendación está confirmada', a: `Alguien ha pedido con tu código ${code} y su LinkedIn Premium ya está activo. Como prometimos, recibes 10 €.`, codeLabel: 'Tu código de descuento', codeCaption: '10 € menos en tu próximo pedido. Válido una vez.', offers: 'Ver las ofertas', balance: 'Saldo disponible', transfer: 'Puedes pedir una transferencia desde tu página de recomendaciones. Al pedirla, tu saldo vuelve a cero.', page: 'Mi página de recomendaciones' },
-    de: { subject: 'Empfehlung bestätigt: 10 € für Sie', title: 'Ihre Empfehlung ist bestätigt', a: `Jemand hat mit Ihrem Code ${code} bestellt, und LinkedIn Premium ist dort jetzt aktiv. Wie versprochen erhalten Sie 10 €.`, codeLabel: 'Ihr Rabattcode', codeCaption: '10 € Rabatt auf Ihre nächste Bestellung. Einmal einlösbar.', offers: 'Angebote ansehen', balance: 'Verfügbares Guthaben', transfer: 'Sie können auf Ihrer Empfehlungsseite eine Überweisung anfordern. Danach steht Ihr Guthaben wieder auf null.', page: 'Meine Empfehlungsseite' }
-  }[lang];
-  const blocks = [
-    { type: 'p', text: L[lang].hello },
-    { type: 'p', text: t.a }
-  ];
-  if (mode === 'transfer') {
-    blocks.push({ type: 'details', rows: [{ label: t.balance, value: formatCurrency(balance || 0, 'EUR', lang) }] });
-    blocks.push({ type: 'p', text: t.transfer });
-    blocks.push({ type: 'button', label: t.page, href: `${getSiteUrl()}/parrainage.html` });
-  } else {
-    blocks.push({ type: 'code', label: t.codeLabel, code: promoCode, caption: t.codeCaption });
-    blocks.push({ type: 'button', label: t.offers, href: `${getSiteUrl()}/#tarifs` });
-  }
+function referralPage() {
+  return `${getSiteUrl()}/parrainage`;
+}
+
+function buildReferralMail(lang, t, blocks) {
   const rendered = renderEmail({ lang, title: t.title, preheader: t.a, blocks, footer: REFERRAL_FOOTER[lang] });
   return { subject: t.subject, html: rendered.html, text: rendered.text };
+}
+
+// Sent when a referred order is paid: 10 € more on the balance.
+function referralReward({ language, code, balance }) {
+  const lang = langOf(language);
+  const t = {
+    fr: { subject: 'Parrainage : 10 € de plus sur votre solde', title: 'Vous avez gagné 10 €', a: `Une personne a commandé avec votre code ${code} et vient de régler sa commande. 10 € s'ajoutent à votre solde.`, balance: 'Solde disponible', use: 'Vous pouvez vous le faire virer, ou l\'utiliser pour payer votre propre abonnement LinkedIn Premium, depuis votre espace parrainage.', page: 'Mon espace parrainage' },
+    en: { subject: 'Referral: €10 added to your balance', title: 'You earned €10', a: `Someone ordered with your code ${code} and has just paid. €10 has been added to your balance.`, balance: 'Available balance', use: 'You can have it transferred to you, or use it to pay for your own LinkedIn Premium subscription, from your referral page.', page: 'My referral page' },
+    es: { subject: 'Recomendación: 10 € más en tu saldo', title: 'Has ganado 10 €', a: `Alguien ha pedido con tu código ${code} y acaba de pagar. Se suman 10 € a tu saldo.`, balance: 'Saldo disponible', use: 'Puedes pedir que te lo transfiramos o usarlo para pagar tu propia suscripción a LinkedIn Premium, desde tu página de recomendaciones.', page: 'Mi página de recomendaciones' },
+    de: { subject: 'Empfehlung: 10 € mehr Guthaben', title: 'Sie haben 10 € verdient', a: `Jemand hat mit Ihrem Code ${code} bestellt und gerade bezahlt. 10 € wurden Ihrem Guthaben gutgeschrieben.`, balance: 'Verfügbares Guthaben', use: 'Auf Ihrer Empfehlungsseite können Sie sich das Guthaben überweisen lassen oder damit Ihr eigenes LinkedIn-Premium-Abo bezahlen.', page: 'Meine Empfehlungsseite' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'details', rows: [{ label: t.balance, value: formatCurrency(balance || 0, 'EUR', lang) }] },
+    { type: 'p', text: t.use },
+    { type: 'button', label: t.page, href: referralPage() }
+  ]);
+}
+
+// Application from someone who is not a customer yet.
+function referralApplicationReceived({ language, name }) {
+  const lang = langOf(language);
+  const t = {
+    fr: { subject: 'Votre demande de parrain est bien reçue', title: 'Demande reçue', a: `Merci ${name}. Nous regardons votre demande et vous répondons par e-mail, en général sous 48 heures ouvrées.`, b: 'En attendant, votre code n\'est pas encore actif. Vous recevrez un e-mail dès qu\'il fonctionne.' },
+    en: { subject: 'Your referral application has been received', title: 'Application received', a: `Thank you, ${name}. We review your application and reply by email, usually within 2 business days.`, b: 'Until then your code is not active yet. You will get an email as soon as it works.' },
+    es: { subject: 'Hemos recibido tu solicitud', title: 'Solicitud recibida', a: `Gracias, ${name}. Revisamos tu solicitud y te respondemos por correo, normalmente en 48 horas hábiles.`, b: 'Mientras tanto, tu código todavía no está activo. Te escribiremos en cuanto funcione.' },
+    de: { subject: 'Ihre Bewerbung ist eingegangen', title: 'Bewerbung eingegangen', a: `Vielen Dank, ${name}. Wir prüfen Ihre Bewerbung und antworten per E-Mail, in der Regel innerhalb von 2 Werktagen.`, b: 'Bis dahin ist Ihr Code noch nicht aktiv. Sie erhalten eine E-Mail, sobald er funktioniert.' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'p', text: t.b }
+  ]);
+}
+
+function referralApplicationApproved({ language, name, code }) {
+  const lang = langOf(language);
+  const url = `${getSiteUrl()}/?ref=${encodeURIComponent(code)}`;
+  const t = {
+    fr: { subject: 'Votre code de parrainage est actif', title: 'Bienvenue parmi nos parrains', a: `Bonne nouvelle, ${name} : votre demande est acceptée et votre code fonctionne dès maintenant.`, how: 'Comment ça marche', steps: [`Partagez votre code ou votre lien : ${url}`, 'La personne qui commande avec ce code paie 10 € de moins.', 'Dès qu\'elle a réglé sa commande, 10 € s\'ajoutent à votre solde.', 'Vous vous faites virer votre solde, ou vous l\'utilisez pour votre propre abonnement.'], page: 'Mon espace parrainage' },
+    en: { subject: 'Your referral code is active', title: 'Welcome to the referral programme', a: `Good news, ${name}: your application is accepted and your code works from now on.`, how: 'How it works', steps: [`Share your code or your link: ${url}`, 'Whoever orders with it pays €10 less.', 'As soon as they have paid, €10 is added to your balance.', 'Have your balance transferred to you, or use it for your own subscription.'], page: 'My referral page' },
+    es: { subject: 'Tu código de recomendación está activo', title: 'Te damos la bienvenida', a: `Buenas noticias, ${name}: tu solicitud está aceptada y tu código ya funciona.`, how: 'Cómo funciona', steps: [`Comparte tu código o tu enlace: ${url}`, 'Quien pida con él paga 10 € menos.', 'En cuanto haya pagado, se suman 10 € a tu saldo.', 'Pide la transferencia de tu saldo o úsalo para tu propia suscripción.'], page: 'Mi página de recomendaciones' },
+    de: { subject: 'Ihr Empfehlungscode ist aktiv', title: 'Willkommen im Empfehlungsprogramm', a: `Gute Nachricht, ${name}: Ihre Bewerbung wurde angenommen, Ihr Code funktioniert ab sofort.`, how: 'So funktioniert es', steps: [`Teilen Sie Ihren Code oder Ihren Link: ${url}`, 'Wer damit bestellt, zahlt 10 € weniger.', 'Sobald die Person bezahlt hat, werden Ihrem Guthaben 10 € gutgeschrieben.', 'Lassen Sie sich Ihr Guthaben überweisen oder nutzen Sie es für Ihr eigenes Abo.'], page: 'Meine Empfehlungsseite' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'code', label: L[lang].referralLabel, code },
+    { type: 'steps', title: t.how, items: t.steps },
+    { type: 'button', label: t.page, href: referralPage() }
+  ]);
+}
+
+function referralApplicationRejected({ language, name }) {
+  const lang = langOf(language);
+  const t = {
+    fr: { subject: 'Votre demande de parrain', title: 'Votre demande n\'a pas été retenue', a: `Merci ${name} pour votre intérêt. Nous ne pouvons pas donner suite à votre demande pour le moment.`, b: 'Si vous pensez qu\'il manque une information, répondez simplement à cet e-mail.' },
+    en: { subject: 'Your referral application', title: 'We cannot accept your application', a: `Thank you for your interest, ${name}. We are not able to accept your application at the moment.`, b: 'If you think some information is missing, just reply to this email.' },
+    es: { subject: 'Tu solicitud de recomendación', title: 'No podemos aceptar tu solicitud', a: `Gracias por tu interés, ${name}. Por ahora no podemos aceptar tu solicitud.`, b: 'Si crees que falta algún dato, responde a este correo.' },
+    de: { subject: 'Ihre Bewerbung', title: 'Wir können Ihre Bewerbung nicht annehmen', a: `Vielen Dank für Ihr Interesse, ${name}. Wir können Ihre Bewerbung derzeit leider nicht annehmen.`, b: 'Falls Ihrer Meinung nach eine Angabe fehlt, antworten Sie einfach auf diese E-Mail.' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'p', text: t.b }
+  ]);
+}
+
+// The referrer turned (part of) their balance into a single-use discount code.
+function referralBalanceCode({ language, promoCode, amount, balanceLeft }) {
+  const lang = langOf(language);
+  const sum = formatCurrency(amount, 'EUR', lang);
+  const t = {
+    fr: { subject: `Votre code de ${sum} pour LinkedIn Premium`, title: 'Votre solde devient un code', a: `Voici votre code de ${sum}, à saisir au moment de commander. Il fonctionne une fois, sur l'offre de votre choix. S'il couvre tout le prix, vous n'avez rien à payer.`, label: 'Code de réduction', left: 'Solde restant', button: 'Choisir mon abonnement', note: 'Si le code vaut plus que l\'offre choisie, la différence n\'est pas conservée.' },
+    en: { subject: `Your ${sum} code for LinkedIn Premium`, title: 'Your balance is now a code', a: `Here is your ${sum} code to enter when you order. It works once, on the offer of your choice. If it covers the whole price, there is nothing to pay.`, label: 'Discount code', left: 'Remaining balance', button: 'Choose my subscription', note: 'If the code is worth more than the offer you choose, the difference is not kept.' },
+    es: { subject: `Tu código de ${sum} para LinkedIn Premium`, title: 'Tu saldo ahora es un código', a: `Aquí tienes tu código de ${sum} para usar al hacer el pedido. Funciona una vez, en la oferta que elijas. Si cubre todo el precio, no tienes nada que pagar.`, label: 'Código de descuento', left: 'Saldo restante', button: 'Elegir mi suscripción', note: 'Si el código vale más que la oferta elegida, la diferencia no se conserva.' },
+    de: { subject: `Ihr Code über ${sum} für LinkedIn Premium`, title: 'Ihr Guthaben als Code', a: `Hier ist Ihr Code über ${sum}, den Sie bei der Bestellung eingeben. Er gilt einmal, für ein Angebot Ihrer Wahl. Deckt er den ganzen Preis, zahlen Sie nichts.`, label: 'Rabattcode', left: 'Restguthaben', button: 'Abo auswählen', note: 'Ist der Code mehr wert als das gewählte Angebot, verfällt die Differenz.' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'code', label: t.label, code: promoCode },
+    { type: 'details', rows: [{ label: t.left, value: formatCurrency(balanceLeft || 0, 'EUR', lang) }] },
+    { type: 'button', label: t.button, href: `${getSiteUrl()}/#tarifs` },
+    { type: 'p', text: t.note, small: true }
+  ]);
+}
+
+// The team marked the transfer as sent.
+function referralTransferSent({ language, amount, iban }) {
+  const lang = langOf(language);
+  const sum = formatCurrency(amount, 'EUR', lang);
+  const t = {
+    fr: { subject: `Virement envoyé : ${sum}`, title: 'Votre virement est parti', a: `Nous avons envoyé le virement de ${sum} correspondant à votre solde de parrainage. Selon votre banque, il arrive sous 1 à 3 jours ouvrés.`, amount: 'Montant' },
+    en: { subject: `Transfer sent: ${sum}`, title: 'Your transfer is on its way', a: `We have sent the transfer of ${sum} for your referral balance. Depending on your bank, it arrives within 1 to 3 business days.`, amount: 'Amount' },
+    es: { subject: `Transferencia enviada: ${sum}`, title: 'Tu transferencia está en camino', a: `Hemos enviado la transferencia de ${sum} de tu saldo de recomendaciones. Según tu banco, llega en 1 a 3 días hábiles.`, amount: 'Importe' },
+    de: { subject: `Überweisung gesendet: ${sum}`, title: 'Ihre Überweisung ist unterwegs', a: `Wir haben die Überweisung über ${sum} für Ihr Empfehlungsguthaben veranlasst. Je nach Bank kommt sie innerhalb von 1 bis 3 Werktagen an.`, amount: 'Betrag' }
+  }[lang];
+  return buildReferralMail(lang, t, [
+    { type: 'p', text: L[lang].hello },
+    { type: 'p', text: t.a },
+    { type: 'details', rows: [{ label: t.amount, value: sum }, { label: 'IBAN', value: maskIban(iban), mono: true }] }
+  ]);
 }
 
 function maskIban(iban) {
@@ -725,7 +831,12 @@ module.exports = {
   orderReceived,
   paymentReceived,
   referralAccessCode,
+  referralApplicationApproved,
+  referralApplicationReceived,
+  referralApplicationRejected,
+  referralBalanceCode,
   referralReward,
+  referralTransferSent,
   refunded,
   reminder,
   renewal,

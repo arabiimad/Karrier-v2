@@ -131,3 +131,11 @@ if (cookieNotice && !safeGet('kareer_cookie_consent')) {
 }
 
 setAudience(audience);
+
+// A referral link (kareer.pro/?ref=CODE) is remembered for 30 days and prefilled at checkout.
+(function rememberReferral() {
+    try {
+        const code = (new URLSearchParams(window.location.search).get('ref') || '').trim().toUpperCase();
+        if (/^REF[A-Z0-9]{4,}$/.test(code)) localStorage.setItem('kareer_ref', JSON.stringify({ code: code, at: Date.now() }));
+    } catch (e) {}
+})();

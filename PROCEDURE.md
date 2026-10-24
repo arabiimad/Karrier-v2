@@ -65,12 +65,23 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 | Statut corrigé à la main | Changer le statut | Un e-mail seulement pour « En activation », « Activée » et « Remboursée » ; le tableau de bord demande confirmation avant |
 | Paiement marqué par erreur | Repasser en non payée | Rien (le reçu n'est jamais renvoyé deux fois) |
 
-## 7. Parrainage
+## 7. Parrainage et ambassadeurs
 
-- Chaque client reçoit son code de parrainage à l'activation de sa première commande.
-- Quand une commande passée avec ce code est activée, le parrain reçoit 10 € : un code de réduction par e-mail, ou 10 € sur son solde s'il a choisi le virement.
-- La page `kareer.pro/parrainage` s'ouvre avec un code à 6 chiffres envoyé par e-mail (valable 15 minutes, 5 essais, 3 codes par adresse sur 15 minutes). Sans ce code, personne ne peut voir l'espace d'un client ni changer son IBAN.
-- **Demande de virement :** l'équipe reçoit l'e-mail « Virement parrainage à faire » avec l'IBAN complet. Vérifier que le titulaire correspond au client, faire le virement, puis le confirmer au client.
+**Qui a un code**
+- **Les clients** : le code est créé automatiquement à l'activation de leur première commande.
+- **Les autres** (étudiants, jeunes diplômés, créateurs de contenu…) : ils font une demande sur `kareer.pro/parrainage`, après avoir vérifié leur e-mail avec un code à 6 chiffres. Leur code reste inactif : il ne donne aucune réduction tant que l'équipe ne l'a pas accepté.
+- **Équipe :** alerte « Demande de parrain », puis *Tableau de bord > Parrainage > Demandes à valider* : **Accepter** ou **Refuser**. La personne reçoit un e-mail dans les deux cas. Un badge sur « Parrainage » indique les demandes en attente.
+
+**Ce que ça rapporte**
+- La personne qui commande avec le code paie 10 € de moins.
+- Le parrain gagne 10 € sur son solde **quand la commande est réglée** (bouton « Marquer payée »), avec un e-mail. Rien n'est versé pour une commande impayée ou gratuite.
+- Si une commande parrainée est remboursée, les 10 € sont retirés du solde (jamais en dessous de zéro).
+
+**Ce que le parrain fait de son solde** (depuis sa page parrainage)
+- **Virement** : tout le solde, sans minimum. L'équipe reçoit « Virement parrainage à faire » avec l'IBAN complet, vérifie que le titulaire correspond, fait le virement, puis clique **Marquer comme viré** : le parrain reçoit la confirmation.
+- **Abonnement** : il transforme le montant de son choix en code de réduction à usage unique, envoyé par e-mail. Si le code couvre tout le prix, la commande est gratuite : elle passe directement en « payée » et suit le parcours normal (lien, activation).
+
+**Sécurité** : l'espace parrainage s'ouvre avec un code à 6 chiffres envoyé par e-mail (15 minutes, 5 essais, 3 codes par adresse sur 15 minutes). Sans ce code, personne ne peut voir un espace ni changer un IBAN.
 
 ## 8. E-mails automatiques planifiés
 

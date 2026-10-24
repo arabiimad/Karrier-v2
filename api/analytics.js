@@ -79,7 +79,8 @@ module.exports = async (req, res) => {
         queues,
         avgActivationMinutes: activationSamples ? Math.round(activationMinutes / activationSamples) : null,
         activationSamples,
-        lateCount
+        lateCount,
+        referralApplications: await countPendingReferralApplications()
       });
     }
 
@@ -164,3 +165,19 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 };
+
+// Referral applications from non-customers waiting for the team.
+async function countPendingReferralApplications() {
+  try {
+    const keys = await kvStore.keys('referral:REF*');
+    let pending = 0;
+    for (const key of keys) {
+      const data = await kvStore.get(key);
+      const referral = typeof data === 'string' ? JSON.parse(data) : data;
+      if (referral && referral.status === 'pending') pending++;
+    }
+    return pending;
+  } catch (e) {
+    return 0;
+  }
+}

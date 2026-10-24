@@ -111,7 +111,7 @@ var WA_COPY = {
         live: 'LinkedIn Premium est actif sur votre compte {email}, vous pouvez vérifier en vous connectant. Le montant à régler est de {amount} (commande {ref}). Dites-moi quel moyen de paiement vous arrange et je vous envoie les informations.',
         nudge: 'petit rappel pour la commande {ref} : Premium est actif depuis le {date} et le règlement de {amount} n\'est pas encore arrivé de notre côté. Dites-moi si je peux vous aider.',
         paid: 'nous avons bien reçu votre paiement de {amount} pour la commande {ref}, merci. Le reçu vient de partir par e-mail. Bonne utilisation de LinkedIn Premium.',
-        referral: 'Votre code de parrainage {code} fait économiser 10 € à vos proches, et vous rapporte 10 € par commande activée.',
+        referral: 'Votre code de parrainage {code} fait économiser 10 € à vos proches, et vous rapporte 10 € par commande réglée.',
         refunded: 'le remboursement de votre commande {ref} ({amount}) est fait, par le même moyen que votre paiement. Selon ce moyen, il arrive en quelques minutes ou quelques jours ouvrés.',
         sign: 'L\'équipe Kareer'
     },
@@ -124,7 +124,7 @@ var WA_COPY = {
         live: 'LinkedIn Premium is live on your account {email}; you can check by signing in. The amount due is {amount} (order {ref}). Let me know which payment method suits you and I will send you the details.',
         nudge: 'a quick reminder about order {ref}: Premium has been live since {date} and we have not received the payment of {amount} yet. Let me know if I can help.',
         paid: 'we have received your payment of {amount} for order {ref}, thank you. The receipt is in your inbox. Enjoy LinkedIn Premium.',
-        referral: 'Your referral code {code} saves your friends €10, and earns you €10 for each activated order.',
+        referral: 'Your referral code {code} saves your friends €10, and earns you €10 for each paid order.',
         refunded: 'the refund for your order {ref} ({amount}) has been made through the method you paid with. Depending on that method, it arrives within minutes or a few business days.',
         sign: 'The Kareer team'
     },
@@ -137,7 +137,7 @@ var WA_COPY = {
         live: 'LinkedIn Premium ya está activo en tu cuenta {email}; puedes comprobarlo iniciando sesión. El importe a pagar es {amount} (pedido {ref}). Dime qué medio de pago te viene mejor y te envío los datos.',
         nudge: 'un recordatorio sobre el pedido {ref}: Premium está activo desde el {date} y todavía no nos ha llegado el pago de {amount}. Dime si te puedo ayudar.',
         paid: 'hemos recibido tu pago de {amount} del pedido {ref}, gracias. El recibo te ha llegado por correo. Disfruta de LinkedIn Premium.',
-        referral: 'Tu código de recomendación {code} ahorra 10 € a quien lo use y te da 10 € por cada pedido activado.',
+        referral: 'Tu código de recomendación {code} ahorra 10 € a quien lo use y te da 10 € por cada pedido pagado.',
         refunded: 'el reembolso de tu pedido {ref} ({amount}) está hecho por el mismo medio con el que pagaste. Según ese medio, llega en unos minutos o en unos días hábiles.',
         sign: 'El equipo de Kareer'
     },
@@ -150,7 +150,7 @@ var WA_COPY = {
         live: 'LinkedIn Premium ist jetzt auf Ihrem Konto {email} aktiv, Sie können es nach der Anmeldung prüfen. Der offene Betrag ist {amount} (Bestellung {ref}). Sagen Sie mir, welche Zahlungsart Ihnen passt, dann schicke ich Ihnen die Angaben.',
         nudge: 'eine kurze Erinnerung zur Bestellung {ref}: Premium ist seit dem {date} aktiv, die Zahlung über {amount} ist bei uns noch nicht eingegangen. Sagen Sie mir gern, ob ich helfen kann.',
         paid: 'wir haben Ihre Zahlung über {amount} für die Bestellung {ref} erhalten, vielen Dank. Der Beleg ist per E-Mail unterwegs. Viel Erfolg mit LinkedIn Premium.',
-        referral: 'Mit Ihrem Empfehlungscode {code} sparen andere 10 €, und Sie erhalten 10 € pro aktivierter Bestellung.',
+        referral: 'Mit Ihrem Empfehlungscode {code} sparen andere 10 €, und Sie erhalten 10 € pro bezahlter Bestellung.',
         refunded: 'die Erstattung Ihrer Bestellung {ref} ({amount}) ist über Ihr ursprüngliches Zahlungsmittel veranlasst. Je nach Zahlungsmittel kommt sie in wenigen Minuten oder einigen Werktagen an.',
         sign: 'Ihr Kareer-Team'
     }
@@ -407,6 +407,8 @@ async function loadStats() {
         var todo = (q.to_link || 0) + (q.to_activate || 0);
         var badge = $('navCountHome');
         if (badge) { badge.hidden = !todo; badge.textContent = todo; }
+        var refBadge = $('navCountReferrals');
+        if (refBadge) { refBadge.hidden = !data.referralApplications; refBadge.textContent = data.referralApplications || ''; }
         document.title = (todo ? '(' + todo + ') ' : '') + 'Kareer Admin';
 
         if (state.lastOrderCount >= 0 && data.totalOrders > state.lastOrderCount) {
@@ -597,6 +599,8 @@ async function runAction(action, id, btn) {
         if (action === 'copy_id') await copyText(btn.dataset.value || id, 'Numéro de commande copié');
         if (action === 'promo_toggle') { await togglePromoStatus(btn.dataset.code, btn.dataset.active === 'true'); return; }
         if (action === 'promo_delete') { await deletePromo(btn.dataset.code); return; }
+        if (action === 'ref_approve' || action === 'ref_reject') { await reviewReferral(btn.dataset.code, action === 'ref_approve' ? 'approve' : 'reject', btn.dataset.name); return; }
+        if (action === 'ref_transfer_done') { await markTransferDone(btn.dataset.code, btn.dataset.requested, btn.dataset.amount); return; }
         if (changed) afterChange(id);
     } finally {
         if (btn && document.body.contains(btn)) btn.disabled = false;
@@ -1265,6 +1269,8 @@ async function deletePromo(code) {
 }
 
 // ===== Referrals =====
+var SITUATIONS = { student: 'Étudiant·e', graduate: 'Jeune diplômé·e', creator: 'Créateur·rice de contenu', other: 'Autre' };
+
 async function loadReferrals() {
     var list = $('referralsList');
     list.innerHTML = '<p class="empty"><span class="spinner"></span>Chargement…</p>';
@@ -1273,40 +1279,117 @@ async function loadReferrals() {
         if (res.status === 401) return logout401();
         var data = await res.json();
         var refs = data.referrals || [];
-        var total = refs.reduce(function(s, r) { return s + (r.referralCount || 0); }, 0);
-        setText('totalReferrers', refs.length);
-        setText('totalReferrals', total);
-        setText('totalReferralEarnings', formatEuro(total * 10));
-        if (!refs.length) { list.innerHTML = '<p class="empty">Aucun parrainage pour l\'instant. Chaque client activé reçoit un code à partager.</p>'; return; }
-        refs.sort(function(a, b) { return (b.referralCount || 0) - (a.referralCount || 0); });
-        list.innerHTML = refs.map(referralCard).join('');
+        var pending = refs.filter(function(r) { return r.status === 'pending'; });
+        var others = refs.filter(function(r) { return r.status !== 'pending'; });
+        var active = others.filter(function(r) { return !r.status || r.status === 'active'; });
+        var paidReferrals = active.reduce(function(sum, r) { return sum + (r.referrals || []).filter(function(f) { return !f.reversedAt; }).length; }, 0);
+        var balances = active.reduce(function(sum, r) { return sum + Number(r.pendingBalance || 0); }, 0);
+        var waiting = refs.reduce(function(sum, r) { return sum + (r.transferRequests || []).filter(function(t) { return t.status !== 'completed'; }).length; }, 0);
+        setText('totalReferrers', active.length);
+        setText('totalReferrals', paidReferrals);
+        setText('totalReferralEarnings', formatEuro(balances));
+        setText('totalReferralTransfers', waiting ? waiting + ' virement' + (waiting > 1 ? 's' : '') + ' à faire' : '');
+        var badge = $('navCountReferrals');
+        if (badge) { badge.hidden = !pending.length; badge.textContent = pending.length || ''; }
+
+        $('applicationsBox').hidden = !pending.length;
+        $('applicationsList').innerHTML = pending.map(applicationCard).join('');
+
+        if (!others.length) { list.innerHTML = '<p class="empty">Aucun parrain pour l\'instant. Chaque client activé reçoit un code, et les autres peuvent faire une demande sur la page parrainage.</p>'; return; }
+        // Transfers to make first, then the biggest balances.
+        others.sort(function(a, b) {
+            var wa = (a.transferRequests || []).some(function(t) { return t.status !== 'completed'; }) ? 1 : 0;
+            var wb = (b.transferRequests || []).some(function(t) { return t.status !== 'completed'; }) ? 1 : 0;
+            return (wb - wa) || (Number(b.pendingBalance || 0) - Number(a.pendingBalance || 0)) || ((b.referralCount || 0) - (a.referralCount || 0));
+        });
+        list.innerHTML = others.map(referralCard).join('');
     } catch (err) {
         list.innerHTML = '<p class="empty">Impossible de charger les parrainages.</p>';
     }
 }
-function referralCard(r) {
-    var count = r.referralCount || 0;
-    var html = '<div class="promo">' +
-        '<div class="promo-head"><span class="promo-code">' + escapeHTML(r.code) + '</span><span class="pill pill-info">' + count + ' filleul' + (count > 1 ? 's' : '') + ' · ' + escapeHTML(formatEuro(count * 10)) + '</span></div>' +
+
+function applicationCard(r) {
+    var a = r.application || {};
+    var link = a.link ? (/^https?:\/\//.test(a.link) ? '<a href="' + escapeHTML(a.link) + '" target="_blank" rel="noopener">' + escapeHTML(a.link) + '</a>' : escapeHTML(a.link)) : '-';
+    return '<div class="promo">' +
+        '<div class="promo-head"><strong>' + escapeHTML(a.name || r.referrerName || r.referrerEmail) + '</strong><span class="pill pill-warn">À valider</span></div>' +
         '<dl class="promo-meta">' +
-            '<div><dt>Parrain</dt><dd>' + escapeHTML(r.referrerEmail || r.referrerName || '-') + '</dd></div>' +
-            '<div><dt>Récompense</dt><dd>' + (r.rewardMode === 'transfer' ? 'Virement' : 'Codes promo') + '</dd></div>' +
-            (r.rewardMode === 'transfer' ? '<div><dt>Solde à verser</dt><dd>' + escapeHTML(formatEuro(r.pendingBalance)) + '</dd></div>' : '') +
+            '<div><dt>E-mail</dt><dd>' + escapeHTML(r.referrerEmail) + '</dd></div>' +
+            '<div><dt>Situation</dt><dd>' + escapeHTML(SITUATIONS[a.situation] || '-') + '</dd></div>' +
+            '<div><dt>École ou activité</dt><dd>' + escapeHTML(a.organisation || '-') + '</dd></div>' +
+            '<div><dt>Lien</dt><dd>' + link + '</dd></div>' +
+            '<div><dt>Demande du</dt><dd>' + escapeHTML(a.submittedAt ? shortDate(a.submittedAt) : '-') + '</dd></div>' +
+            '<div><dt>Code prévu</dt><dd>' + escapeHTML(r.code) + '</dd></div>' +
+        '</dl>' +
+        (a.message ? '<p class="card-text">« ' + escapeHTML(a.message) + ' »</p>' : '') +
+        '<div class="row"><button type="button" class="btn btn-primary btn-small" data-action="ref_approve" data-code="' + escapeHTML(r.code) + '" data-name="' + escapeHTML(a.name || '') + '">Accepter</button>' +
+        '<button type="button" class="btn btn-small" data-action="ref_reject" data-code="' + escapeHTML(r.code) + '" data-name="' + escapeHTML(a.name || '') + '">Refuser</button></div>' +
+    '</div>';
+}
+
+function referralCard(r) {
+    var refs = r.referrals || [];
+    var paid = refs.filter(function(f) { return !f.reversedAt; }).length;
+    var status = r.status === 'rejected' ? '<span class="pill pill-bad">Refusé</span>' : '<span class="pill pill-ok">Actif</span>';
+    var source = r.source === 'application' ? 'Candidature' : 'Client';
+    var name = r.application && r.application.name ? r.application.name : (r.referrerName || '');
+    var html = '<div class="promo">' +
+        '<div class="promo-head"><span class="promo-code">' + escapeHTML(r.code) + '</span><span class="row">' + status +
+            '<span class="pill pill-info">' + paid + ' réglée' + (paid > 1 ? 's' : '') + '</span></span></div>' +
+        '<dl class="promo-meta">' +
+            '<div><dt>Parrain</dt><dd>' + escapeHTML(r.referrerEmail || '-') + (name && name !== String(r.referrerEmail || '').split('@')[0] ? '<br>' + escapeHTML(name) : '') + '</dd></div>' +
+            '<div><dt>Origine</dt><dd>' + source + (r.application && r.application.situation ? ' · ' + escapeHTML(SITUATIONS[r.application.situation] || '') : '') + '</dd></div>' +
+            '<div><dt>Solde</dt><dd>' + escapeHTML(formatEuro(r.pendingBalance)) + '</dd></div>' +
             '<div><dt>Depuis</dt><dd>' + escapeHTML(r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '-') + '</dd></div>' +
         '</dl>';
-    if (r.transferRequests && r.transferRequests.length) {
-        html += '<div class="sublist"><p class="sublist-title">Demandes de virement</p>' + r.transferRequests.map(function(t) {
-            var label = t.status === 'completed' ? 'Effectué' : t.status === 'rejected' ? 'Refusé' : 'En attente';
-            var info = t.paymentInfo ? ' · ' + escapeHTML(t.paymentInfo.accountName || '') + ' · IBAN ' + escapeHTML(String(t.paymentInfo.iban || '').slice(0, 8)) + '…' : '';
-            return '<div class="subitem"><span>' + escapeHTML(formatEuro(t.amount)) + ' · ' + escapeHTML(t.requestedAt ? new Date(t.requestedAt).toLocaleDateString('fr-FR') : '') + info + '</span><span class="pill ' + (t.status === 'completed' ? 'pill-ok' : t.status === 'rejected' ? 'pill-bad' : 'pill-warn') + '">' + label + '</span></div>';
+    var transfers = r.transferRequests || [];
+    if (transfers.length) {
+        html += '<div class="sublist"><p class="sublist-title">Virements</p>' + transfers.slice().reverse().map(function(t) {
+            var info = t.paymentInfo ? escapeHTML(t.paymentInfo.accountName || '') + ' · <span class="mono">' + escapeHTML(t.paymentInfo.iban || '') + '</span>' : '';
+            var right = t.status === 'completed'
+                ? '<span class="pill pill-ok">Viré le ' + escapeHTML(t.completedAt ? new Date(t.completedAt).toLocaleDateString('fr-FR') : '') + '</span>'
+                : '<button type="button" class="btn btn-primary btn-small" data-action="ref_transfer_done" data-code="' + escapeHTML(r.code) + '" data-requested="' + escapeHTML(t.requestedAt) + '" data-amount="' + escapeHTML(t.amount) + '">Marquer comme viré</button>';
+            return '<div class="subitem"><span><strong>' + escapeHTML(formatEuro(t.amount)) + '</strong> · demandé le ' + escapeHTML(t.requestedAt ? new Date(t.requestedAt).toLocaleDateString('fr-FR') : '') + (info ? '<br>' + info : '') + '</span>' + right + '</div>';
         }).join('') + '</div>';
     }
-    if (r.referrals && r.referrals.length) {
-        html += '<div class="sublist"><p class="sublist-title">Filleuls</p>' + r.referrals.map(function(f) {
-            return '<div class="subitem"><span>' + escapeHTML(f.name || f.email) + '</span><span class="mono">' + escapeHTML(f.usedAt ? new Date(f.usedAt).toLocaleDateString('fr-FR') : '') + '</span></div>';
+    var codes = r.balanceCodes || [];
+    if (codes.length) {
+        html += '<div class="sublist"><p class="sublist-title">Solde transformé en code</p>' + codes.map(function(c) {
+            return '<div class="subitem"><span class="mono">' + escapeHTML(c.code) + '</span><span>' + escapeHTML(formatEuro(c.amount)) + ' · ' + escapeHTML(new Date(c.createdAt).toLocaleDateString('fr-FR')) + '</span></div>';
+        }).join('') + '</div>';
+    }
+    if (refs.length) {
+        html += '<div class="sublist"><p class="sublist-title">Commandes parrainées</p>' + refs.slice().reverse().map(function(f) {
+            var when = f.paidAt ? 'réglée le ' + new Date(f.paidAt).toLocaleDateString('fr-FR') : (f.usedAt ? new Date(f.usedAt).toLocaleDateString('fr-FR') : '');
+            return '<div class="subitem"><span>' + escapeHTML(f.email || f.name || '') + '</span><span>' + (f.reversedAt ? '<span class="pill pill-bad">Remboursée</span>' : escapeHTML(when)) + '</span></div>';
         }).join('') + '</div>';
     }
     return html + '</div>';
+}
+
+async function reviewReferral(code, decision, name) {
+    var who = name || code;
+    var question = decision === 'approve'
+        ? 'Accepter ' + who + ' comme parrain ?\n\nSon code ' + code + ' fonctionne tout de suite et la personne reçoit un e-mail de bienvenue.'
+        : 'Refuser la demande de ' + who + ' ?\n\nLa personne reçoit un e-mail poli, sans raison détaillée.';
+    if (!confirm(question)) return;
+    var res = await authFetch('/api/rewards?type=referral&action=review', { method: 'PUT', body: JSON.stringify({ code: code, decision: decision }) });
+    if (res.status === 401) return logout401();
+    var data = await res.json();
+    if (!data.success) { showToast(data.error || 'Échec', 'error'); return; }
+    showToast(decision === 'approve' ? 'Parrain accepté, e-mail envoyé' : 'Demande refusée, e-mail envoyé', 'success');
+    loadReferrals();
+    loadStats();
+}
+
+async function markTransferDone(code, requestedAt, amount) {
+    if (!confirm('Le virement de ' + formatEuro(amount) + ' est fait ?\n\nLe parrain reçoit un e-mail de confirmation.')) return;
+    var res = await authFetch('/api/rewards?type=referral&action=transfer_done', { method: 'PUT', body: JSON.stringify({ code: code, requestedAt: requestedAt }) });
+    if (res.status === 401) return logout401();
+    var data = await res.json();
+    if (!data.success) { showToast(data.error || 'Échec', 'error'); return; }
+    showToast('Virement noté, parrain prévenu', 'success');
+    loadReferrals();
 }
 
 // ===== Start =====

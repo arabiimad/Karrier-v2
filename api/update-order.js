@@ -1,11 +1,11 @@
 require('./_env');
-const crypto = require('crypto');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { decryptSecret } = require('./_credentials');
 const { sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
 const { ensureReference, issueCredentialLink } = require('./_orders');
+const { creditReferrer, ensureReferralCode, reverseReferrerCredit } = require('./_referrals');
 const { isPaid } = require('./_payment');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
@@ -127,16 +127,17 @@ module.exports = async (req, res) => {
       order.notes.push({ text: note, date: new Date().toISOString(), by: 'admin' });
     }
 
-    // Activation: 12 months of Premium, a referral code for the customer, reward for whoever referred them.
+    // Activation: 12 months of Premium and a referral code for the customer.
+    // Whoever referred them is credited later, when this order is paid.
     if (status === 'done' && previousStatus !== 'done') {
       order.activatedAt = new Date().toISOString();
       order.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
       if (!order.referralCode) await ensureReferralCode(order);
-      await rewardReferrerIfNeeded(order);
       deleteCredentials(order);
     }
-    if (status === 'refunded' && previousStatus !== 'refunded' && !order.refundedAt) {
-      order.refundedAt = new Date().toISOString();
+    if (status === 'refunded' && previousStatus !== 'refunded') {
+      if (!order.refundedAt) order.refundedAt = new Date().toISOString();
+      await reverseReferrerCredit(order);
     }
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
@@ -218,114 +219,6 @@ async function revealCredentials(sessionId, res) {
   });
 }
 
-// The customer's own code, reused if they already have one from an earlier order.
-async function ensureReferralCode(order) {
-  const email = String(order.customerEmail || '').trim().toLowerCase();
-  if (!email) return;
-  const existing = await kvStore.get(`referral:email:${email}`);
-  if (typeof existing === 'string' && /^REF[A-Z0-9]{4,}$/.test(existing) && await kvStore.get(`referral:${existing}`)) {
-    order.referralCode = existing;
-    order.customerReferralCode = existing;
-    return;
-  }
-
-  let code;
-  do {
-    code = 'REF' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
-  } while (await kvStore.get(`referral:${code}`));
-
-  order.referralCode = code;
-  order.customerReferralCode = code;
-  await kvStore.set(`referral:${code}`, JSON.stringify({
-    referrerEmail: email,
-    referrerName: email.split('@')[0],
-    language: order.language || 'fr',
-    referralCount: 0,
-    referrals: [],
-    rewardMode: 'promo',
-    pendingBalance: 0,
-    transferRequests: [],
-    sessionId: order.sessionId,
-    plan: order.plan,
-    createdAt: new Date().toISOString()
-  }));
-  await kvStore.set(`referral:email:${email}`, code);
-
-  const refIndexData = await kvStore.get('referrals:index');
-  const refIndex = refIndexData ? (typeof refIndexData === 'string' ? JSON.parse(refIndexData) : refIndexData) : [];
-  if (!refIndex.includes(code)) refIndex.push(code);
-  await kvStore.set('referrals:index', JSON.stringify(refIndex));
-}
-
-async function rewardReferrerIfNeeded(order) {
-  if (!order.usedReferralCode || order.referrerRewardedAt || !order.customerEmail) return;
-
-  try {
-    const usedCode = String(order.usedReferralCode).toUpperCase();
-    const referralData = await kvStore.get(`referral:${usedCode}`);
-    if (!referralData) return;
-
-    const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-    const customerEmail = order.customerEmail.toLowerCase();
-    if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === customerEmail) return;
-
-    referral.referrals = referral.referrals || [];
-    const alreadyRecorded = referral.referrals.some(r => String(r.email || '').toLowerCase() === customerEmail);
-    let referrerPromoCode = null;
-
-    if (!alreadyRecorded) {
-      if (referral.rewardMode === 'transfer') {
-        referral.pendingBalance = (referral.pendingBalance || 0) + 10;
-      } else {
-        referrerPromoCode = 'PARRAIN' + crypto.randomBytes(4).toString('hex').toUpperCase();
-        await kvStore.set(`promo:${referrerPromoCode}`, JSON.stringify({
-          type: 'fixed',
-          value: 10,
-          description: `Recompense parrainage de ${customerEmail}`,
-          maxUses: 1,
-          expiresAt: null,
-          minAmount: 0,
-          applicablePlans: 'all',
-          active: true,
-          usedCount: 0,
-          createdAt: new Date().toISOString(),
-          usageHistory: [],
-          referralCode: usedCode,
-          referralType: 'referrer'
-        }));
-      }
-
-      referral.referrals.push({
-        email: customerEmail,
-        name: customerEmail.split('@')[0],
-        usedAt: new Date().toISOString(),
-        orderId: order.sessionId,
-        referrerPromoCode
-      });
-      referral.referralCount = (referral.referralCount || 0) + 1;
-      referral.lastReferralAt = new Date().toISOString();
-      await kvStore.set(`referral:${usedCode}`, JSON.stringify(referral));
-    }
-
-    if (!alreadyRecorded && referral.referrerEmail) {
-      await sendEmail({
-        to: referral.referrerEmail,
-        ...customerEmails.referralReward({
-          language: referral.language,
-          code: usedCode,
-          mode: referral.rewardMode,
-          promoCode: referrerPromoCode,
-          balance: referral.pendingBalance
-        })
-      });
-    }
-
-    order.referrerRewardedAt = new Date().toISOString();
-  } catch (err) {
-    console.error('[Referral] Error rewarding referrer:', err.message);
-  }
-}
-
 async function markPaid(sessionId, body, res) {
   if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
 
@@ -351,6 +244,8 @@ async function markPaid(sessionId, body, res) {
     receiptSent = !!mail.sent;
     if (receiptSent) order.receiptSentAt = now;
   }
+  // The referrer earns their 10 € once the referred order is actually paid.
+  if (paid && !wasPaid) await creditReferrer(order);
 
   await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
   await logAction(kvStore, {
