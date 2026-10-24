@@ -693,6 +693,30 @@ function transferRequested({ language, amount, iban, accountName }) {
   return { subject: t.subject, html: rendered.html, text: rendered.text };
 }
 
+// 10. Sign-in code for the referral page.
+function referralAccessCode({ language, code }) {
+  const lang = langOf(language);
+  const t = {
+    fr: { subject: `${code} est votre code Kareer`, title: 'Votre code d\'accès', a: 'Voici le code pour ouvrir votre espace parrainage. Il est valable 15 minutes.', label: 'Code', warn: 'Si vous n\'avez pas demandé ce code, ignorez cet e-mail : sans lui, personne ne peut ouvrir votre espace.' },
+    en: { subject: `${code} is your Kareer code`, title: 'Your access code', a: 'Here is the code to open your referral page. It is valid for 15 minutes.', label: 'Code', warn: 'If you did not ask for this code, ignore this email: nobody can open your page without it.' },
+    es: { subject: `${code} es tu código de Kareer`, title: 'Tu código de acceso', a: 'Este es el código para abrir tu página de recomendaciones. Es válido durante 15 minutos.', label: 'Código', warn: 'Si no has pedido este código, ignora este correo: sin él nadie puede abrir tu página.' },
+    de: { subject: `${code} ist Ihr Kareer-Code`, title: 'Ihr Zugangscode', a: 'Mit diesem Code öffnen Sie Ihre Empfehlungsseite. Er ist 15 Minuten gültig.', label: 'Code', warn: 'Falls Sie diesen Code nicht angefordert haben, ignorieren Sie diese E-Mail: Ohne ihn kann niemand Ihre Seite öffnen.' }
+  }[lang];
+  const rendered = renderEmail({
+    lang,
+    title: t.title,
+    preheader: t.a,
+    footer: REFERRAL_FOOTER[lang],
+    signature: false,
+    blocks: [
+      { type: 'p', text: t.a },
+      { type: 'code', label: t.label, code },
+      { type: 'p', text: t.warn, small: true }
+    ]
+  });
+  return { subject: t.subject, html: rendered.html, text: rendered.text };
+}
+
 module.exports = {
   activated,
   activationStarted,
@@ -700,6 +724,7 @@ module.exports = {
   maskIban,
   orderReceived,
   paymentReceived,
+  referralAccessCode,
   referralReward,
   refunded,
   reminder,

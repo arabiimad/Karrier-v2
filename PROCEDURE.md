@@ -65,7 +65,14 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 | Statut corrigé à la main | Changer le statut | Un e-mail seulement pour « En activation », « Activée » et « Remboursée » ; le tableau de bord demande confirmation avant |
 | Paiement marqué par erreur | Repasser en non payée | Rien (le reçu n'est jamais renvoyé deux fois) |
 
-## 7. E-mails automatiques planifiés
+## 7. Parrainage
+
+- Chaque client reçoit son code de parrainage à l'activation de sa première commande.
+- Quand une commande passée avec ce code est activée, le parrain reçoit 10 € : un code de réduction par e-mail, ou 10 € sur son solde s'il a choisi le virement.
+- La page `kareer.pro/parrainage` s'ouvre avec un code à 6 chiffres envoyé par e-mail (valable 15 minutes, 5 essais, 3 codes par adresse sur 15 minutes). Sans ce code, personne ne peut voir l'espace d'un client ni changer son IBAN.
+- **Demande de virement :** l'équipe reçoit l'e-mail « Virement parrainage à faire » avec l'IBAN complet. Vérifier que le titulaire correspond au client, faire le virement, puis le confirmer au client.
+
+## 8. E-mails automatiques planifiés
 
 | Quand | Quoi |
 | --- | --- |
@@ -73,7 +80,7 @@ Bouton **Marquer payée** : la fiche s'ouvre sur le formulaire de paiement. Choi
 | Tous les jours à 3 h 30 (UTC) | Suppression des mots de passe de plus de 7 jours |
 | Le 1er du mois | Rapport du mois précédent à l'adresse admin |
 
-## 8. Réglages nécessaires
+## 9. Réglages nécessaires
 
 | Variable | Rôle |
 | --- | --- |

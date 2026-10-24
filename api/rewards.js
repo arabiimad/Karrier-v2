@@ -3,6 +3,9 @@ const crypto = require('crypto');
 const { verifyAdminToken } = require('./_verify-admin');
 const { adminEmail, getSiteUrl, renderEmail, sendEmail } = require('./_email');
 const customerEmails = require('./_customer-emails');
+const rateLimit = require('./_rate-limit');
+const referralAuth = require('./_referral-auth');
+const checkCodeRate = rateLimit({ windowMs: 10 * 60 * 1000, max: 8 });
 
 function parseValue(data) {
   if (!data) return null;
@@ -30,8 +33,20 @@ async function codeForEmail(email) {
   return null;
 }
 
+function maskEmail(email) {
+  const [name, domain] = String(email || '').split('@');
+  if (!domain) return '';
+  return `${name.charAt(0)}•••@${domain}`;
+}
+
+// What the owner sees: IBAN masked, referred people reduced to a masked email.
 function publicReferral(code, referral) {
   const copy = { code, ...referral };
+  copy.referrals = (referral.referrals || []).map(r => ({
+    who: maskEmail(r.email),
+    usedAt: r.usedAt || null,
+    promoCode: r.referrerPromoCode || null
+  }));
   if (copy.paymentInfo) {
     copy.paymentInfo = {
       accountName: copy.paymentInfo.accountName || '',
@@ -135,70 +150,11 @@ module.exports = async (req, res) => {
       if (req.method === 'POST') {
         const { action } = req.query;
 
-        // Utiliser un code promo (public)
+        // Promo codes are applied by /api/create-order when the order is saved.
+        // This public route let anyone use up a limited code, so it is closed.
         if (action === 'use') {
-          const { code, orderId, amount } = req.body;
-
-          if (!code || !orderId || !amount) {
-            return res.status(400).json({ error: 'Paramètres manquants' });
-          }
-
-          const promoData = await kv.get(`promo:${code.toUpperCase()}`);
-          
-          if (!promoData) {
-            return res.status(400).json({ error: 'Code promo invalide' });
-          }
-
-          const promo = typeof promoData === 'string' ? JSON.parse(promoData) : promoData;
-
-          if (!promo.active) {
-            return res.status(400).json({ error: 'Code promo invalide' });
-          }
-
-          if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) {
-            return res.status(400).json({ error: 'Code promo expiré' });
-          }
-
-          if (promo.maxUses && promo.usedCount >= promo.maxUses) {
-            return res.status(400).json({ error: 'Code promo épuisé' });
-          }
-
-          if (promo.minAmount && amount < promo.minAmount) {
-            return res.status(400).json({ 
-              error: `Montant minimum requis: ${promo.minAmount}€` 
-            });
-          }
-
-          let discount = 0;
-          if (promo.type === 'percentage') {
-            discount = Math.round((amount * promo.value) / 100);
-          } else if (promo.type === 'fixed') {
-            discount = promo.value;
-          }
-          discount = Math.min(discount, amount);
-
-          promo.usedCount = (promo.usedCount || 0) + 1;
-          promo.lastUsedAt = new Date().toISOString();
-          
-          if (!promo.usageHistory) {
-            promo.usageHistory = [];
-          }
-          promo.usageHistory.push({
-            orderId,
-            amount,
-            discount,
-            usedAt: new Date().toISOString()
-          });
-
-          await kv.set(`promo:${code.toUpperCase()}`, promo);
-
-          return res.status(200).json({
-            success: true,
-            discount,
-            newAmount: amount - discount
-          });
+          return res.status(410).json({ error: 'Route retirée : le code est appliqué à la commande.' });
         }
-
         // Créer un nouveau code promo (admin only)
         if (!isAdmin) {
           return res.status(401).json({ error: 'Non autorisé' });
@@ -321,30 +277,26 @@ module.exports = async (req, res) => {
       if (req.method === 'GET') {
         const { code, email } = req.query;
 
+        // Public check of a code: says whether it exists, nothing about its owner.
         if (code) {
           const referralData = await kv.get(`referral:${code.toUpperCase()}`);
-          
           if (!referralData) {
             return res.status(404).json({ error: 'Code de parrainage invalide' });
           }
-
-          const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-
-          return res.status(200).json({
-            code: code.toUpperCase(),
-            referrerEmail: referral.referrerEmail,
-            referrerName: referral.referrerName,
-            referralCount: referral.referralCount || 0
-          });
+          return res.status(200).json({ code: code.toUpperCase(), valid: true });
         }
 
-        if (email) {
-          const code = await codeForEmail(email);
+        // The owner's page: only after the emailed code was confirmed.
+        const sessionEmail = referralAuth.readSession(req);
+        if (email || req.query.me) {
+          if (!sessionEmail) {
+            return res.status(401).json({ error: 'auth_required' });
+          }
+          const code = await codeForEmail(sessionEmail);
           const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
           if (!referral) {
             return res.status(404).json({ error: 'Aucun code de parrainage trouvé' });
           }
-          // The IBAN is never sent back in full: anyone can type an email address here.
           return res.status(200).json(publicReferral(code, referral));
         }
 
@@ -367,14 +319,85 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Paramètres manquants' });
       }
 
-      // POST - Créer ou utiliser un code de parrainage
+      // POST - Connexion par code, création du code de parrainage
       if (req.method === 'POST') {
         const { action } = req.query;
-        const { referrerEmail, referrerName, refereeEmail, refereeName, code } = req.body;
+        const body = req.body || {};
+
+        if (action === 'send_code' || action === 'verify_code') {
+          const rate = checkCodeRate(req);
+          if (!rate.allowed) {
+            return res.status(429).json({ error: 'too_many_requests', retryAfter: rate.retryAfter });
+          }
+        }
+
+        // Step 1: email a 6-digit code. The answer is the same whether or not the
+        // address has a referral page, so nobody can test which emails are customers.
+        if (action === 'send_code') {
+          const email = referralAuth.normalizeEmail(body.email);
+          if (!email) return res.status(400).json({ error: 'invalid_email' });
+
+          const code = await codeForEmail(email);
+          const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
+          if (referral) {
+            const key = `referral-otp:${email}`;
+            const now = Date.now();
+            const previous = parseValue(await kv.get(key));
+            const sends = (previous && previous.sends ? previous.sends : []).filter(t => now - t < referralAuth.CODE_TTL_MS);
+            if (sends.length >= referralAuth.MAX_SENDS) {
+              return res.status(429).json({ error: 'too_many_codes' });
+            }
+            const otp = referralAuth.newCode();
+            await kv.set(key, JSON.stringify({
+              hash: referralAuth.hashCode(email, otp),
+              expiresAt: now + referralAuth.CODE_TTL_MS,
+              attempts: 0,
+              sends: sends.concat([now])
+            }));
+            await sendEmail({ to: email, ...customerEmails.referralAccessCode({ language: body.lang || referral.language, code: otp }) });
+          }
+          return res.status(200).json({ success: true });
+        }
+
+        // Step 2: check the code and open a 2-hour session.
+        if (action === 'verify_code') {
+          const email = referralAuth.normalizeEmail(body.email);
+          const typed = String(body.code || '').replace(/\D/g, '');
+          if (!email || typed.length !== 6) return res.status(400).json({ error: 'code_invalid' });
+
+          const key = `referral-otp:${email}`;
+          const otp = parseValue(await kv.get(key));
+          if (!otp || !otp.hash || Date.now() > otp.expiresAt) {
+            return res.status(400).json({ error: 'code_expired' });
+          }
+          if (otp.attempts >= referralAuth.MAX_ATTEMPTS) {
+            // Kill the code but keep the send history, so the per-email limit still applies.
+            otp.hash = null;
+            await kv.set(key, JSON.stringify(otp));
+            return res.status(429).json({ error: 'too_many_attempts' });
+          }
+          if (!referralAuth.sameHash(otp.hash, referralAuth.hashCode(email, typed))) {
+            otp.attempts = (otp.attempts || 0) + 1;
+            await kv.set(key, JSON.stringify(otp));
+            return res.status(400).json({ error: 'code_invalid', attemptsLeft: Math.max(0, referralAuth.MAX_ATTEMPTS - otp.attempts) });
+          }
+          await kv.del(key);
+          return res.status(200).json({ success: true, token: referralAuth.signSession(email) });
+        }
+
+        // Rewards are granted when the referred order is activated (api/update-order.js).
+        // The old public route let anyone add rewards without an order, so it is closed.
+        if (action === 'use') {
+          return res.status(410).json({ error: 'Route retirée : la récompense est attribuée à l\'activation de la commande.' });
+        }
+
+        const sessionEmail = referralAuth.readSession(req);
+        const referrerEmail = sessionEmail;
+        const referrerName = body.referrerName;
 
         if (action === 'create') {
           if (!referrerEmail) {
-            return res.status(400).json({ error: 'Email requis' });
+            return res.status(401).json({ error: 'auth_required' });
           }
 
           const emailKey = `referral:email:${referrerEmail.toLowerCase()}`;
@@ -409,98 +432,14 @@ module.exports = async (req, res) => {
           });
         }
 
-        if (action === 'use') {
-          console.log('[Referral] Use action - code:', code, 'refereeEmail:', refereeEmail);
-          
-          if (!code || !refereeEmail) {
-            console.log('[Referral] Missing code or email');
-            return res.status(400).json({ error: 'Code et email requis' });
-          }
-
-          const referralData = await kv.get(`referral:${code.toUpperCase()}`);
-          console.log('[Referral] Referral data found:', !!referralData);
-          
-          if (!referralData) {
-            console.log('[Referral] Code not found in KV:', code.toUpperCase());
-            return res.status(404).json({ error: 'Code de parrainage invalide' });
-          }
-
-          const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-          console.log('[Referral] Referral structure:', { 
-            hasReferrerEmail: !!referral.referrerEmail,
-            hasReferrals: !!referral.referrals,
-            referralCount: referral.referralCount
-          });
-
-          if (referral.referrerEmail.toLowerCase() === refereeEmail.toLowerCase()) {
-            console.log('[Referral] Self-referral attempt');
-            return res.status(400).json({ error: 'Vous ne pouvez pas utiliser votre propre code' });
-          }
-
-          const alreadyUsed = referral.referrals?.some(r => r.email.toLowerCase() === refereeEmail.toLowerCase());
-          if (alreadyUsed) {
-            console.log('[Referral] Code already used by this email');
-            return res.status(400).json({ error: 'Vous avez déjà utilisé ce code' });
-          }
-
-          let referrerPromoCode = null;
-          
-          if (referral.rewardMode === 'transfer') {
-            referral.pendingBalance = (referral.pendingBalance || 0) + 10;
-          } else {
-            referrerPromoCode = 'PARRAIN' + crypto.randomBytes(4).toString('hex').toUpperCase();
-            await kv.set(`promo:${referrerPromoCode}`, {
-              type: 'fixed',
-              value: 10,
-              description: `Récompense parrainage de ${refereeName || refereeEmail}`,
-              maxUses: 1,
-              expiresAt: null,
-              minAmount: 0,
-              applicablePlans: 'all',
-              active: true,
-              usedCount: 0,
-              createdAt: new Date().toISOString(),
-              usageHistory: [],
-              referralCode: code.toUpperCase(),
-              referralType: 'referrer'
-            });
-          }
-
-          if (!referral.referrals) {
-            referral.referrals = [];
-          }
-          referral.referrals.push({
-            email: refereeEmail.toLowerCase(),
-            name: refereeName || refereeEmail,
-            usedAt: new Date().toISOString(),
-            referrerPromoCode: referrerPromoCode,
-            orderId: null // Sera mis à jour quand la commande sera créée
-          });
-
-          referral.referralCount = (referral.referralCount || 0) + 1;
-          referral.lastReferralAt = new Date().toISOString();
-
-          console.log('[Referral] Saving updated referral - count:', referral.referralCount);
-          await kv.set(`referral:${code.toUpperCase()}`, referral);
-          console.log('[Referral] Referral saved successfully');
-
-          // Le filleul a déjà reçu sa réduction de 10€ au checkout en utilisant le code de parrainage
-          // L'email au parrain sera envoyé quand la commande du filleul passera en statut "done"
-
-          return res.status(200).json({
-            success: true,
-            referrerPromoCode,
-            message: 'Parrainage enregistré ! Votre parrain recevra 10€ de réduction après validation de votre commande.'
-          });
-        }
       }
 
       // PUT - Mettre à jour les préférences de récompense
       if (req.method === 'PUT') {
-        const { email, rewardMode, paymentInfo, requestTransfer } = req.body;
-
+        const { rewardMode, paymentInfo, requestTransfer } = req.body || {};
+        const email = referralAuth.readSession(req);
         if (!email) {
-          return res.status(400).json({ error: 'Email requis' });
+          return res.status(401).json({ error: 'auth_required' });
         }
 
         const code = await codeForEmail(email);
@@ -594,7 +533,7 @@ async function sendTransferRequestEmails(data) {
         { label: 'Titulaire', value: data.accountName },
         { label: 'IBAN', value: data.iban, mono: true }
       ] },
-      { type: 'note', tone: 'highlight', title: 'Avant de virer', text: 'La page de parrainage ne demande pas de connexion : n\'importe qui connaissant l\'adresse e-mail peut saisir un IBAN. Confirmez le changement avec le client sur WhatsApp ou par e-mail avant le virement.' },
+      { type: 'note', tone: 'highlight', title: 'Avant de virer', text: 'La demande vient d\'une session ouverte avec un code envoyé à l\'adresse du client. Vérifiez que le titulaire du compte correspond bien au client.' },
       { type: 'button', label: 'Ouvrir le tableau de bord', href: `${getSiteUrl()}/admin` }
     ]
   });

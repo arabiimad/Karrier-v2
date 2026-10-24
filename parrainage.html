@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <link rel="icon" href="kareer-logo.png" type="image/png">
     <link rel="stylesheet" href="style.css?v=4">
     <style>
         /* Older variable names used by inline styles on this page */
@@ -53,372 +53,477 @@
         .toast { visibility: hidden; }
         .toast.show { transform: translate(-50%, 0); visibility: visible; }
         @media (max-width: 768px) { .referral-steps { grid-template-columns: 1fr; } }
+        [hidden] { display: none !important; }
+        .ref-top { max-width: 900px; margin: 0 auto; padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .ref-top .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; color: var(--ink); text-decoration: none; }
+        .ref-top .brand img { width: 30px; height: 30px; border-radius: 7px; }
+        .ref-langs { display: inline-flex; font-family: var(--mono); font-size: 13px; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; }
+        .ref-langs button { border: 0; background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; font: inherit; }
+        .ref-langs button + button { border-left: 1.5px solid var(--ink); }
+        .ref-langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+        .signin { border-top: 1.5px solid var(--ink); padding-top: 28px; margin-bottom: 48px; max-width: 520px; }
+        .signin h2, .no-ref h2 { font-size: 26px; letter-spacing: -0.025em; margin-bottom: 8px; }
+        .signin p, .no-ref p { color: var(--ink-2); margin-bottom: 18px; }
+        .field { display: grid; gap: 6px; margin-bottom: 14px; }
+        .field label { font-weight: 600; }
+        .field input, .bank input { width: 100%; min-height: 48px; padding: 0 14px; border: 1.5px solid var(--rule); border-radius: 6px; background: var(--card); color: var(--ink); font: inherit; font-size: 16px; }
+        .field input:focus, .bank input:focus { outline: none; border-color: var(--blue); }
+        #codeInput { font-family: var(--mono); font-size: 24px; letter-spacing: .3em; max-width: 220px; }
+        .row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .link-btn { border: 0; background: none; color: var(--blue); font: inherit; font-size: 15px; cursor: pointer; padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; }
+        .signin-msg { min-height: 24px; margin-top: 12px; font-size: 15px; color: var(--ink-2); }
+        .signin-msg.error { color: var(--danger); }
+        .session-bar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 14px; color: var(--ink-3); margin-bottom: 18px; }
+        .reward-box { margin-bottom: 40px; padding: 24px; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; }
+        .reward-box h3 { font-size: 18px; margin-bottom: 6px; }
+        .reward-box > p { font-size: 15px; color: var(--ink-2); margin-bottom: 16px; }
+        .mode-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .mode-desc { font-size: 14px; color: var(--ink-2); padding: 12px 14px; background: var(--paper); border-radius: 6px; }
+        .bank { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+        .bank h4 { font-size: 16px; }
+        .bank .hint { font-size: 13px; color: var(--ink-3); }
+        .balance { margin-top: 10px; padding: 16px; border: 1.5px dashed var(--ink); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .balance strong { font-family: var(--mono); font-size: 26px; }
+        .referral-item-reward small { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; }
+        .referral-list { margin-bottom: 40px; }
+        .no-ref { border-top: 1.5px solid var(--ink); padding-top: 28px; margin-bottom: 48px; }
     </style>
 </head>
 <body>
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="status"></div>
+
+    <header class="ref-top">
+        <a class="brand" href="/"><img src="kareer-logo.png" alt=""><span>Kareer</span></a>
+        <div class="ref-langs" role="group" aria-label="Langue">
+            <button type="button" data-lang="fr">FR</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="de">DE</button>
+        </div>
+    </header>
 
     <div class="referral-hero">
-        <h1>Parrainage</h1>
-        <p>Quand quelqu'un commande avec votre code, il paie 10&nbsp;€ de moins et vous recevez 10&nbsp;€.</p>
+        <h1 data-t="title">Parrainage</h1>
+        <p data-t="lede">Quand quelqu'un commande avec votre code, il paie 10&nbsp;€ de moins et vous recevez 10&nbsp;€.</p>
     </div>
 
     <div class="referral-container">
-        <div class="referral-card">
-            <!-- Code de parrainage -->
+        <!-- Sign-in: email, then the 6-digit code sent to it -->
+        <section class="signin" id="signin">
+            <h2 data-t="signinTitle">Ouvrir votre espace</h2>
+            <p data-t="signinText">Saisissez l'adresse e-mail de votre commande. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.</p>
+            <form id="emailForm" novalidate>
+                <div class="field">
+                    <label for="emailInput" data-t="emailLabel">Adresse e-mail</label>
+                    <input type="email" id="emailInput" autocomplete="email" required>
+                </div>
+                <button type="submit" class="referral-btn referral-btn-primary" id="sendBtn" data-t="sendCode">Recevoir un code</button>
+            </form>
+            <form id="codeForm" novalidate hidden>
+                <p id="codeSent"></p>
+                <div class="field">
+                    <label for="codeInput" data-t="codeLabel">Code reçu par e-mail</label>
+                    <input type="text" id="codeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
+                </div>
+                <div class="row-actions">
+                    <button type="submit" class="referral-btn referral-btn-primary" id="verifyBtn" data-t="verify">Valider</button>
+                    <button type="button" class="link-btn" id="resendBtn" data-t="resend">Renvoyer le code</button>
+                    <button type="button" class="link-btn" id="changeBtn" data-t="change">Changer d'adresse</button>
+                </div>
+            </form>
+            <p class="signin-msg" id="signinMsg" role="status"></p>
+        </section>
+
+        <!-- Signed in, but no referral page for this address -->
+        <section class="no-ref" id="noRef" hidden>
+            <h2 data-t="noRefTitle">Pas encore d'espace parrainage</h2>
+            <p data-t="noRefText">Votre code personnel est créé quand votre première commande est activée.</p>
+            <a href="/#tarifs" class="referral-btn referral-btn-primary" style="display:inline-flex;align-items:center;text-decoration:none" data-t="seeOffers">Voir les offres</a>
+        </section>
+
+        <!-- Signed in -->
+        <div class="referral-card" id="dashboard" hidden>
+            <div class="session-bar"><span id="signedAs"></span><button type="button" class="link-btn" id="logoutBtn" data-t="logout">Se déconnecter</button></div>
+
             <div class="referral-code-section">
-                <div class="referral-code-label">Votre code de parrainage</div>
+                <div class="referral-code-label" data-t="codeTitle">Votre code de parrainage</div>
                 <div class="referral-code-display">
-                    <div class="referral-code-text" id="referralCode">Chargement…</div>
-                    <div class="referral-code-hint">Partagez ce code avec vos amis</div>
+                    <div class="referral-code-text" id="referralCode"></div>
+                    <div class="referral-code-hint" data-t="codeHint">Partagez-le avec qui vous voulez.</div>
                 </div>
                 <div class="referral-actions">
-                    <button class="referral-btn referral-btn-primary" onclick="copyCode()">
-                        Copier le code
-                    </button>
-                    <button class="referral-btn referral-btn-secondary" onclick="shareWhatsApp()">
-                        Partager sur WhatsApp
-                    </button>
-                    <button class="referral-btn referral-btn-secondary" onclick="shareEmail()">
-                        Partager par e-mail
-                    </button>
+                    <button type="button" class="referral-btn referral-btn-primary" id="copyBtn" data-t="copy">Copier le code</button>
+                    <button type="button" class="referral-btn" id="shareWaBtn" data-t="shareWa">Partager sur WhatsApp</button>
+                    <button type="button" class="referral-btn" id="shareMailBtn" data-t="shareMail">Partager par e-mail</button>
                 </div>
             </div>
 
-            <!-- Statistiques -->
             <div class="referral-stats">
-                <div class="referral-stat">
-                    <div class="referral-stat-value" id="referralCount">0</div>
-                    <div class="referral-stat-label">Amis parrainés</div>
-                </div>
-                <div class="referral-stat">
-                    <div class="referral-stat-value" id="totalEarned">0€</div>
-                    <div class="referral-stat-label">Gains totaux</div>
-                </div>
-                <div class="referral-stat" id="pendingBalanceStat" style="display:none">
-                    <div class="referral-stat-value" id="pendingBalance">0€</div>
-                    <div class="referral-stat-label">Solde en attente</div>
-                </div>
+                <div class="referral-stat"><div class="referral-stat-value" id="referralCount">0</div><div class="referral-stat-label" data-t="statCount">Personnes parrainées</div></div>
+                <div class="referral-stat"><div class="referral-stat-value" id="totalEarned">0 €</div><div class="referral-stat-label" data-t="statEarned">Gains totaux</div></div>
+                <div class="referral-stat" id="balanceStat" hidden><div class="referral-stat-value" id="balanceValue">0 €</div><div class="referral-stat-label" data-t="statBalance">Solde à virer</div></div>
             </div>
 
-            <!-- Mode de récompense -->
-            <div class="referral-reward-mode" style="margin-bottom:40px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px">
-                <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">Recevoir vos récompenses</h3>
-                <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
-                    10&nbsp;€ par personne parrainée, sous forme de code promo ou de virement.
-                </p>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
-                    <button class="reward-mode-btn active" data-mode="discount" onclick="selectRewardMode('discount')">
-                        Codes promo
-                    </button>
-                    <button class="reward-mode-btn" data-mode="transfer" onclick="selectRewardMode('transfer')">
-                        Virement bancaire
-                    </button>
+            <div class="reward-box">
+                <h3 data-t="rewardTitle">Recevoir vos récompenses</h3>
+                <p data-t="rewardText">10 € par personne parrainée, en code de réduction ou par virement.</p>
+                <div class="mode-row">
+                    <button type="button" class="reward-mode-btn" data-mode="promo" data-t="modePromo">Codes de réduction</button>
+                    <button type="button" class="reward-mode-btn" data-mode="transfer" data-t="modeTransfer">Virement bancaire</button>
                 </div>
-                <div id="rewardModeDescription" style="font-size:13px;color:var(--text-muted);padding:12px;background:rgba(21,101,192,0.05);border-radius:8px">
-                    Vous recevrez un code promo de 10€ pour chaque ami parrainé
-                </div>
-
-                <!-- Section virement -->
-                <div id="transferSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
-                    <h4 style="font-size:15px;font-weight:600;margin-bottom:12px">Informations bancaires</h4>
-                    <input type="text" id="ibanInput" placeholder="IBAN (ex: FR76 XXXX XXXX XXXX XXXX XXXX XXX)" 
-                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-family:monospace">
-                    <input type="text" id="accountNameInput" placeholder="Nom du titulaire du compte" 
-                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-                    <button onclick="savePaymentInfo()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">
-                        Enregistrer
-                    </button>
-                    
-                    <div id="transferRequestSection" style="display:none;margin-top:20px">
-                        <div style="padding:16px;background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:8px;margin-bottom:12px">
-                            <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">Solde disponible pour virement</div>
-                            <div style="font-size:2rem;font-weight:800;color:var(--primary)" id="transferableBalance">0€</div>
-                        </div>
-                        <button onclick="requestTransfer()" id="requestTransferBtn" 
-                                style="width:100%;padding:14px;background:linear-gradient(135deg, var(--success), #059669);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
-                            Demander un virement
-                        </button>
+                <div class="mode-desc" id="modeDesc"></div>
+                <div class="bank" id="bankBox" hidden>
+                    <h4 data-t="bankTitle">Coordonnées bancaires</h4>
+                    <input type="text" id="ibanInput" autocomplete="off" spellcheck="false" placeholder="IBAN (FR76 …)">
+                    <p class="hint" id="ibanSaved" hidden></p>
+                    <input type="text" id="holderInput" autocomplete="name">
+                    <div><button type="button" class="referral-btn" id="saveBankBtn" data-t="save">Enregistrer</button></div>
+                    <div class="balance" id="balanceBox" hidden>
+                        <div><div class="hint" data-t="available">Solde disponible</div><strong id="balanceAmount">0 €</strong></div>
+                        <button type="button" class="referral-btn referral-btn-primary" id="transferBtn" data-t="requestTransfer">Demander le virement</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Comment ça marche -->
-            <div class="referral-how-it-works">
-                <h2>Comment ça marche</h2>
-                <div class="referral-steps">
-                    <div class="referral-step">
-                        <div class="referral-step-number">1</div>
-                        <h3>Partagez votre code</h3>
-                        <p>Envoyez votre code à qui vous voulez, par WhatsApp ou par e-mail.</p>
-                    </div>
-                    <div class="referral-step">
-                        <div class="referral-step-number">2</div>
-                        <h3>Votre ami commande</h3>
-                        <p>La personne saisit le code au moment de commander et paie 10&nbsp;€ de moins.</p>
-                    </div>
-                    <div class="referral-step">
-                        <div class="referral-step-number">3</div>
-                        <h3>Vous recevez 10&nbsp;€</h3>
-                        <p>Quand sa commande est terminée, vous recevez 10&nbsp;€ en code promo ou sur votre solde de virement.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Liste des parrainages -->
-            <div class="referral-list" id="referralListSection" style="display:none">
-                <h2>Vos parrainages</h2>
+            <div class="referral-list" id="listBox" hidden>
+                <h2 data-t="listTitle">Vos parrainages</h2>
                 <div id="referralList"></div>
+            </div>
+        </div>
+
+        <div class="referral-how-it-works">
+            <h2 data-t="howTitle">Comment ça marche</h2>
+            <div class="referral-steps">
+                <div class="referral-step"><div class="referral-step-number">1</div><h3 data-t="h1t">Partagez votre code</h3><p data-t="h1d">Envoyez votre code à qui vous voulez, par WhatsApp ou par e-mail.</p></div>
+                <div class="referral-step"><div class="referral-step-number">2</div><h3 data-t="h2t">La personne commande</h3><p data-t="h2d">Elle saisit le code au moment de commander et paie 10 € de moins.</p></div>
+                <div class="referral-step"><div class="referral-step-number">3</div><h3 data-t="h3t">Vous recevez 10 €</h3><p data-t="h3d">Dès que sa commande est activée : un code de réduction par e-mail, ou 10 € sur votre solde.</p></div>
             </div>
         </div>
     </div>
 
     <script>
-        let userEmail = '';
-        let referralCode = '';
-        let currentRewardMode = 'discount';
-        let pendingBalanceAmount = 0;
-
-        // Sélectionner le mode de récompense
-        function selectRewardMode(mode) {
-            currentRewardMode = mode;
-            
-            // Mettre à jour l'UI
-            document.querySelectorAll('.reward-mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.mode === mode) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // Afficher/masquer la section virement
-            const transferSection = document.getElementById('transferSection');
-            const description = document.getElementById('rewardModeDescription');
-            
-            if (mode === 'transfer') {
-                transferSection.style.display = 'block';
-                description.textContent = 'Vos récompenses seront cumulées et vous pourrez demander un virement bancaire';
-                if (pendingBalanceAmount > 0) {
-                    document.getElementById('transferRequestSection').style.display = 'block';
-                    document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                }
-            } else {
-                transferSection.style.display = 'none';
-                description.textContent = 'Vous recevrez un code promo de 10€ pour chaque ami parrainé';
+    (function () {
+        var T = {
+            fr: {
+                pageTitle: 'Parrainage · Kareer', title: 'Parrainage', lede: "Quand quelqu'un commande avec votre code, il paie 10 € de moins et vous recevez 10 €.",
+                signinTitle: 'Ouvrir votre espace', signinText: "Saisissez l'adresse e-mail de votre commande. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.",
+                emailLabel: 'Adresse e-mail', sendCode: 'Recevoir un code', sending: 'Envoi…',
+                codeSent: "Si un espace parrainage existe pour {email}, un code vient d'y être envoyé. Il est valable 15 minutes. Pensez à regarder dans les spams.",
+                noAccountHint: "Le parrainage s'ouvre après votre première commande activée.",
+                codeLabel: 'Code reçu par e-mail', verify: 'Valider', resend: 'Renvoyer le code', change: "Changer d'adresse",
+                errEmail: 'Adresse e-mail invalide.', errLength: 'Le code contient 6 chiffres.', errCode: 'Code incorrect. Essais restants : {n}.', errExpired: 'Ce code a expiré. Demandez-en un nouveau.',
+                errTooMany: 'Trop de tentatives. Patientez quelques minutes avant de réessayer.', errNetwork: 'Connexion impossible. Réessayez.', sessionExpired: 'Votre session a expiré. Demandez un nouveau code.',
+                signedAs: 'Connecté : {email}', logout: 'Se déconnecter',
+                noRefTitle: "Pas encore d'espace parrainage", noRefText: 'Votre code personnel est créé quand votre première commande est activée.', seeOffers: 'Voir les offres',
+                codeTitle: 'Votre code de parrainage', codeHint: 'Partagez-le avec qui vous voulez.', copy: 'Copier le code', copied: 'Code copié', shareWa: 'Partager sur WhatsApp', shareMail: 'Partager par e-mail',
+                statCount: 'Personnes parrainées', statEarned: 'Gains totaux', statBalance: 'Solde à virer',
+                rewardTitle: 'Recevoir vos récompenses', rewardText: '10 € par personne parrainée, en code de réduction ou par virement.',
+                modePromo: 'Codes de réduction', modeTransfer: 'Virement bancaire',
+                descPromo: 'Vous recevez un code de 10 € par e-mail à chaque commande activée avec votre code.', descTransfer: "Vos récompenses s'ajoutent à un solde que vous pouvez vous faire virer.", modeSaved: 'Choix enregistré',
+                bankTitle: 'Coordonnées bancaires', holder: 'Titulaire du compte', ibanSaved: 'IBAN enregistré : {iban}. Saisissez-en un nouveau pour le remplacer.',
+                save: 'Enregistrer', saved: 'Coordonnées enregistrées', fillBoth: "Renseignez l'IBAN et le titulaire.", badIban: 'IBAN ou titulaire invalide.',
+                available: 'Solde disponible', requestTransfer: 'Demander le virement', confirmTransfer: 'Demander le virement de {amount} ? Votre solde repassera à 0.',
+                transferSent: 'Demande envoyée. Nous la traitons sous 48 heures ouvrées.', noBank: "Enregistrez d'abord vos coordonnées bancaires.", failed: "L'opération n'a pas abouti. Réessayez.",
+                listTitle: 'Vos parrainages', rewardCode: 'code {code}',
+                howTitle: 'Comment ça marche', h1t: 'Partagez votre code', h1d: 'Envoyez votre code à qui vous voulez, par WhatsApp ou par e-mail.',
+                h2t: 'La personne commande', h2d: 'Elle saisit le code au moment de commander et paie 10 € de moins.',
+                h3t: 'Vous recevez 10 €', h3d: 'Dès que sa commande est activée : un code de réduction par e-mail, ou 10 € sur votre solde.',
+                shareText: "J'ai pris LinkedIn Premium chez Kareer. Avec mon code {code}, tu paies 10 € de moins : {url}",
+                mailSubject: '10 € de réduction sur LinkedIn Premium', mailBody: "Bonjour,\n\nj'ai pris LinkedIn Premium chez Kareer. Si tu commandes avec mon code {code}, tu paies 10 € de moins.\n\n{url}"
+            },
+            en: {
+                pageTitle: 'Referrals · Kareer', title: 'Referrals', lede: 'When someone orders with your code, they pay €10 less and you get €10.',
+                signinTitle: 'Open your page', signinText: 'Enter the email address you ordered with. We send you a 6-digit code to check it is you.',
+                emailLabel: 'Email address', sendCode: 'Send me a code', sending: 'Sending…',
+                codeSent: 'If a referral page exists for {email}, a code has just been sent there. It is valid for 15 minutes. Check your spam folder too.',
+                noAccountHint: 'Your referral page opens after your first activated order.',
+                codeLabel: 'Code from the email', verify: 'Confirm', resend: 'Send a new code', change: 'Use another address',
+                errEmail: 'Invalid email address.', errLength: 'The code has 6 digits.', errCode: 'Wrong code. Attempts left: {n}.', errExpired: 'This code has expired. Ask for a new one.',
+                errTooMany: 'Too many attempts. Wait a few minutes before trying again.', errNetwork: 'Connection failed. Try again.', sessionExpired: 'Your session has expired. Ask for a new code.',
+                signedAs: 'Signed in: {email}', logout: 'Sign out',
+                noRefTitle: 'No referral page yet', noRefText: 'Your personal code is created when your first order is activated.', seeOffers: 'See the offers',
+                codeTitle: 'Your referral code', codeHint: 'Share it with anyone you like.', copy: 'Copy the code', copied: 'Code copied', shareWa: 'Share on WhatsApp', shareMail: 'Share by email',
+                statCount: 'People referred', statEarned: 'Total earned', statBalance: 'Balance to transfer',
+                rewardTitle: 'How you get your rewards', rewardText: '€10 per person referred, as a discount code or by bank transfer.',
+                modePromo: 'Discount codes', modeTransfer: 'Bank transfer',
+                descPromo: 'You get a €10 code by email for each activated order placed with your code.', descTransfer: 'Your rewards add up to a balance you can have transferred to you.', modeSaved: 'Choice saved',
+                bankTitle: 'Bank details', holder: 'Account holder', ibanSaved: 'Saved IBAN: {iban}. Enter a new one to replace it.',
+                save: 'Save', saved: 'Bank details saved', fillBoth: 'Fill in the IBAN and the account holder.', badIban: 'Invalid IBAN or account holder.',
+                available: 'Available balance', requestTransfer: 'Request the transfer', confirmTransfer: 'Request the transfer of {amount}? Your balance goes back to 0.',
+                transferSent: 'Request sent. We process it within 2 business days.', noBank: 'Save your bank details first.', failed: 'That did not work. Try again.',
+                listTitle: 'Your referrals', rewardCode: 'code {code}',
+                howTitle: 'How it works', h1t: 'Share your code', h1d: 'Send your code to anyone, on WhatsApp or by email.',
+                h2t: 'They order', h2d: 'They enter the code when ordering and pay €10 less.',
+                h3t: 'You get €10', h3d: 'As soon as their order is activated: a discount code by email, or €10 on your balance.',
+                shareText: 'I got LinkedIn Premium through Kareer. With my code {code} you pay €10 less: {url}',
+                mailSubject: '€10 off LinkedIn Premium', mailBody: 'Hi,\n\nI got LinkedIn Premium through Kareer. If you order with my code {code}, you pay €10 less.\n\n{url}'
+            },
+            es: {
+                pageTitle: 'Recomendaciones · Kareer', title: 'Recomendaciones', lede: 'Cuando alguien pide con tu código, paga 10 € menos y tú recibes 10 €.',
+                signinTitle: 'Abre tu página', signinText: 'Escribe el correo de tu pedido. Te enviamos un código de 6 cifras para comprobar que eres tú.',
+                emailLabel: 'Correo electrónico', sendCode: 'Recibir un código', sending: 'Enviando…',
+                codeSent: 'Si existe una página de recomendaciones para {email}, acabamos de enviar un código. Es válido 15 minutos. Revisa también el spam.',
+                noAccountHint: 'Tu página de recomendaciones se abre tras tu primer pedido activado.',
+                codeLabel: 'Código del correo', verify: 'Confirmar', resend: 'Enviar otro código', change: 'Usar otro correo',
+                errEmail: 'Correo no válido.', errLength: 'El código tiene 6 cifras.', errCode: 'Código incorrecto. Intentos restantes: {n}.', errExpired: 'Este código ha caducado. Pide uno nuevo.',
+                errTooMany: 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.', errNetwork: 'No hay conexión. Inténtalo de nuevo.', sessionExpired: 'Tu sesión ha caducado. Pide un código nuevo.',
+                signedAs: 'Sesión: {email}', logout: 'Cerrar sesión',
+                noRefTitle: 'Todavía no tienes página de recomendaciones', noRefText: 'Tu código personal se crea cuando se activa tu primer pedido.', seeOffers: 'Ver las ofertas',
+                codeTitle: 'Tu código de recomendación', codeHint: 'Compártelo con quien quieras.', copy: 'Copiar el código', copied: 'Código copiado', shareWa: 'Compartir por WhatsApp', shareMail: 'Compartir por correo',
+                statCount: 'Personas recomendadas', statEarned: 'Total ganado', statBalance: 'Saldo por transferir',
+                rewardTitle: 'Cómo recibes tus recompensas', rewardText: '10 € por persona recomendada, en código de descuento o por transferencia.',
+                modePromo: 'Códigos de descuento', modeTransfer: 'Transferencia bancaria',
+                descPromo: 'Recibes por correo un código de 10 € por cada pedido activado con tu código.', descTransfer: 'Tus recompensas se suman a un saldo que puedes pedir por transferencia.', modeSaved: 'Elección guardada',
+                bankTitle: 'Datos bancarios', holder: 'Titular de la cuenta', ibanSaved: 'IBAN guardado: {iban}. Escribe uno nuevo para cambiarlo.',
+                save: 'Guardar', saved: 'Datos guardados', fillBoth: 'Completa el IBAN y el titular.', badIban: 'IBAN o titular no válido.',
+                available: 'Saldo disponible', requestTransfer: 'Pedir la transferencia', confirmTransfer: '¿Pedir la transferencia de {amount}? Tu saldo volverá a 0.',
+                transferSent: 'Solicitud enviada. La tramitamos en 48 horas hábiles.', noBank: 'Guarda primero tus datos bancarios.', failed: 'No ha funcionado. Inténtalo de nuevo.',
+                listTitle: 'Tus recomendaciones', rewardCode: 'código {code}',
+                howTitle: 'Cómo funciona', h1t: 'Comparte tu código', h1d: 'Envía tu código a quien quieras, por WhatsApp o por correo.',
+                h2t: 'La persona pide', h2d: 'Escribe el código al pedir y paga 10 € menos.',
+                h3t: 'Recibes 10 €', h3d: 'En cuanto se activa su pedido: un código de descuento por correo o 10 € en tu saldo.',
+                shareText: 'Tengo LinkedIn Premium con Kareer. Con mi código {code} pagas 10 € menos: {url}',
+                mailSubject: '10 € de descuento en LinkedIn Premium', mailBody: 'Hola:\n\ntengo LinkedIn Premium con Kareer. Si pides con mi código {code}, pagas 10 € menos.\n\n{url}'
+            },
+            de: {
+                pageTitle: 'Empfehlungen · Kareer', title: 'Empfehlungen', lede: 'Wenn jemand mit Ihrem Code bestellt, zahlt die Person 10 € weniger und Sie erhalten 10 €.',
+                signinTitle: 'Ihre Seite öffnen', signinText: 'Geben Sie die E-Mail-Adresse Ihrer Bestellung ein. Wir senden Ihnen einen 6-stelligen Code, um zu prüfen, dass Sie es sind.',
+                emailLabel: 'E-Mail-Adresse', sendCode: 'Code anfordern', sending: 'Wird gesendet…',
+                codeSent: 'Falls für {email} eine Empfehlungsseite existiert, wurde gerade ein Code dorthin gesendet. Er ist 15 Minuten gültig. Prüfen Sie auch den Spam-Ordner.',
+                noAccountHint: 'Ihre Empfehlungsseite wird nach Ihrer ersten aktivierten Bestellung freigeschaltet.',
+                codeLabel: 'Code aus der E-Mail', verify: 'Bestätigen', resend: 'Neuen Code senden', change: 'Andere Adresse',
+                errEmail: 'Ungültige E-Mail-Adresse.', errLength: 'Der Code hat 6 Ziffern.', errCode: 'Falscher Code. Verbleibende Versuche: {n}.', errExpired: 'Dieser Code ist abgelaufen. Fordern Sie einen neuen an.',
+                errTooMany: 'Zu viele Versuche. Bitte warten Sie einige Minuten.', errNetwork: 'Keine Verbindung. Bitte erneut versuchen.', sessionExpired: 'Ihre Sitzung ist abgelaufen. Fordern Sie einen neuen Code an.',
+                signedAs: 'Angemeldet: {email}', logout: 'Abmelden',
+                noRefTitle: 'Noch keine Empfehlungsseite', noRefText: 'Ihr persönlicher Code wird erstellt, sobald Ihre erste Bestellung aktiviert ist.', seeOffers: 'Angebote ansehen',
+                codeTitle: 'Ihr Empfehlungscode', codeHint: 'Teilen Sie ihn, mit wem Sie möchten.', copy: 'Code kopieren', copied: 'Code kopiert', shareWa: 'Auf WhatsApp teilen', shareMail: 'Per E-Mail teilen',
+                statCount: 'Geworbene Personen', statEarned: 'Insgesamt verdient', statBalance: 'Auszahlbares Guthaben',
+                rewardTitle: 'So erhalten Sie Ihre Prämien', rewardText: '10 € pro geworbener Person, als Rabattcode oder per Überweisung.',
+                modePromo: 'Rabattcodes', modeTransfer: 'Überweisung',
+                descPromo: 'Sie erhalten für jede aktivierte Bestellung mit Ihrem Code einen 10-€-Code per E-Mail.', descTransfer: 'Ihre Prämien sammeln sich als Guthaben, das Sie sich überweisen lassen können.', modeSaved: 'Auswahl gespeichert',
+                bankTitle: 'Bankverbindung', holder: 'Kontoinhaber', ibanSaved: 'Gespeicherte IBAN: {iban}. Geben Sie eine neue ein, um sie zu ersetzen.',
+                save: 'Speichern', saved: 'Bankverbindung gespeichert', fillBoth: 'Bitte IBAN und Kontoinhaber angeben.', badIban: 'Ungültige IBAN oder ungültiger Kontoinhaber.',
+                available: 'Verfügbares Guthaben', requestTransfer: 'Überweisung anfordern', confirmTransfer: 'Überweisung von {amount} anfordern? Ihr Guthaben wird auf 0 gesetzt.',
+                transferSent: 'Anfrage gesendet. Wir bearbeiten sie innerhalb von 2 Werktagen.', noBank: 'Speichern Sie zuerst Ihre Bankverbindung.', failed: 'Das hat nicht geklappt. Bitte erneut versuchen.',
+                listTitle: 'Ihre Empfehlungen', rewardCode: 'Code {code}',
+                howTitle: 'So funktioniert es', h1t: 'Teilen Sie Ihren Code', h1d: 'Schicken Sie Ihren Code an wen Sie möchten, per WhatsApp oder E-Mail.',
+                h2t: 'Die Person bestellt', h2d: 'Sie gibt den Code bei der Bestellung ein und zahlt 10 € weniger.',
+                h3t: 'Sie erhalten 10 €', h3d: 'Sobald die Bestellung aktiviert ist: ein Rabattcode per E-Mail oder 10 € auf Ihr Guthaben.',
+                shareText: 'Ich habe LinkedIn Premium über Kareer. Mit meinem Code {code} zahlst du 10 € weniger: {url}',
+                mailSubject: '10 € Rabatt auf LinkedIn Premium', mailBody: 'Hallo,\n\nich habe LinkedIn Premium über Kareer. Wenn du mit meinem Code {code} bestellst, zahlst du 10 € weniger.\n\n{url}'
             }
+        };
+        var LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE' };
+        var TOKEN_KEY = 'kareer_referral_session';
+        var lang = pickLang();
+        var t = T[lang];
+        var email = '';
+        var data = null;
 
-            // Sauvegarder le choix
-            saveRewardMode(mode);
+        function $(id) { return document.getElementById(id); }
+        function fill(text, map) { return text.replace(/\{(\w+)\}/g, function (_, k) { return map[k] != null ? map[k] : ''; }); }
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function money(n) { return new Intl.NumberFormat(LOCALES[lang], { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(n || 0); }
+        function pickLang() {
+            var c = [new URLSearchParams(location.search).get('lang')];
+            try { c.push(localStorage.getItem('kareer_lang')); } catch (e) {}
+            c.push((navigator.language || '').slice(0, 2));
+            for (var i = 0; i < c.length; i++) if (c[i] && T[c[i]]) return c[i];
+            return 'fr';
         }
-
-        // Sauvegarder le mode de récompense
-        async function saveRewardMode(mode) {
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        rewardMode: mode
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Mode de récompense mis à jour');
-                }
-            } catch (err) {
-                console.error('Erreur:', err);
-            }
-        }
-
-        // Sauvegarder les informations de paiement
-        async function savePaymentInfo() {
-            const iban = document.getElementById('ibanInput').value.trim();
-            const accountName = document.getElementById('accountNameInput').value.trim();
-
-            if (!iban || !accountName) {
-                showToast('Veuillez remplir tous les champs');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        paymentInfo: { iban, accountName }
-                    })
-                });
-                const data = await res.json();
-                if (!data.success) {
-                    showToast(data.error || 'Enregistrement impossible');
-                    return;
-                }
-                if (data.success) {
-                    showToast('Informations bancaires enregistrées');
-                    if (pendingBalanceAmount > 0) {
-                        document.getElementById('transferRequestSection').style.display = 'block';
-                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                    }
-                }
-            } catch (err) {
-                showToast('Erreur lors de l\'enregistrement');
-            }
-        }
-
-        // Demander un virement
-        async function requestTransfer() {
-            if (pendingBalanceAmount === 0) {
-                showToast('Aucun solde disponible');
-                return;
-            }
-
-            if (!confirm(`Demander un virement de ${pendingBalanceAmount}€ ?`)) {
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        requestTransfer: true
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Demande de virement envoyée. On revient vers vous sous 48 h.');
-                    pendingBalanceAmount = 0;
-                    document.getElementById('pendingBalance').textContent = '0€';
-                    document.getElementById('transferableBalance').textContent = '0€';
-                    document.getElementById('requestTransferBtn').disabled = true;
-                    document.getElementById('requestTransferBtn').textContent = 'Demande envoyée';
-                }
-            } catch (err) {
-                showToast('Erreur lors de la demande');
-            }
-        }
-
-        // Demander l'email de l'utilisateur
-        function initReferral() {
-            const email = prompt('Entrez votre email pour accéder à votre code de parrainage :');
-            if (!email || !email.includes('@')) {
-                alert('Email invalide');
-                return;
-            }
-            userEmail = email;
-            loadReferralData();
-        }
-
-        // Charger les données de parrainage
-        async function loadReferralData() {
-            try {
-                const res = await fetch(`/api/rewards?type=referral&email=${encodeURIComponent(userEmail)}`);
-                const data = await res.json();
-                
-                if (res.status === 403 || data.hasOrdered === false) {
-                    // L'utilisateur n'a pas encore commandé
-                    document.querySelector('.referral-card').innerHTML = `
-                        <div style="padding:8px 0 40px">
-                            <h2 style="font-size:26px;letter-spacing:-0.025em;margin-bottom:10px">Le parrainage s'ouvre après une première commande</h2>
-                            <p style="color:var(--ink-2);margin-bottom:22px;max-width:34em">
-                                Votre code personnel est créé quand vous avez commandé au moins une fois chez Kareer.
-                            </p>
-                            <a href="/#tarifs" class="btn btn-primary">Voir les tarifs</a>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                referralCode = data.code;
-                document.getElementById('referralCode').textContent = data.code;
-                document.getElementById('referralCount').textContent = data.referralCount || 0;
-                document.getElementById('totalEarned').textContent = (data.totalEarned || 0) + '€';
-
-                // Charger le mode de récompense
-                currentRewardMode = data.rewardMode === 'transfer' ? 'transfer' : 'discount';
-                selectRewardMode(currentRewardMode);
-
-                // Afficher le solde en attente si mode virement
-                pendingBalanceAmount = data.pendingBalance || 0;
-                if (pendingBalanceAmount > 0) {
-                    document.getElementById('pendingBalanceStat').style.display = 'block';
-                    document.getElementById('pendingBalance').textContent = pendingBalanceAmount + '€';
-                }
-
-                // Pré-remplir les infos de paiement si elles existent
-                if (data.paymentInfo) {
-                    // The server only sends a masked IBAN; leave the field empty for a new one.
-                    if (data.paymentInfo.ibanMasked) document.getElementById('ibanInput').placeholder = 'IBAN enregistré : ' + data.paymentInfo.ibanMasked;
-                    document.getElementById('accountNameInput').value = data.paymentInfo.accountName || '';
-                    if (pendingBalanceAmount > 0) {
-                        document.getElementById('transferRequestSection').style.display = 'block';
-                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                    }
-                }
-
-                // Afficher la liste des parrainages
-                if (data.referrals && data.referrals.length > 0) {
-                    document.getElementById('referralListSection').style.display = 'block';
-                    displayReferrals(data.referrals);
-                }
-            } catch (err) {
-                console.error('Erreur:', err);
-                document.getElementById('referralCode').textContent = 'Erreur de chargement';
-            }
-        }
-
-        // Afficher la liste des parrainages
-        function displayReferrals(referrals) {
-            const list = document.getElementById('referralList');
-            list.innerHTML = referrals.map(ref => `
-                <div class="referral-item">
-                    <div class="referral-item-info">
-                        <div class="referral-item-avatar" aria-hidden="true">·</div>
-                        <div class="referral-item-details">
-                            <h4>${ref.refereeName || ref.refereeEmail}</h4>
-                            <p>${new Date(ref.referredAt).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                    </div>
-                    <div class="referral-item-reward">+10€</div>
-                </div>
-            `).join('');
-        }
-
-        // Copier le code
-        function copyCode() {
-            navigator.clipboard.writeText(referralCode).then(() => {
-                showToast('Code copié');
-            });
-        }
-
-        // Partager sur WhatsApp
-        function shareWhatsApp() {
-            const message = `J'ai pris LinkedIn Premium chez Kareer. Avec mon code ${referralCode}, tu paies 10 € de moins : https://kareer.pro`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-        }
-
-        // Partager par Email
-        function shareEmail() {
-            const subject = '10 € de réduction sur LinkedIn Premium';
-            const body = `Salut,\n\nJ'ai pris LinkedIn Premium chez Kareer. Si tu commandes avec mon code ${referralCode}, tu paies 10 € de moins.\n\nhttps://kareer.pro\n\nÀ bientôt`;
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        }
-
-        // Afficher un toast
+        function getToken() { try { return sessionStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+        function setToken(v) { try { v ? sessionStorage.setItem(TOKEN_KEY, v) : sessionStorage.removeItem(TOKEN_KEY); } catch (e) {} }
         function showToast(message) {
-            const toast = document.getElementById('toast');
+            var toast = $('toast');
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(function () { toast.classList.remove('show'); }, 3000);
+        }
+        function message(text, isError) {
+            var el = $('signinMsg');
+            el.textContent = text || '';
+            el.className = 'signin-msg' + (isError ? ' error' : '');
         }
 
-        // Initialiser au chargement
-        initReferral();
+        function api(path, options) {
+            options = options || {};
+            var headers = { 'Content-Type': 'application/json' };
+            var token = getToken();
+            if (token) headers.Authorization = 'Bearer ' + token;
+            return fetch('/api/rewards?type=referral' + path, { method: options.method || 'GET', headers: headers, body: options.body ? JSON.stringify(options.body) : undefined })
+                .then(function (res) { return res.json().catch(function () { return {}; }).then(function (body) { return { status: res.status, ok: res.ok, data: body }; }); });
+        }
+
+        function applyLang() {
+            document.documentElement.lang = lang;
+            document.title = t.pageTitle;
+            document.querySelectorAll('[data-t]').forEach(function (el) { var v = t[el.getAttribute('data-t')]; if (v != null) el.textContent = v; });
+            document.querySelectorAll('.ref-langs button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+            $('holderInput').placeholder = t.holder;
+            if (email && !$('codeForm').hidden) $('codeSent').textContent = fill(t.codeSent, { email: email }) + ' ' + t.noAccountHint;
+            if (data) render();
+        }
+
+        // ----- sign-in -----
+        function sendCode() {
+            var value = $('emailInput').value.trim().toLowerCase();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { message(t.errEmail, true); return; }
+            email = value;
+            $('sendBtn').disabled = true;
+            $('sendBtn').textContent = t.sending;
+            message('');
+            api('&action=send_code', { method: 'POST', body: { email: email, lang: lang } }).then(function (r) {
+                if (r.status === 429) { message(t.errTooMany, true); return; }
+                if (!r.ok) { message(r.data.error === 'invalid_email' ? t.errEmail : t.failed, true); return; }
+                $('emailForm').hidden = true;
+                $('codeForm').hidden = false;
+                $('codeSent').textContent = fill(t.codeSent, { email: email }) + ' ' + t.noAccountHint;
+                $('codeInput').value = '';
+                $('codeInput').focus();
+            }).catch(function () { message(t.errNetwork, true); })
+              .finally(function () { $('sendBtn').disabled = false; $('sendBtn').textContent = t.sendCode; });
+        }
+
+        function verifyCode() {
+            var code = $('codeInput').value.replace(/\D/g, '');
+            if (code.length !== 6) { message(t.errLength, true); return; }
+            $('verifyBtn').disabled = true;
+            api('&action=verify_code', { method: 'POST', body: { email: email, code: code } }).then(function (r) {
+                if (r.ok && r.data.token) { setToken(r.data.token); message(''); load(); return; }
+                var err = r.data.error;
+                if (err === 'code_expired') message(t.errExpired, true);
+                else if (err === 'too_many_attempts' || r.status === 429) message(t.errTooMany, true);
+                else message(fill(t.errCode, { n: r.data.attemptsLeft != null ? r.data.attemptsLeft : '…' }), true);
+            }).catch(function () { message(t.errNetwork, true); })
+              .finally(function () { $('verifyBtn').disabled = false; });
+        }
+
+        function showSignin(note) {
+            setToken(null);
+            data = null;
+            $('dashboard').hidden = true;
+            $('noRef').hidden = true;
+            $('signin').hidden = false;
+            $('codeForm').hidden = true;
+            $('emailForm').hidden = false;
+            if (email) $('emailInput').value = email;
+            message(note || '', !!note);
+        }
+
+        // ----- signed in -----
+        function load() {
+            api('&me=1').then(function (r) {
+                if (r.status === 401) { showSignin(getToken() ? t.sessionExpired : ''); return; }
+                $('signin').hidden = true;
+                if (r.status === 404) { $('noRef').hidden = false; $('dashboard').hidden = true; return; }
+                if (!r.ok) { showSignin(t.failed); return; }
+                data = r.data;
+                email = data.referrerEmail || email;
+                $('noRef').hidden = true;
+                $('dashboard').hidden = false;
+                render();
+            }).catch(function () { showSignin(t.errNetwork); });
+        }
+
+        function render() {
+            var mode = data.rewardMode === 'transfer' ? 'transfer' : 'promo';
+            var balance = Number(data.pendingBalance || 0);
+            var count = Number(data.referralCount || (data.referrals || []).length || 0);
+            $('signedAs').textContent = fill(t.signedAs, { email: email });
+            $('referralCode').textContent = data.code;
+            $('referralCount').textContent = count;
+            $('totalEarned').textContent = money(count * 10);
+            $('balanceStat').hidden = !(balance > 0);
+            $('balanceValue').textContent = money(balance);
+            document.querySelectorAll('.reward-mode-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.mode === mode); });
+            $('modeDesc').textContent = mode === 'transfer' ? t.descTransfer : t.descPromo;
+            $('bankBox').hidden = mode !== 'transfer';
+            var info = data.paymentInfo || null;
+            $('ibanSaved').hidden = !(info && info.ibanMasked);
+            if (info && info.ibanMasked) $('ibanSaved').textContent = fill(t.ibanSaved, { iban: info.ibanMasked });
+            if (info && info.accountName && !$('holderInput').value) $('holderInput').value = info.accountName;
+            $('balanceBox').hidden = !(balance > 0);
+            $('balanceAmount').textContent = money(balance);
+            var list = data.referrals || [];
+            $('listBox').hidden = !list.length;
+            $('referralList').innerHTML = list.map(function (r) {
+                var when = r.usedAt ? new Date(r.usedAt).toLocaleDateString(LOCALES[lang]) : '';
+                return '<div class="referral-item"><div class="referral-item-info"><div class="referral-item-avatar" aria-hidden="true">·</div>' +
+                    '<div class="referral-item-details"><h4>' + esc(r.who || '') + '</h4><p>' + esc(when) + '</p></div></div>' +
+                    '<div class="referral-item-reward">+' + esc(money(10)) + (r.promoCode ? '<small>' + esc(fill(t.rewardCode, { code: r.promoCode })) + '</small>' : '') + '</div></div>';
+            }).join('');
+        }
+
+        function setMode(mode) {
+            api('', { method: 'PUT', body: { rewardMode: mode } }).then(function (r) {
+                if (r.status === 401) { showSignin(t.sessionExpired); return; }
+                if (!r.ok) { showToast(t.failed); return; }
+                data.rewardMode = r.data.rewardMode;
+                render();
+                showToast(t.modeSaved);
+            }).catch(function () { showToast(t.errNetwork); });
+        }
+
+        function saveBank() {
+            var iban = $('ibanInput').value.trim();
+            var holder = $('holderInput').value.trim();
+            if (!iban || !holder) { showToast(t.fillBoth); return; }
+            api('', { method: 'PUT', body: { paymentInfo: { iban: iban, accountName: holder } } }).then(function (r) {
+                if (r.status === 401) { showSignin(t.sessionExpired); return; }
+                if (!r.ok) { showToast(r.status === 400 ? t.badIban : t.failed); return; }
+                $('ibanInput').value = '';
+                showToast(t.saved);
+                load();
+            }).catch(function () { showToast(t.errNetwork); });
+        }
+
+        function requestTransfer() {
+            var balance = Number(data.pendingBalance || 0);
+            if (!(balance > 0)) return;
+            if (!data.paymentInfo) { showToast(t.noBank); return; }
+            if (!confirm(fill(t.confirmTransfer, { amount: money(balance) }))) return;
+            $('transferBtn').disabled = true;
+            api('', { method: 'PUT', body: { requestTransfer: true } }).then(function (r) {
+                if (r.status === 401) { showSignin(t.sessionExpired); return; }
+                if (!r.ok) { showToast(r.data.error === 'Informations de paiement requises' ? t.noBank : t.failed); return; }
+                data.pendingBalance = r.data.pendingBalance;
+                render();
+                showToast(t.transferSent);
+            }).catch(function () { showToast(t.errNetwork); })
+              .finally(function () { $('transferBtn').disabled = false; });
+        }
+
+        function shareUrl() { return 'https://kareer.pro/?ref=' + encodeURIComponent(data.code); }
+
+        // ----- wiring -----
+        $('emailForm').addEventListener('submit', function (e) { e.preventDefault(); sendCode(); });
+        $('codeForm').addEventListener('submit', function (e) { e.preventDefault(); verifyCode(); });
+        $('codeInput').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); if (this.value.length === 6) verifyCode(); });
+        $('resendBtn').addEventListener('click', function () { $('emailInput').value = email; sendCode(); });
+        $('changeBtn').addEventListener('click', function () { showSignin(''); $('emailInput').focus(); });
+        $('logoutBtn').addEventListener('click', function () { showSignin(''); });
+        document.querySelectorAll('.reward-mode-btn').forEach(function (b) { b.addEventListener('click', function () { if (data && b.dataset.mode !== (data.rewardMode === 'transfer' ? 'transfer' : 'promo')) setMode(b.dataset.mode); }); });
+        $('saveBankBtn').addEventListener('click', saveBank);
+        $('transferBtn').addEventListener('click', requestTransfer);
+        $('copyBtn').addEventListener('click', function () {
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(data.code).then(function () { showToast(t.copied); }).catch(function () {});
+        });
+        $('shareWaBtn').addEventListener('click', function () {
+            window.open('https://wa.me/?text=' + encodeURIComponent(fill(t.shareText, { code: data.code, url: shareUrl() })), '_blank', 'noopener');
+        });
+        $('shareMailBtn').addEventListener('click', function () {
+            location.href = 'mailto:?subject=' + encodeURIComponent(t.mailSubject) + '&body=' + encodeURIComponent(fill(t.mailBody, { code: data.code, url: shareUrl() }));
+        });
+        document.querySelectorAll('.ref-langs button').forEach(function (b) {
+            b.addEventListener('click', function () {
+                lang = b.dataset.lang; t = T[lang];
+                try { localStorage.setItem('kareer_lang', lang); } catch (e) {}
+                applyLang();
+            });
+        });
+
+        applyLang();
+        if (getToken()) load();
+    })();
     </script>
 </body>
 </html>
