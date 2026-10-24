@@ -4,15 +4,9 @@ const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const { isPaid } = require('./_payment');
 const rateLimit = require('./_rate-limit');
-const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
-  escapeHtml,
-  formatCurrency,
-  formatPlan,
-  getSiteUrl
-} = require('./_email');
+const { sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { ensureReference } = require('./_orders');
 const checkRate = rateLimit({ windowMs: 60000, max: 10 });
 
 module.exports = async (req, res) => {
@@ -54,17 +48,17 @@ module.exports = async (req, res) => {
       if (!isPaid(order)) {
         return res.status(400).json({ error: 'Order is not paid' });
       }
+      await ensureReference(order);
       order.status = 'refunded';
       order.refundMethod = 'manual';
       order.refundReason = reason || 'requested_by_customer';
       order.refundedAt = new Date().toISOString();
       order.updatedAt = order.refundedAt;
       await kvStore.set(`order:${session_id}`, JSON.stringify(order));
-      if (process.env.RESEND_API_KEY && order.customerEmail) {
-        await sendRefundEmail(order);
-      }
+      const mail = await sendRefundEmail(order);
       return res.status(200).json({
         success: true,
+        emailSent: mail.sent,
         refund: { id: 'manual', amount: order.amount, status: 'recorded', manual: true },
         order
       });
@@ -87,9 +81,7 @@ module.exports = async (req, res) => {
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
 
-    if (process.env.RESEND_API_KEY && order.customerEmail) {
-      await sendRefundEmail(order);
-    }
+    await sendRefundEmail(order);
 
     return res.status(200).json({
       success: true,
@@ -106,58 +98,6 @@ module.exports = async (req, res) => {
   }
 };
 
-async function sendRefundEmail(order) {
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    const lang = order.language || 'fr';
-    const siteUrl = getSiteUrl();
-    const t = lang === 'fr' ? {
-      subject: 'Remboursement effectué — Kareer',
-      title: 'Remboursement effectué',
-      message: order.refundMethod === 'manual'
-        ? 'Votre commande a été remboursée. Le délai pour voir le montant revenir dépend du moyen de paiement utilisé.'
-        : 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans un délai habituel de 5 à 10 jours ouvrés.',
-      amount: 'Montant remboursé',
-      order: 'Commande',
-      contact: 'Nous contacter'
-    } : {
-      subject: 'Refund processed — Kareer',
-      title: 'Refund processed',
-      message: order.refundMethod === 'manual'
-        ? 'Your order has been refunded. How long the money takes to arrive depends on the payment method you used.'
-        : 'Your order has been refunded. The amount will be credited to your account within the usual 5 to 10 business days.',
-      amount: 'Refunded amount',
-      order: 'Order',
-      contact: 'Contact us'
-    };
-
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.message)}</p>
-      ${detailTable([
-        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
-        { label: t.amount, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
-        { label: t.order, value: order.sessionId }
-      ])}
-      ${emailButton(t.contact, 'mailto:contact@kareer.pro')}
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject: t.subject,
-      html: buildEmailHtml({
-        siteUrl,
-        headerColor: '#0f766e',
-        title: t.title,
-        preheader: t.message,
-        content,
-        lang
-      }),
-      text: `${t.title}\n\n${t.message}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${t.amount}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${t.order}: ${order.sessionId}`
-    });
-  } catch (error) {
-    console.error('Refund email error:', error.message);
-  }
+function sendRefundEmail(order) {
+  return sendEmail({ to: order.customerEmail, ...customerEmails.refunded(order) });
 }

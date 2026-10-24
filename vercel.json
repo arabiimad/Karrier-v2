@@ -6,7 +6,7 @@
   "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/automation?action=renewal_reminders",
+      "path": "/api/automation?action=daily_reminders",
       "schedule": "0 9 * * *"
     },
     {

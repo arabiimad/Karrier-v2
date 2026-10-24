@@ -98,6 +98,96 @@ function formatAudience(audience) {
     return names[audience] || audience || '';
 }
 function planName(order) { return order.planLabel || PLAN_NAMES[order.plan] || order.plan || '-'; }
+function refOf(order) { return order.reference || order.sessionId; }
+
+// WhatsApp messages the team sends at each step, in the customer's language.
+var WA_COPY = {
+    fr: {
+        hello: 'Bonjour,',
+        newOrder: 'merci pour votre commande {ref} ({plan}, {amount}). Je vous envoie par e-mail un lien sécurisé pour transmettre votre mot de passe LinkedIn. L\'activation prend 5 à 30 minutes après réception, et vous ne réglez qu\'une fois Premium actif.',
+        student: 'Comme il s\'agit du tarif étudiant, pouvez-vous m\'envoyer ici votre carte étudiante ou une attestation de diplôme récente ?',
+        linkSent: 'le lien sécurisé pour votre commande {ref} vient de partir par e-mail (pensez à regarder dans les spams). Dès que vous avez transmis votre mot de passe, l\'activation prend 5 à 30 minutes.',
+        activating: 'nous lançons l\'activation de votre commande {ref}. LinkedIn va peut-être vous envoyer un code de vérification par e-mail ou par SMS : pouvez-vous me le transmettre ici dès que vous le recevez ?',
+        live: 'LinkedIn Premium est actif sur votre compte {email}, vous pouvez vérifier en vous connectant. Le montant à régler est de {amount} (commande {ref}). Dites-moi quel moyen de paiement vous arrange et je vous envoie les informations.',
+        nudge: 'petit rappel pour la commande {ref} : Premium est actif depuis le {date} et le règlement de {amount} n\'est pas encore arrivé de notre côté. Dites-moi si je peux vous aider.',
+        paid: 'nous avons bien reçu votre paiement de {amount} pour la commande {ref}, merci. Le reçu vient de partir par e-mail. Bonne utilisation de LinkedIn Premium.',
+        referral: 'Votre code de parrainage {code} fait économiser 10 € à vos proches, et vous rapporte 10 € par commande activée.',
+        refunded: 'le remboursement de votre commande {ref} ({amount}) est fait, par le même moyen que votre paiement. Selon ce moyen, il arrive en quelques minutes ou quelques jours ouvrés.',
+        sign: 'L\'équipe Kareer'
+    },
+    en: {
+        hello: 'Hello,',
+        newOrder: 'thank you for your order {ref} ({plan}, {amount}). I am emailing you a secure link to submit your LinkedIn password. Activation takes 5 to 30 minutes once we have it, and you only pay once Premium is live.',
+        student: 'As this is the student price, could you send me your student card or a recent degree certificate here?',
+        linkSent: 'the secure link for your order {ref} has just been emailed to you (check your spam folder too). Once you have submitted your password, activation takes 5 to 30 minutes.',
+        activating: 'we are starting the activation of your order {ref}. LinkedIn may send you a verification code by email or text message: could you send it to me here as soon as you get it?',
+        live: 'LinkedIn Premium is live on your account {email}; you can check by signing in. The amount due is {amount} (order {ref}). Let me know which payment method suits you and I will send you the details.',
+        nudge: 'a quick reminder about order {ref}: Premium has been live since {date} and we have not received the payment of {amount} yet. Let me know if I can help.',
+        paid: 'we have received your payment of {amount} for order {ref}, thank you. The receipt is in your inbox. Enjoy LinkedIn Premium.',
+        referral: 'Your referral code {code} saves your friends €10, and earns you €10 for each activated order.',
+        refunded: 'the refund for your order {ref} ({amount}) has been made through the method you paid with. Depending on that method, it arrives within minutes or a few business days.',
+        sign: 'The Kareer team'
+    },
+    es: {
+        hello: 'Hola:',
+        newOrder: 'gracias por tu pedido {ref} ({plan}, {amount}). Te envío por correo un enlace seguro para enviar tu contraseña de LinkedIn. La activación tarda entre 5 y 30 minutos tras recibirla y solo pagas cuando Premium esté activo.',
+        student: 'Como es el precio para estudiantes, ¿me puedes enviar aquí tu carné de estudiante o un certificado de título reciente?',
+        linkSent: 'el enlace seguro de tu pedido {ref} acaba de salir por correo (revisa también el spam). En cuanto envíes tu contraseña, la activación tarda entre 5 y 30 minutos.',
+        activating: 'empezamos la activación de tu pedido {ref}. Es posible que LinkedIn te envíe un código de verificación por correo o SMS: ¿me lo pasas por aquí en cuanto te llegue?',
+        live: 'LinkedIn Premium ya está activo en tu cuenta {email}; puedes comprobarlo iniciando sesión. El importe a pagar es {amount} (pedido {ref}). Dime qué medio de pago te viene mejor y te envío los datos.',
+        nudge: 'un recordatorio sobre el pedido {ref}: Premium está activo desde el {date} y todavía no nos ha llegado el pago de {amount}. Dime si te puedo ayudar.',
+        paid: 'hemos recibido tu pago de {amount} del pedido {ref}, gracias. El recibo te ha llegado por correo. Disfruta de LinkedIn Premium.',
+        referral: 'Tu código de recomendación {code} ahorra 10 € a quien lo use y te da 10 € por cada pedido activado.',
+        refunded: 'el reembolso de tu pedido {ref} ({amount}) está hecho por el mismo medio con el que pagaste. Según ese medio, llega en unos minutos o en unos días hábiles.',
+        sign: 'El equipo de Kareer'
+    },
+    de: {
+        hello: 'Guten Tag,',
+        newOrder: 'vielen Dank für Ihre Bestellung {ref} ({plan}, {amount}). Ich sende Ihnen per E-Mail einen sicheren Link für Ihr LinkedIn-Passwort. Die Aktivierung dauert danach 5 bis 30 Minuten, und Sie zahlen erst, wenn Premium aktiv ist.',
+        student: 'Da es sich um den Studierendenpreis handelt: Könnten Sie mir hier Ihren Studierendenausweis oder ein aktuelles Abschlusszeugnis schicken?',
+        linkSent: 'der sichere Link für Ihre Bestellung {ref} ist gerade per E-Mail rausgegangen (bitte auch im Spam-Ordner nachsehen). Sobald Sie Ihr Passwort übermittelt haben, dauert die Aktivierung 5 bis 30 Minuten.',
+        activating: 'wir starten jetzt die Aktivierung Ihrer Bestellung {ref}. LinkedIn schickt Ihnen eventuell einen Bestätigungscode per E-Mail oder SMS: Könnten Sie ihn mir hier weiterleiten, sobald er ankommt?',
+        live: 'LinkedIn Premium ist jetzt auf Ihrem Konto {email} aktiv, Sie können es nach der Anmeldung prüfen. Der offene Betrag ist {amount} (Bestellung {ref}). Sagen Sie mir, welche Zahlungsart Ihnen passt, dann schicke ich Ihnen die Angaben.',
+        nudge: 'eine kurze Erinnerung zur Bestellung {ref}: Premium ist seit dem {date} aktiv, die Zahlung über {amount} ist bei uns noch nicht eingegangen. Sagen Sie mir gern, ob ich helfen kann.',
+        paid: 'wir haben Ihre Zahlung über {amount} für die Bestellung {ref} erhalten, vielen Dank. Der Beleg ist per E-Mail unterwegs. Viel Erfolg mit LinkedIn Premium.',
+        referral: 'Mit Ihrem Empfehlungscode {code} sparen andere 10 €, und Sie erhalten 10 € pro aktivierter Bestellung.',
+        refunded: 'die Erstattung Ihrer Bestellung {ref} ({amount}) ist über Ihr ursprüngliches Zahlungsmittel veranlasst. Je nach Zahlungsmittel kommt sie in wenigen Minuten oder einigen Werktagen an.',
+        sign: 'Ihr Kareer-Team'
+    }
+};
+var WA_AUDIENCE = { fr: ['Étudiant', 'Salarié'], en: ['Student', 'Employee'], es: ['Estudiante', 'Asalariado'], de: ['Studierende', 'Angestellte'] };
+var WA_LOCALE = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE' };
+
+function waMessages(o) {
+    var lang = WA_COPY[o.language] ? o.language : 'fr';
+    var c = WA_COPY[lang];
+    var aud = String(o.audience || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    var who = /^(student|etudiant)/.test(aud) ? WA_AUDIENCE[lang][0] : /^(salary|salarie)/.test(aud) ? WA_AUDIENCE[lang][1] : '';
+    var vars = {
+        ref: refOf(o),
+        plan: planName(o) + (who ? ' · ' + who : ''),
+        amount: new Intl.NumberFormat(WA_LOCALE[lang], { style: 'currency', currency: o.currency || 'EUR', minimumFractionDigits: Number.isInteger(o.amount) ? 0 : 2 }).format(o.amount || 0),
+        email: o.linkedinEmail || o.customerEmail || '',
+        code: o.referralCode || '',
+        date: o.activatedAt ? new Intl.DateTimeFormat(WA_LOCALE[lang], { day: 'numeric', month: 'long' }).format(new Date(o.activatedAt)) : ''
+    };
+    function fill(text) { return text.replace(/\{(\w+)\}/g, function(_, k) { return vars[k]; }); }
+    function msg(label, body, extra) {
+        var first = lang === 'de' ? body : body.charAt(0).toUpperCase() + body.slice(1);
+        return { label: label, text: c.hello + '\n\n' + fill(first) + (extra ? '\n\n' + fill(extra) : '') + '\n\n' + c.sign };
+    }
+    var s = o.status, list = [];
+    if (s === 'pending' || s === 'pending_payment') list.push(msg('Accueil de la commande', c.newOrder, isStudent(o) && !o.studentVerified ? c.student : ''));
+    if (s === 'awaiting_credentials' && !o.hasCredentials) list.push(msg('Lien envoyé', c.linkSent, needsStudentCheck(o) ? c.student : ''));
+    if (s === 'activating' || (o.hasCredentials && s !== 'done' && s !== 'refunded')) list.push(msg('Code de vérification', c.activating));
+    if (s === 'done' && !o.isPaid) {
+        list.push(msg('Premium actif, paiement', c.live));
+        list.push(msg('Relance de paiement', c.nudge));
+    }
+    if (s === 'done' && o.isPaid) list.push(msg('Paiement reçu', c.paid, o.referralCode ? c.referral : ''));
+    if (s === 'refunded' && o.isPaid !== false && o.refundedAt) list.push(msg('Remboursement', c.refunded));
+    return { lang: lang, list: list };
+}
 function isStudent(order) { return /etudiant|étudiant|student/i.test(String(order.audience || '') + ' ' + String(order.plan || '')); }
 function isOpen(order) { return ['pending', 'pending_payment', 'awaiting_credentials', 'activating'].indexOf(order.status) >= 0; }
 function needsStudentCheck(order) { return isStudent(order) && !order.studentVerified && isOpen(order); }
@@ -385,7 +475,7 @@ function todoItem(order) {
         : 'commandée ' + timeAgo(order.createdAt);
     var student = needsStudentCheck(order) ? ' <span class="pill pill-violet">Justificatif à vérifier</span>' : '';
     return '<div class="todo-item" data-open="' + escapeHTML(order.sessionId) + '">' +
-        '<div class="todo-main"><strong>' + escapeHTML(planName(order)) + student + '</strong><span>' + escapeHTML(order.customerEmail || '-') + '</span></div>' +
+        '<div class="todo-main"><strong>' + escapeHTML(planName(order)) + student + '</strong><span><span class="ref">' + escapeHTML(refOf(order)) + '</span> · ' + escapeHTML(order.customerEmail || '-') + '</span></div>' +
         '<div class="todo-meta"><strong>' + euroHTML(order.amount) + '</strong><span>' + escapeHTML(when) + '</span></div>' +
         '<div class="todo-actions">' + nextButtons(order) + '</div>' +
     '</div>';
@@ -427,7 +517,7 @@ function orderRow(order) {
     var note = credentialNote(order);
     return '<tr data-id="' + escapeHTML(order.sessionId) + '"' + (late ? ' class="row-late"' : '') + '>' +
         '<td class="c-order"><span class="cell-main">' + escapeHTML(planName(order)) + '</span>' +
-            '<span class="cell-sub">' + escapeHTML(formatAudience(order.audience)) + ' · ' + escapeHTML(shortDate(order.createdAt)) + '</span></td>' +
+            '<span class="cell-sub"><span class="ref">' + escapeHTML(refOf(order)) + '</span> · ' + escapeHTML(formatAudience(order.audience)) + ' · ' + escapeHTML(shortDate(order.createdAt)) + '</span></td>' +
         '<td class="c-client"><span class="cell-main">' + escapeHTML(order.customerEmail || '-') + '</span>' + linkedin + '</td>' +
         '<td class="c-amount"><div class="cell-stack"><span class="cell-amount">' + euroHTML(order.amount) + '</span>' + paymentBadge(order) + '</div></td>' +
         '<td class="c-status"><div class="cell-stack">' + statusBadge(order) + (late ? '<span class="late">En retard</span>' : '') + student + '</div>' +
@@ -497,12 +587,14 @@ async function runAction(action, id, btn) {
         if (action === 'copy_access') await copyAccess(id);
         if (action === 'mark_activated') changed = await setStatus(id, 'done', "Premium est actif sur le compte du client ?\n\nLe client reçoit l'e-mail de confirmation et ses identifiants sont supprimés.");
         if (action === 'mark_paid') changed = await markPaid(id, true);
+        if (action === 'confirm_paid') changed = await confirmPaid(id);
+        if (action === 'copy_wa') { var m = waMessages(state.drawerOrder || {}).list[Number(btn.dataset.index)]; if (m) await copyText(m.text, 'Message copié, collez-le dans WhatsApp'); return; }
         if (action === 'mark_unpaid') changed = await markPaid(id, false);
         if (action === 'reminder') await sendReminder(id);
         if (action === 'refund') changed = await refundOrder(id);
         if (action === 'delete') { if (await deleteOrder(id)) { closeDrawer(); afterChange(null); } return; }
         if (action === 'add_note') changed = await addNote(id);
-        if (action === 'copy_id') await copyText(id, 'Numéro de commande copié');
+        if (action === 'copy_id') await copyText(btn.dataset.value || id, 'Numéro de commande copié');
         if (action === 'promo_toggle') { await togglePromoStatus(btn.dataset.code, btn.dataset.active === 'true'); return; }
         if (action === 'promo_delete') { await deletePromo(btn.dataset.code); return; }
         if (changed) afterChange(id);
@@ -522,7 +614,7 @@ async function sendLink(id) {
     var data = await api('/update-order', { method: 'POST', body: { action: 'credential_link', session_id: id } });
     if (!data) return false;
     if (!data.success) { showToast(data.error || 'Lien non envoyé', 'error'); return false; }
-    if (data.link) await copyText(data.link, data.emailSent ? 'Lien envoyé par e-mail et copié' : 'Lien copié : envoyez-le sur WhatsApp');
+    if (data.link) await copyText(data.link, data.emailSent ? 'Lien envoyé au client par e-mail (et copié)' : 'E-mail non parti : lien copié, envoyez-le sur WhatsApp');
     else showToast(data.emailSent ? 'Lien envoyé par e-mail' : 'Lien créé', 'success');
     return true;
 }
@@ -541,31 +633,46 @@ async function setStatus(id, status, question) {
     var data = await api('/update-order', { method: 'PATCH', body: { session_id: id, status: status } });
     if (!data) return false;
     if (!data.success) { showToast(data.error || 'Statut non modifié', 'error'); return false; }
-    showToast('Statut : ' + (STATUS_LABELS[status] || status), 'success');
+    showToast('Statut : ' + (STATUS_LABELS[status] || status) + (data.emailSent ? ' · e-mail envoyé au client' : ''), 'success');
     return true;
 }
 
+// "Marquer payée" opens the order on its payment form; the form records the method and sends the receipt.
 async function markPaid(id, paid) {
-    var body = { action: 'mark_paid', session_id: id, paid: paid };
     if (paid) {
-        var method = prompt('Commande payée. Moyen de paiement (facultatif) :', '');
-        if (method === null) return false;
-        if (method.trim()) body.method = method.trim();
-    } else if (!confirm('Repasser cette commande en non payée ?')) {
+        state.payFormFor = id;
+        await openOrder(id, state.drawerId === id);
+        var form = $('payForm');
+        if (form) { form.hidden = false; form.scrollIntoView({ block: 'center', behavior: 'smooth' }); var m = $('payMethod'); if (m) m.focus(); }
         return false;
     }
-    var data = await api('/update-order', { method: 'POST', body: body });
+    if (!confirm('Repasser cette commande en non payée ?')) return false;
+    var data = await api('/update-order', { method: 'POST', body: { action: 'mark_paid', session_id: id, paid: false } });
     if (!data) return false;
     if (!data.success) { showToast(data.error || 'Échec', 'error'); return false; }
-    showToast(paid ? 'Commande marquée payée' : 'Commande repassée en non payée', 'success');
+    showToast('Commande repassée en non payée', 'success');
+    return true;
+}
+
+async function confirmPaid(id) {
+    var select = $('payMethod'), other = $('payMethodOther'), receipt = $('payReceipt');
+    var method = select ? select.value : '';
+    if (method === 'other') method = other ? other.value.trim() : '';
+    var data = await api('/update-order', { method: 'POST', body: { action: 'mark_paid', session_id: id, paid: true, method: method || undefined, notify: receipt ? receipt.checked : true } });
+    if (!data) return false;
+    if (!data.success) { showToast(data.error || 'Échec', 'error'); return false; }
+    state.payFormFor = null;
+    showToast(data.receiptSent ? 'Paiement enregistré, reçu envoyé au client' : 'Paiement enregistré', 'success');
     return true;
 }
 
 async function sendReminder(id) {
     var data = await api('/automation', { method: 'POST', body: { action: 'send_reminder', session_id: id } });
     if (!data) return;
-    var sent = data.success && (!data.result || data.result.sent !== false);
-    showToast(sent ? 'Rappel envoyé' : (data.error || (data.result && data.result.reason) || 'Rappel non envoyé'), sent ? 'success' : 'error');
+    var result = data.result || {};
+    var sent = data.success && result.sent !== false;
+    var labels = { new_link: 'Nouveau lien envoyé par e-mail (l\'ancien ne marche plus)', payment: 'Rappel de paiement envoyé par e-mail', order: 'Relance envoyée par e-mail' };
+    showToast(sent ? (labels[result.kind] || 'Rappel envoyé') : (data.error || result.reason || 'Rappel non envoyé'), sent ? 'success' : 'error');
 }
 
 async function refundOrder(id, reason) {
@@ -624,6 +731,7 @@ async function openOrder(id, keepScroll) {
     var order = await fetchOrder(id);
     if (state.drawerId !== id) return;
     if (!order) { body.innerHTML = '<p class="empty">Commande introuvable.</p>'; return; }
+    state.drawerOrder = order;
     body.innerHTML = renderDrawer(order);
     if (keepScroll) drawer.scrollTop = scroll;
     else { var close = body.querySelector('.icon-btn'); if (close) close.focus(); }
@@ -633,12 +741,17 @@ async function openOrder(id, keepScroll) {
     if (status) status.addEventListener('change', async function() {
         var value = status.value;
         status.value = '';
-        if (await setStatus(order.sessionId, value)) afterChange(order.sessionId);
+        var mails = { activating: 'Le client reçoit l\'e-mail « activation en cours ».', done: 'Le client reçoit l\'e-mail « Premium est actif » avec le montant à régler.', refunded: order.isPaid ? 'Le client reçoit l\'e-mail de remboursement.' : 'Le client reçoit l\'e-mail d\'annulation.' };
+        var question = 'Passer la commande en « ' + (STATUS_LABELS[value] || value) + ' » ?' + (mails[value] ? '\n\n' + mails[value] : '');
+        if (await setStatus(order.sessionId, value, question)) afterChange(order.sessionId);
     });
+    var method = $('payMethod');
+    if (method) method.addEventListener('change', function() { var other = $('payMethodOther'); if (other) other.hidden = method.value !== 'other'; });
 }
 
 function closeDrawer() {
     state.drawerId = null;
+    state.payFormFor = null;
     var drawer = $('drawer');
     if (!drawer || drawer.hidden) return;
     drawer.hidden = true;
@@ -685,6 +798,9 @@ function timelineHTML(o) {
     }).join('');
 
     var payNote = o.paymentMethod ? o.paymentMethod : (o.isPaid && !o.paidAt ? 'réglée avant le lien (ancien parcours)' : '');
+    if (o.receiptSentAt) payNote += (payNote ? ' · ' : '') + 'reçu envoyé';
+    var reminders = (o.reminders || []).filter(function(r) { return r.status === 'done'; });
+    if (!o.isPaid && reminders.length) payNote += (payNote ? ' · ' : '') + reminders.length + ' rappel' + (reminders.length > 1 ? 's' : '') + ' envoyé' + (reminders.length > 1 ? 's' : '');
     if (o.status !== 'refunded' || o.isPaid) {
         html += tlStep(o.isPaid ? 'done' : (o.paymentDue ? 'current' : ''), 'Payée', payNote, o.paidAt);
     }
@@ -705,6 +821,9 @@ function renderDrawer(o) {
     var badges = statusBadge(o) + paymentBadge(o) + (late ? '<span class="late">En retard</span>' : '') +
         (needsStudentCheck(o) ? '<span class="pill pill-violet">Justificatif à vérifier</span>' : '');
     var next = nextButtons(o).replace(/ btn-small/g, '');
+    var showPay = o.status !== 'refunded' && !o.isPaid;
+    var payOpen = showPay && (o.status === 'done' || state.payFormFor === o.sessionId);
+    if (payOpen) next = next.replace(/<button[^>]*data-action="mark_paid"[^>]*>[^<]*<\/button>/, '');
 
     var kv = [
         ['E-mail client', '<a href="mailto:' + escapeHTML(o.customerEmail || '') + '">' + escapeHTML(o.customerEmail || '-') + '</a>'],
@@ -717,6 +836,26 @@ function renderDrawer(o) {
     if (o.usedReferralCode) kv.push(['Code de parrainage', '<span class="mono">' + escapeHTML(o.usedReferralCode) + '</span>']);
     if (o.referralCode) kv.push(['Son code à partager', '<span class="mono">' + escapeHTML(o.referralCode) + '</span>']);
     if (o.expiresAt) kv.push(['Abonnement jusqu\'au', escapeHTML(new Date(o.expiresAt).toLocaleDateString('fr-FR'))]);
+    kv.push(['Identifiant interne', '<span class="mono muted">' + escapeHTML(o.sessionId) + '</span>']);
+
+    var pay = '';
+    if (showPay) {
+        pay = '<section class="d-section pay-form" id="payForm"' + (payOpen ? '' : ' hidden') + '><h3>Enregistrer le paiement</h3>' +
+            '<div class="pay-row"><select class="input" id="payMethod" aria-label="Moyen de paiement">' +
+                ['Virement bancaire', 'PayPal', 'Wise', 'Revolut', 'Espèces'].map(function(m) { return '<option value="' + m + '">' + m + '</option>'; }).join('') +
+                '<option value="other">Autre…</option></select>' +
+            '<input class="input" id="payMethodOther" placeholder="Moyen de paiement" hidden></div>' +
+            '<label class="check"><input type="checkbox" id="payReceipt" checked><span>Envoyer le reçu au client<small>E-mail « Paiement reçu » avec le montant, la date et le moyen de paiement.</small></span></label>' +
+            '<button type="button" class="btn btn-primary" data-action="confirm_paid" data-id="' + id + '">Confirmer : ' + escapeHTML(formatEuro(o.amount)) + ' reçus</button></section>';
+    }
+
+    var wa = waMessages(o);
+    var waHTML = wa.list.length ? '<section class="d-section"><h3>Message WhatsApp <span class="muted">(' + wa.lang.toUpperCase() + ')</span></h3>' +
+        wa.list.map(function(m, i) {
+            return '<div class="wa-msg"><div class="wa-msg-head"><strong>' + escapeHTML(m.label) + '</strong>' +
+                '<button type="button" class="btn btn-small" data-action="copy_wa" data-index="' + i + '">Copier</button></div>' +
+                '<p>' + escapeHTML(m.text).replace(/\n/g, '<br>') + '</p></div>';
+        }).join('') + '</section>' : '';
 
     var student = '';
     if (isStudent(o)) {
@@ -735,7 +874,7 @@ function renderDrawer(o) {
     others += '<button type="button" class="btn" data-action="reminder" data-id="' + id + '">Envoyer un rappel</button>';
     if (o.status !== 'refunded') {
         if (o.isPaid) others += '<button type="button" class="btn" data-action="mark_unpaid" data-id="' + id + '">Repasser en non payée</button>';
-        else if (next.indexOf('mark_paid') === -1) others += '<button type="button" class="btn" data-action="mark_paid" data-id="' + id + '">Marquer payée</button>';
+        else if (next.indexOf('mark_paid') === -1 && !payOpen) others += '<button type="button" class="btn" data-action="mark_paid" data-id="' + id + '">Marquer payée</button>';
         if (o.isPaid) others += '<button type="button" class="btn btn-danger" data-action="refund" data-id="' + id + '">Rembourser</button>';
     }
     var statusOptions = Object.keys(STATUS_LABELS).filter(function(k) { return k !== 'pending'; }).map(function(k) {
@@ -743,12 +882,14 @@ function renderDrawer(o) {
     }).join('');
 
     return '<header class="d-head"><div>' +
-            '<p class="d-eyebrow">' + id + ' <button type="button" class="copy" data-action="copy_id" data-id="' + id + '">copier</button></p>' +
+            '<p class="d-eyebrow">' + escapeHTML(refOf(o)) + ' <button type="button" class="copy" data-action="copy_id" data-id="' + id + '" data-value="' + escapeHTML(refOf(o)) + '">copier</button></p>' +
             '<h2 class="d-title" id="drawerTitle">' + escapeHTML(planName(o)) + '</h2>' +
             '<p class="d-sub">' + escapeHTML(formatEuro(o.amount)) + ' · commandée ' + escapeHTML(timeAgo(o.createdAt)) + '</p>' +
         '</div><button type="button" class="icon-btn" data-close aria-label="Fermer"><svg aria-hidden="true"><use href="#i-close"/></svg></button></header>' +
         '<div class="d-badges">' + badges + '</div>' +
         '<div class="d-next">' + next + '<p>' + escapeHTML(nextHint(o)) + '</p></div>' +
+        pay +
+        waHTML +
         '<section class="d-section"><h3>Suivi</h3>' + timelineHTML(o) + '</section>' +
         '<section class="d-section"><h3>Client et commande</h3><dl class="kv">' +
             kv.map(function(r) { return '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') +

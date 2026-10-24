@@ -2,17 +2,10 @@ require('./_env');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
 const { getPlan } = require('./_plans');
-const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
-  escapeHtml,
-  formatAudience,
-  formatCurrency,
-  formatPlan,
-  getSiteUrl,
-  stepsBox
-} = require('./_email');
+const crypto = require('crypto');
+const { sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { alertTeam, newReference } = require('./_orders');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -26,7 +19,6 @@ module.exports = async (req, res) => {
 
   try {
     const {
-      orderId,
       planId,
       linkedinEmail,
       customerEmail,
@@ -35,8 +27,12 @@ module.exports = async (req, res) => {
       promoCode,
     } = req.body;
 
-    if (!orderId || !planId || !linkedinEmail) {
+    if (!planId || !linkedinEmail) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(String(linkedinEmail).trim()) || (customerEmail && !emailPattern.test(String(customerEmail).trim()))) {
+      return res.status(400).json({ error: 'Invalid email address' });
     }
 
     const planInfo = getPlan(planId);
@@ -44,7 +40,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid plan' });
     }
 
-    const sessionId = orderId || `kareer_${planId}_${Date.now()}`;
+    // Ids are made here, never taken from the browser, so an order cannot be overwritten.
+    const sessionId = `kareer_${planId}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const reference = await newReference();
     let amount = planInfo.amount;
     const discounts = [];
     let normalizedPromoCode = null;
@@ -71,6 +69,7 @@ module.exports = async (req, res) => {
 
     const order = {
       sessionId,
+      reference,
       plan: planId,
       planLabel: planInfo.planLabel,
       audience: planInfo.audience,
@@ -80,9 +79,9 @@ module.exports = async (req, res) => {
       discounts,
       promoCode: normalizedPromoCode,
       usedReferralCode: normalizedReferralCode,
-      linkedinEmail,
-      customerEmail: customerEmail || linkedinEmail,
-      language,
+      linkedinEmail: String(linkedinEmail).trim(),
+      customerEmail: String(customerEmail || linkedinEmail).trim(),
+      language: ['fr', 'en', 'es', 'de'].includes(language) ? language : 'fr',
       status: 'pending_payment',
       source: 'checkout-whatsapp',
       paymentFlow: 'after_activation',
@@ -91,8 +90,8 @@ module.exports = async (req, res) => {
       updatedAt: new Date().toISOString(),
     };
 
-    // Save order to KV
     await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+    await kvStore.set(`order-ref:${reference}`, sessionId);
 
     // Update index
     const indexData = await kvStore.get('orders:index');
@@ -102,18 +101,23 @@ module.exports = async (req, res) => {
       await kvStore.set('orders:index', JSON.stringify(allIds));
     }
 
-    console.log(`[Order] Created: ${sessionId} - ${planId} ${order.amount}${order.currency} (${linkedinEmail})`);
+    console.log(`[Order] Created: ${reference} ${sessionId} - ${planId} ${order.amount}${order.currency}`);
 
-    // Send emails in background (don't block response)
-    sendWelcomeEmail(order).catch(e => console.error('Welcome email error:', e.message));
-    sendAdminNotification(order).catch(e => console.error('Admin notif error:', e.message));
+    // Wait for the emails: a serverless function can be frozen as soon as it answers.
+    const confirmation = customerEmails.orderReceived(order);
+    const [customerMail] = await Promise.allSettled([
+      sendEmail({ to: order.customerEmail, ...confirmation }),
+      alertTeam('new_order', order)
+    ]);
 
     res.status(200).json({
       success: true,
       orderId: sessionId,
+      reference,
       amount: order.amount,
       currency: order.currency,
-      status: order.status
+      status: order.status,
+      emailSent: customerMail.status === 'fulfilled' && customerMail.value.sent
     });
 
   } catch (error) {
@@ -212,161 +216,4 @@ async function validateReferralCode(code, customerEmail) {
   }
 
   return { code: referralCode };
-}
-
-async function sendWelcomeEmail(order) {
-  if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] RESEND_API_KEY not configured');
-    return;
-  }
-  if (!order.customerEmail) {
-    console.log('[Email] No customer email in order:', order.sessionId);
-    return;
-  }
-
-  console.log(`[Email] Sending welcome email to ${order.customerEmail} (${order.language})`);
-
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const lang = order.language || 'fr';
-    const siteUrl = getSiteUrl();
-    
-    console.log('[Email] Resend initialized, preparing email content');
-
-    const t = lang === 'fr' ? {
-      subject: 'Commande reçue — Kareer',
-      title: 'Commande enregistrée',
-      preheader: 'Votre commande est enregistrée. Vous payez une fois Premium actif.',
-      body: 'Votre commande est bien enregistrée. Nous vous envoyons un lien sécurisé pour transmettre votre mot de passe LinkedIn. Vous payez sur WhatsApp une fois Premium actif.',
-      stepsTitle: 'Prochaines étapes',
-      steps: [
-        'Nous confirmons votre commande sur WhatsApp et vous envoyons un lien sécurisé.',
-        'Vous transmettez vos identifiants, puis nous lançons l’activation.',
-        'Une fois Premium actif, vous réglez sur WhatsApp.'
-      ],
-      delay: 'Délai : 5 à 30 minutes après réception de vos identifiants, pendant nos horaires.',
-      amount: 'Montant',
-      order: 'Commande',
-      contact: 'Écrire sur WhatsApp',
-      footer: 'Vous recevez cet email car vous avez commencé une commande sur kareer.pro.'
-    } : lang === 'es' ? {
-      subject: 'Pedido recibido — Kareer',
-      title: 'Pedido registrado',
-      preheader: 'Tu pedido está registrado. Pagas cuando Premium esté activo.',
-      body: 'Tu pedido está registrado. Te enviamos un enlace seguro para enviar tu contraseña de LinkedIn. Pagas por WhatsApp cuando Premium esté activo.',
-      stepsTitle: 'Próximos pasos',
-      steps: [
-        'Confirmamos tu pedido por WhatsApp y te enviamos un enlace seguro.',
-        'Envías tus credenciales y empezamos la activación.',
-        'Cuando Premium esté activo, pagas por WhatsApp.'
-      ],
-      delay: 'Plazo: de 5 a 30 minutos después de recibir tus credenciales, en nuestro horario.',
-      amount: 'Monto',
-      order: 'Pedido',
-      contact: 'Escribir por WhatsApp',
-      footer: 'Recibes este email porque has iniciado un pedido en kareer.pro.'
-    } : lang === 'de' ? {
-      subject: 'Bestellung erhalten — Kareer',
-      title: 'Bestellung registriert',
-      preheader: 'Ihre Bestellung ist registriert. Sie zahlen, sobald Premium aktiv ist.',
-      body: 'Ihre Bestellung wurde registriert. Wir senden Ihnen einen sicheren Link für Ihr LinkedIn-Passwort. Sie zahlen per WhatsApp, sobald Premium aktiv ist.',
-      stepsTitle: 'Nächste Schritte',
-      steps: [
-        'Wir bestätigen Ihre Bestellung per WhatsApp und senden Ihnen einen sicheren Link.',
-        'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.',
-        'Sobald Premium aktiv ist, zahlen Sie per WhatsApp.'
-      ],
-      delay: 'Dauer: 5 bis 30 Minuten nach Erhalt Ihrer Zugangsdaten, während unserer Geschäftszeiten.',
-      amount: 'Betrag',
-      order: 'Bestellung',
-      contact: 'Per WhatsApp schreiben',
-      footer: 'Sie erhalten diese E-Mail, weil Sie eine Bestellung auf kareer.pro gestartet haben.'
-    } : {
-      subject: 'Order received — Kareer',
-      title: 'Order registered',
-      preheader: 'Your order is registered. You pay once Premium is live.',
-      body: 'Your order is registered. We will send you a secure link to submit your LinkedIn password. You pay on WhatsApp once Premium is live.',
-      stepsTitle: 'Next steps',
-      steps: [
-        'We confirm your order on WhatsApp and send you a secure link.',
-        'You submit your credentials, then we start activation.',
-        'Once Premium is live, you pay on WhatsApp.'
-      ],
-      delay: 'Timing: 5 to 30 minutes after we receive your credentials, during our opening hours.',
-      amount: 'Amount',
-      order: 'Order',
-      contact: 'Message us on WhatsApp',
-      footer: 'You are receiving this email because you started an order on kareer.pro.'
-    };
-
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
-      ${detailTable([
-        { label: 'Plan', value: order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, lang)}` : formatPlan(order.plan, order.audience, lang) },
-        { label: t.amount, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
-        { label: t.order, value: order.sessionId }
-      ])}
-      ${stepsBox(t.stepsTitle, t.steps, t.delay)}
-      ${emailButton(t.contact, 'https://wa.me/212651064637', { color: '#22C55E' })}
-    `;
-
-    console.log('[Email] Calling resend.emails.send...');
-    const emailResult = await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject: t.subject,
-      html: buildEmailHtml({
-        siteUrl,
-        title: t.title,
-        preheader: t.preheader,
-        content,
-        footer: t.footer,
-        lang
-      }),
-      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${t.amount}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${t.order}: ${order.sessionId}\n\n${t.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}\n\n${t.contact}: https://wa.me/212651064637`
-    });
-    
-    console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`, emailResult);
-  } catch (error) {
-    console.error('[Email] Error sending welcome email:', error.message);
-    console.error('[Email] Full error:', error);
-  }
-}
-
-async function sendAdminNotification(order) {
-  if (!process.env.RESEND_API_KEY) return;
-
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
-  const siteUrl = getSiteUrl();
-  const plan = order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, 'fr')}` : formatPlan(order.plan, order.audience, 'fr');
-  const content = `
-    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Une nouvelle commande WhatsApp vient d’être créée.</p>
-    ${detailTable([
-      { label: 'Plan', value: plan },
-      { label: 'Montant', value: formatCurrency(order.amount, order.currency || 'EUR', 'fr') },
-      { label: 'Email client', value: order.customerEmail },
-      { label: 'Email LinkedIn', value: order.linkedinEmail },
-      { label: 'Commande', value: order.sessionId },
-      { label: 'Date', value: new Date(order.createdAt).toLocaleString('fr-FR') }
-    ])}
-    ${emailButton('Ouvrir le dashboard', `${siteUrl}/admin`)}
-  `;
-
-  await resend.emails.send({
-    from: 'Kareer <notifications@kareer.pro>',
-    to: adminEmail,
-    subject: `Nouvelle commande — ${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
-    html: buildEmailHtml({
-      siteUrl,
-      title: 'Nouvelle commande WhatsApp',
-      preheader: `${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
-      content,
-      footer: 'Notification interne Kareer.',
-      lang: 'fr'
-    }),
-    text: `Nouvelle commande WhatsApp\n\nPlan: ${plan}\nMontant: ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}\nEmail client: ${order.customerEmail}\nEmail LinkedIn: ${order.linkedinEmail}\nCommande: ${order.sessionId}\nAdmin: ${siteUrl}/admin`
-  });
 }

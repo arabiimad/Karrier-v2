@@ -3,21 +3,23 @@ const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
 const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
-  escapeHtml,
+  adminEmail,
   formatCurrency,
-  formatPlan,
-  getSiteUrl
+  formatOrderPlan,
+  getSiteUrl,
+  renderEmail,
+  sendEmail
 } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { ensureReference, issueCredentialLink } = require('./_orders');
+const { countsAsRevenue, isPaymentDue } = require('./_payment');
 const checkRate = rateLimit({ windowMs: 60000, max: 10 });
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // Allow Vercel cron (GET with ?action=...) or admin POST
-  const isCron = req.method === 'GET' && ['renewal_reminders', 'monthly_report', 'process_pending', 'cleanup_credentials'].includes(req.query.action);
+  const isCron = req.method === 'GET' && ['daily_reminders', 'renewal_reminders', 'payment_reminders', 'monthly_report', 'process_pending', 'cleanup_credentials'].includes(req.query.action);
 
   if (!isCron && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -72,6 +74,15 @@ module.exports = async (req, res) => {
       case 'renewal_reminders':
         result = await sendRenewalReminders((req.body && req.body.days_before) || 30);
         break;
+      case 'payment_reminders':
+        result = await sendPaymentReminders();
+        break;
+      case 'daily_reminders':
+        result = {
+          payments: await sendPaymentReminders(),
+          renewals: await sendRenewalReminders(30)
+        };
+        break;
       case 'monthly_report':
         result = await sendMonthlyReport();
         break;
@@ -117,6 +128,7 @@ async function processPendingOrders() {
   return { processed, credentialsCleaned: credentialsCleanup.cleaned, results };
 }
 
+// Manual reminder from the dashboard. The content follows the step the order is stuck at.
 async function sendReminder(sessionId) {
   if (!sessionId) {
     throw new Error('session_id required');
@@ -126,68 +138,59 @@ async function sendReminder(sessionId) {
   if (!data) {
     throw new Error('Order not found');
   }
-
   const order = typeof data === 'string' ? JSON.parse(data) : data;
-
-  if (process.env.RESEND_API_KEY && order.customerEmail) {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = getSiteUrl();
-
-    const statusMessages = {
-      fr: {
-        pending: 'Votre commande est en attente de traitement.',
-        pending_payment: 'Votre commande est reçue. Vous allez recevoir un lien sécurisé pour transmettre vos accès.',
-        awaiting_credentials: 'Nous attendons vos identifiants via le lien sécurisé. Le paiement se fait une fois Premium actif.',
-        activating: 'Votre compte LinkedIn est en cours d\'activation.',
-        done: 'Votre compte LinkedIn Premium est activé !',
-        refunded: 'Votre commande a été remboursée.'
-      },
-      en: {
-        pending: 'Your order is pending processing.',
-        pending_payment: 'Your order is received. You will get a secure link to submit your login details.',
-        awaiting_credentials: 'We are waiting for your credentials through the secure link. Payment comes once Premium is live.',
-        activating: 'Your LinkedIn account is being activated.',
-        done: 'Your LinkedIn Premium account is activated!',
-        refunded: 'Your order has been refunded.'
-      }
-    };
-
-    const lang = order.language || 'fr';
-    const messages = statusMessages[lang] || statusMessages.fr;
-    const title = lang === 'fr' ? 'Mise à jour de votre commande' : 'Order update';
-    const statusLabel = lang === 'fr' ? 'Statut' : 'Status';
-    const amountLabel = lang === 'fr' ? 'Montant' : 'Amount';
-    const cta = lang === 'fr' ? 'Voir le statut' : 'View status';
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(messages[order.status] || '')}</p>
-      ${detailTable([
-        { label: statusLabel, value: messages[order.status] || order.status },
-        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
-        { label: amountLabel, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
-        { label: lang === 'fr' ? 'Commande' : 'Order', value: order.sessionId }
-      ])}
-      ${emailButton(cta, `${siteUrl}/suivi?id=${encodeURIComponent(sessionId)}`)}
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject: lang === 'fr' ? 'Mise à jour de votre commande Kareer' : 'Kareer order update',
-      html: buildEmailHtml({
-        siteUrl,
-        title,
-        preheader: messages[order.status] || '',
-        content,
-        lang
-      }),
-      text: `${title}\n\n${messages[order.status] || ''}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${amountLabel}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${cta}: ${siteUrl}/suivi?id=${sessionId}`
-    });
-
-    return { sent: true, email: order.customerEmail };
+  if (!order.reference) {
+    await ensureReference(order);
+    await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
   }
 
-  return { sent: false, reason: 'No email configured' };
+  // Waiting for the password: the old link cannot be shown again, so send a fresh one.
+  if (order.status === 'awaiting_credentials' && !order.hasCredentials) {
+    const { link, expiresAt } = await issueCredentialLink(order);
+    const mail = await sendEmail({ to: order.customerEmail, ...customerEmails.credentialLink(order, link, expiresAt) });
+    return { sent: mail.sent, kind: 'new_link', email: order.customerEmail };
+  }
+
+  const reminder = customerEmails.reminder(order);
+  if (!reminder) {
+    return { sent: false, reason: 'Rien à relancer pour ce statut', email: order.customerEmail };
+  }
+  const mail = await sendEmail({ to: order.customerEmail, ...reminder });
+  if (mail.sent) {
+    order.reminders = (order.reminders || []).concat([{ at: new Date().toISOString(), status: order.status, by: 'admin' }]);
+    order.updatedAt = new Date().toISOString();
+    await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+  }
+  return { sent: mail.sent, kind: order.status === 'done' ? 'payment' : 'order', email: order.customerEmail };
+}
+
+// Automatic payment reminders: 24 h after activation, then once more 3 days later.
+const PAYMENT_REMINDER_STEPS_H = [24, 96];
+
+async function sendPaymentReminders() {
+  const orders = await kvStore.getAllOrders(isPaymentDue);
+  let sent = 0;
+  const results = [];
+  for (const order of orders) {
+    const activatedAt = Date.parse(order.activatedAt || order.updatedAt || order.createdAt);
+    if (!activatedAt) continue;
+    const autoCount = (order.reminders || []).filter(r => r.by === 'auto' && r.status === 'done').length;
+    const step = PAYMENT_REMINDER_STEPS_H[autoCount];
+    if (step === undefined) continue;
+    if (Date.now() - activatedAt < step * 3600000) continue;
+
+    const mail = await sendEmail({ to: order.customerEmail, ...customerEmails.reminder(order) });
+    if (!mail.sent) {
+      results.push({ id: order.sessionId, error: mail.error || mail.reason });
+      continue;
+    }
+    order.reminders = (order.reminders || []).concat([{ at: new Date().toISOString(), status: 'done', by: 'auto' }]);
+    order.updatedAt = new Date().toISOString();
+    await kvStore.set(`order:${order.sessionId}`, JSON.stringify(order));
+    sent++;
+    results.push({ id: order.sessionId, reminder: autoCount + 1 });
+  }
+  return { sent, results };
 }
 
 function isValidEmail(email) {
@@ -236,48 +239,27 @@ async function sendLegacyCustomerOffer(email, firstName) {
 
   const promo = await ensureLegacyCustomerPromoCode();
 
-  if (!process.env.RESEND_API_KEY) {
-    return { sent: false, reason: 'RESEND_API_KEY not configured', email: normalizedEmail, promoCode: promo.code, promoCreated: promo.created };
-  }
-
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const siteUrl = getSiteUrl();
-  const offerUrl = `${siteUrl}/#pricing`;
-  const subject = 'Une offre pour continuer avec LinkedIn Premium — Kareer';
-  const title = `Bonjour ${normalizedFirstName}`;
-  const preheader = '10€ de réduction avec le code ANCIENCLIENT10.';
-  const body = [
-    `On espère que vous avez bien profité de votre abonnement LinkedIn Premium l’année dernière.`,
-    `Depuis, Kareer a évolué : nous avons créé notre propre solution, plus pratique pour vous et pour nous.`,
-    `On a pensé à vous pour continuer à évoluer dans votre carrière professionnelle : profitez de 10€ de réduction sur n’importe quel abonnement Premium avec le code promo ci-dessous.`
-  ];
-  const content = `
-    ${body.map(paragraph => `<p style="margin:0 0 16px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(paragraph)}</p>`).join('')}
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:22px;margin:24px 0;text-align:center">
-      <div style="color:#166534;font-size:13px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">Votre code promo</div>
-      <div style="background:#ffffff;border:2px dashed #86efac;border-radius:10px;padding:16px;color:#15803d;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:900;letter-spacing:2px">${promo.code}</div>
-      <div style="color:#166534;font-size:13px;margin-top:10px">10€ de réduction sur n’importe quel abonnement Premium.</div>
-    </div>
-    ${emailButton('Voir les abonnements Premium', offerUrl)}
-    <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6">Si vous avez une question, répondez simplement à cet email. On vous accompagne comme avant, avec un parcours plus simple.</p>
-  `;
-
-  await resend.emails.send({
-    from: 'Kareer <notifications@kareer.pro>',
-    to: normalizedEmail,
-    subject,
-    html: buildEmailHtml({
-      siteUrl,
-      headerColor: '#15803d',
-      title,
-      preheader,
-      content,
-      footer: 'Vous recevez cet email car vous avez déjà été client Kareer.',
-      lang: 'fr'
-    }),
-    text: `${title}\n\n${body.join('\n\n')}\n\nCode promo: ${promo.code}\nVoir les offres: ${offerUrl}`
+  const offerUrl = `${getSiteUrl()}/#tarifs`;
+  const subject = `${normalizedFirstName}, 10 € pour reprendre LinkedIn Premium`;
+  const offer = renderEmail({
+    lang: 'fr',
+    title: `Bonjour ${normalizedFirstName},`,
+    preheader: '10 € de réduction sur tous les abonnements Premium avec le code ANCIENCLIENT10.',
+    footer: 'Vous recevez cet e-mail car vous avez déjà été client Kareer.',
+    blocks: [
+      { type: 'p', text: 'Vous avez utilisé LinkedIn Premium avec nous l\'an dernier, et nous espérons qu\'il vous a été utile.' },
+      { type: 'p', text: 'Depuis, la commande a changé : vous commandez sur kareer.pro, nous activons Premium 5 à 30 minutes après réception de vos identifiants, et vous ne payez qu\'une fois Premium actif.' },
+      { type: 'code', label: 'Votre code anciens clients', code: promo.code, caption: '10 € de moins sur n\'importe quel abonnement Premium.' },
+      { type: 'button', label: 'Voir les abonnements', href: offerUrl }
+    ]
   });
+
+  const mail = await sendEmail({ to: normalizedEmail, subject, html: offer.html, text: offer.text });
+  if (!mail.sent) {
+    const error = new Error(mail.error || 'Envoi impossible');
+    error.statusCode = 502;
+    throw error;
+  }
 
   const logData = await kvStore.get('legacy-customer-offer:log');
   const logs = logData ? (typeof logData === 'string' ? JSON.parse(logData) : logData) : [];
@@ -382,240 +364,93 @@ async function cleanupOldOrders(days) {
 }
 
 async function sendMonthlyReport() {
-  if (!process.env.RESEND_API_KEY) {
-    return { sent: false, reason: 'No RESEND_API_KEY configured' };
-  }
-
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
-
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed; report is for previous month
+  const month = now.getMonth(); // report covers the previous month
   const reportMonth = month === 0 ? 11 : month - 1;
-  const reportYear = month === 0 ? year - 1 : year;
+  const reportYear = month === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const label = `${monthNames[reportMonth]} ${reportYear}`;
+  const start = new Date(reportYear, reportMonth, 1).getTime();
+  const end = new Date(reportYear, reportMonth + 1, 0, 23, 59, 59, 999).getTime();
 
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  const monthLabel = monthNames[reportMonth];
-
-  const startOfMonth = new Date(reportYear, reportMonth, 1).getTime();
-  const endOfMonth = new Date(reportYear, reportMonth + 1, 0, 23, 59, 59, 999).getTime();
-
-  const indexData = await kvStore.get('orders:index');
-  const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
-
-  const stats = {
-    total: 0,
-    revenue: 0,
-    byPlan: {},
-    byStatus: { pending: 0, activating: 0, done: 0, refunded: 0 },
-    refunds: 0,
-    refundRevenue: 0
-  };
-
-  for (const id of allIds) {
-    const data = await kvStore.get(`order:${id}`);
-    if (!data) continue;
-    const order = typeof data === 'string' ? JSON.parse(data) : data;
-    const createdAt = new Date(order.createdAt).getTime();
-    if (createdAt < startOfMonth || createdAt > endOfMonth) continue;
-
-    stats.total++;
-    const amount = parseFloat(order.amount) || 0;
-
-    if (order.status !== 'refunded') {
-      stats.revenue += amount;
-    }
-
-    stats.byStatus[order.status] = (stats.byStatus[order.status] || 0) + 1;
-
-    const planKey = order.plan || 'Inconnu';
-    if (!stats.byPlan[planKey]) stats.byPlan[planKey] = { count: 0, revenue: 0 };
-    if (order.status !== 'refunded') {
-      stats.byPlan[planKey].count++;
-      stats.byPlan[planKey].revenue += amount;
-    }
-
-    if (order.status === 'refunded') {
-      stats.refunds++;
-      stats.refundRevenue += amount;
-    }
-  }
-
-  const refundRate = stats.total > 0 ? ((stats.refunds / stats.total) * 100).toFixed(1) : '0.0';
-
-  const planRows = Object.entries(stats.byPlan).map(([plan, d]) =>
-    `<tr>
-      <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#1f2937">${escapeHtml(plan)}</td>
-      <td style="padding:10px;border-bottom:1px solid #e5e7eb;text-align:center;color:#1f2937">${escapeHtml(d.count)}</td>
-      <td style="padding:10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;color:#1f2937">${formatCurrency(d.revenue, 'EUR', 'fr')}</td>
-    </tr>`
-  ).join('');
-
-  const reportContent = `
-    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Résumé automatique pour ${escapeHtml(monthLabel)} ${escapeHtml(reportYear)}.</p>
-    ${detailTable([
-      { label: 'Commandes totales', value: stats.total },
-      { label: 'Revenu net', value: formatCurrency(stats.revenue, 'EUR', 'fr') },
-      { label: 'En attente', value: stats.byStatus.pending || 0 },
-      { label: 'En activation', value: stats.byStatus.activating || 0 },
-      { label: 'Terminées', value: stats.byStatus.done || 0 },
-      { label: 'Remboursements', value: `${stats.refunds} (${formatCurrency(stats.refundRevenue, 'EUR', 'fr')})` },
-      { label: 'Taux de remboursement', value: `${refundRate}%` }
-    ])}
-    <h2 style="color:#1e293b;font-size:16px;margin:24px 0 12px">Répartition par plan</h2>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin-bottom:8px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
-      <thead>
-        <tr style="background:#f1f5f9">
-          <th style="padding:10px;text-align:left;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Plan</th>
-          <th style="padding:10px;text-align:center;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Commandes</th>
-          <th style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">Revenu</th>
-        </tr>
-      </thead>
-      <tbody>${planRows || '<tr><td colspan="3" style="padding:10px;text-align:center;color:#94a3b8">Aucune donnée</td></tr>'}</tbody>
-    </table>
-  `;
-  const html = buildEmailHtml({
-    siteUrl: getSiteUrl(),
-    title: `Rapport mensuel Kareer — ${monthLabel} ${reportYear}`,
-    preheader: `Résumé mensuel Kareer pour ${monthLabel} ${reportYear}`,
-    content: reportContent,
-    footer: `Rapport automatique Kareer · ${monthLabel} ${reportYear}`,
-    lang: 'fr'
+  const orders = await kvStore.getAllOrders(order => {
+    const createdAt = Date.parse(order.createdAt);
+    return createdAt >= start && createdAt <= end;
   });
 
-  try {
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: adminEmail,
-      subject: `Rapport mensuel Kareer — ${monthLabel} ${reportYear}`,
-      html
-    });
-    return { sent: true, stats };
-  } catch (e) {
-    console.error('Monthly report email error:', e.message);
-    return { sent: false, error: e.message, stats };
+  const stats = { total: orders.length, revenue: 0, due: 0, dueCount: 0, done: 0, refunds: 0, refunded: 0, byPlan: {} };
+  for (const order of orders) {
+    const amount = Number(order.amount) || 0;
+    const plan = formatOrderPlan(order, 'fr');
+    stats.byPlan[plan] = stats.byPlan[plan] || { count: 0, revenue: 0 };
+    stats.byPlan[plan].count++;
+    if (countsAsRevenue(order)) {
+      stats.revenue += amount;
+      stats.byPlan[plan].revenue += amount;
+    }
+    if (isPaymentDue(order)) { stats.due += amount; stats.dueCount++; }
+    if (order.status === 'done') stats.done++;
+    if (order.status === 'refunded') { stats.refunds++; stats.refunded += amount; }
   }
+
+  const euro = value => formatCurrency(value, 'EUR', 'fr');
+  const planRows = Object.entries(stats.byPlan)
+    .sort((a, b) => b[1].revenue - a[1].revenue)
+    .map(([plan, d]) => ({ label: `${plan} (${d.count})`, value: euro(d.revenue) }));
+
+  const report = renderEmail({
+    lang: 'fr',
+    title: `Rapport de ${label}`,
+    preheader: `${stats.total} commandes, ${euro(stats.revenue)} encaissés.`,
+    signature: false,
+    footer: 'Rapport automatique envoyé le 1er de chaque mois.',
+    blocks: [
+      { type: 'p', text: `Commandes passées en ${label}. Le chiffre encaissé ne compte que les commandes marquées payées.` },
+      { type: 'details', rows: [
+        { label: 'Commandes', value: stats.total },
+        { label: 'Activées', value: stats.done },
+        { label: 'Encaissé', value: euro(stats.revenue) },
+        { label: 'Encore à encaisser', value: `${euro(stats.due)} (${stats.dueCount})` },
+        { label: 'Remboursées ou annulées', value: `${stats.refunds} (${euro(stats.refunded)})` }
+      ] },
+      planRows.length ? { type: 'p', text: 'Par offre (nombre de commandes) :' } : null,
+      planRows.length ? { type: 'details', rows: planRows } : null,
+      { type: 'button', label: 'Ouvrir le tableau de bord', href: `${getSiteUrl()}/admin` }
+    ]
+  });
+
+  const mail = await sendEmail({ to: adminEmail(), subject: `Rapport Kareer, ${label}`, html: report.html, text: report.text });
+  return { sent: mail.sent, error: mail.error, stats };
 }
 
+// About 30 days before the 12 months end. Uses the activation date, not the order date.
 async function sendRenewalReminders(daysBefore) {
-  if (!process.env.RESEND_API_KEY) {
-    return { sent: 0, reason: 'No RESEND_API_KEY configured' };
-  }
-
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const siteUrl = getSiteUrl();
-
-  const indexData = await kvStore.get('orders:index');
-  const allIds = indexData ? (typeof indexData === 'string' ? JSON.parse(indexData) : indexData) : [];
-
-  const now = Date.now();
-  const oneYearMs = 365 * 24 * 60 * 60 * 1000;
   const windowMs = daysBefore * 24 * 60 * 60 * 1000;
+  const graceMs = 7 * 24 * 60 * 60 * 1000;
+  const orders = await kvStore.getAllOrders(order => order.status === 'done' && order.customerEmail && !order.renewalReminderSent);
 
   let sent = 0;
   const results = [];
+  for (const order of orders) {
+    const base = order.activatedAt || order.createdAt;
+    const expiresAt = order.expiresAt ? Date.parse(order.expiresAt) : Date.parse(base) + 365 * 24 * 60 * 60 * 1000;
+    if (!expiresAt) continue;
+    const left = expiresAt - Date.now();
+    if (left > windowMs || left < -graceMs) continue;
 
-  for (const id of allIds) {
-    const data = await kvStore.get(`order:${id}`);
-    if (!data) continue;
-
-    const order = typeof data === 'string' ? JSON.parse(data) : data;
-
-    // Only remind completed orders
-    if (order.status !== 'done') continue;
-    if (!order.customerEmail) continue;
-
-    // Already sent renewal reminder
-    if (order.renewalReminderSent) continue;
-
-    const createdAt = new Date(order.createdAt).getTime();
-    const timeSinceOrder = now - createdAt;
-
-    // Check if order is within the renewal window (1 year - daysBefore to 1 year + 7 days)
-    if (timeSinceOrder >= (oneYearMs - windowMs) && timeSinceOrder <= (oneYearMs + 7 * 24 * 60 * 60 * 1000)) {
-      const lang = order.language || 'fr';
-
-      const t = lang === 'fr' ? {
-        subject: 'Votre abonnement LinkedIn Premium arrive à expiration — Kareer',
-        title: 'Renouvelez votre LinkedIn Premium',
-        body: `Votre abonnement LinkedIn Premium (${order.planLabel || order.plan}) arrive bientôt à expiration. Renouvelez maintenant pour continuer à profiter de toutes les fonctionnalités Premium sans interruption.`,
-        benefit1: 'Même prix avantageux garanti',
-        benefit2: 'Activation en 30 minutes maximum après réception des identifiants',
-        benefit3: 'Support WhatsApp dédié',
-        cta: 'Renouveler maintenant',
-        footer: 'Cet email vous est envoyé car votre abonnement arrive à échéance.'
-      } : lang === 'es' ? {
-        subject: 'Tu suscripción LinkedIn Premium está por vencer — Kareer',
-        title: 'Renueva tu LinkedIn Premium',
-        body: `Tu suscripción LinkedIn Premium (${order.planLabel || order.plan}) está por vencer. Renueva ahora para seguir disfrutando de todas las funciones Premium sin interrupción.`,
-        benefit1: 'Mismo precio ventajoso garantizado',
-        benefit2: 'Activación en 30 minutos como máximo tras recibir tus datos',
-        benefit3: 'Soporte WhatsApp dedicado',
-        cta: 'Renovar ahora',
-        footer: 'Este email se envía porque tu suscripción está por vencer.'
-      } : lang === 'de' ? {
-        subject: 'Ihr LinkedIn Premium-Abonnement läuft bald ab — Kareer',
-        title: 'Erneuern Sie Ihr LinkedIn Premium',
-        body: `Ihr LinkedIn Premium-Abonnement (${order.planLabel || order.plan}) läuft bald ab. Erneuern Sie jetzt, um alle Premium-Funktionen ohne Unterbrechung zu nutzen.`,
-        benefit1: 'Gleicher günstiger Preis garantiert',
-        benefit2: 'Aktivierung in höchstens 30 Minuten nach Erhalt der Zugangsdaten',
-        benefit3: 'Persönlicher WhatsApp-Support',
-        cta: 'Jetzt erneuern',
-        footer: 'Diese E-Mail wird gesendet, weil Ihr Abonnement bald abläuft.'
-      } : {
-        subject: 'Your LinkedIn Premium subscription is expiring — Kareer',
-        title: 'Renew your LinkedIn Premium',
-        body: `Your LinkedIn Premium subscription (${order.planLabel || order.plan}) is about to expire. Renew now to continue enjoying all Premium features without interruption.`,
-        benefit1: 'Same great price guaranteed',
-        benefit2: 'Activation within 30 minutes of receiving your credentials',
-        benefit3: 'Dedicated WhatsApp support',
-        cta: 'Renew now',
-        footer: 'This email is sent because your subscription is about to expire.'
-      };
-
-      try {
-        const renewalContent = `
-          <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
-          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px;margin:24px 0">
-            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>1.</strong> ${escapeHtml(t.benefit1)}</p>
-            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>2.</strong> ${escapeHtml(t.benefit2)}</p>
-            <p style="margin:7px 0;color:#1f2937;font-size:14px;line-height:1.5"><strong>3.</strong> ${escapeHtml(t.benefit3)}</p>
-          </div>
-          ${emailButton(t.cta, `${siteUrl}/#pricing`)}
-        `;
-
-        await resend.emails.send({
-          from: 'Kareer <notifications@kareer.pro>',
-          to: order.customerEmail,
-          subject: t.subject,
-          html: buildEmailHtml({
-            siteUrl,
-            headerColor: '#ea580c',
-            title: t.title,
-            preheader: t.body,
-            content: renewalContent,
-            footer: t.footer,
-            lang
-          }),
-          text: `${t.title}\n\n${t.body}\n\n- ${t.benefit1}\n- ${t.benefit2}\n- ${t.benefit3}\n\n${t.cta}: ${siteUrl}/#pricing`
-        });
-
-        // Mark as sent to avoid duplicate reminders
-        order.renewalReminderSent = new Date().toISOString();
-        order.updatedAt = new Date().toISOString();
-        await kvStore.set(`order:${id}`, JSON.stringify(order));
-
-        sent++;
-        results.push({ id, email: order.customerEmail, plan: order.planLabel || order.plan });
-      } catch (e) {
-        console.error(`Renewal email error for ${id}:`, e.message);
-        results.push({ id, error: e.message });
-      }
+    const mail = await sendEmail({
+      to: order.customerEmail,
+      ...customerEmails.renewal({ ...order, expiresAt: new Date(expiresAt).toISOString() })
+    });
+    if (!mail.sent) {
+      results.push({ id: order.sessionId, error: mail.error || mail.reason });
+      continue;
     }
+    order.renewalReminderSent = new Date().toISOString();
+    order.updatedAt = order.renewalReminderSent;
+    await kvStore.set(`order:${order.sessionId}`, JSON.stringify(order));
+    sent++;
+    results.push({ id: order.sessionId, email: order.customerEmail });
   }
-
   return { sent, results };
 }

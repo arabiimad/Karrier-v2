@@ -364,3 +364,7 @@ mark, .mark { background: linear-gradient(transparent 12%, var(--mark) 12%, var(
 .receipt-lines .later dt, .receipt-lines .later dd { color: var(--ink-2); font-weight: 400; }
 .audience .audience-hint { flex-basis: 100%; max-width: 46em; font-size: 15px; color: var(--ink-2); border-left: 2px solid var(--blue); padding: 2px 0 2px 12px; }
 .audience .audience-hint strong { color: var(--ink); font-weight: 700; }
+
+/* Order summary on the thank-you page: the hero receipt, flat. */
+.receipt.receipt-flat { transform: none; max-width: 440px; margin: 0 0 40px; }
+.receipt.receipt-flat .receipt-head span:last-child { color: var(--ink); letter-spacing: .04em; }

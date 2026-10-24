@@ -470,3 +470,19 @@ textarea.input { min-height: 88px; padding: 10px 12px; resize: vertical; line-he
     .toast { transition: none; }
     .spinner { animation-duration: 2s; }
 }
+
+/* Customer-facing order number (KR-XXXXXX) */
+.ref { font-family: var(--mono); font-size: .92em; color: var(--ink-2); letter-spacing: .02em; }
+
+/* Payment form in the order panel */
+.pay-form { display: grid; gap: 10px; }
+.pay-form[hidden] { display: none; }
+.pay-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.pay-row .input { flex: 1 1 180px; width: auto; }
+.pay-form > .btn { justify-self: start; }
+
+/* Ready-to-send WhatsApp messages */
+.wa-msg { border: 1px solid var(--rule); border-radius: var(--r-md); padding: 12px 14px; background: var(--panel-2); }
+.wa-msg + .wa-msg { margin-top: 8px; }
+.wa-msg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13.5px; }
+.wa-msg p { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); white-space: normal; overflow-wrap: anywhere; }

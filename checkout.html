@@ -98,11 +98,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .error-msg { display: none; align-items: center; gap: 8px; padding: 12px 14px; margin-bottom: 16px; border: 1.5px solid var(--danger); border-radius: 6px; color: var(--danger); font-size: 14px; }
         .error-msg.visible { display: flex; }
-        .success-state { display: none; padding: 32px 24px; }
-        .success-state.visible { display: block; }
-        .success-icon { display: none; }
-        .success-state h2 { font-size: 22px; letter-spacing: -0.02em; margin-bottom: 8px; }
-        .success-state p { color: var(--ink-2); margin-bottom: 8px; }
         .trust-row { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 14px 24px; border-top: 1px solid var(--rule); }
         .trust-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
         .trust-item svg { width: 14px; height: 14px; }
@@ -220,12 +215,6 @@
         </div>
 
         <!-- Success state -->
-        <div class="success-state" id="successState">
-            <div class="success-icon">✅</div>
-            <h2>Commande enregistrée.</h2>
-            <p>Vous allez être redirigé vers WhatsApp pour finaliser le paiement.</p>
-            <p style="font-size:0.8rem">Si la redirection ne fonctionne pas, <a id="waFallbackLink" href="#" target="_blank" style="color:var(--wa-green)">cliquez ici</a>.</p>
-        </div>
 
         <!-- Trust -->
         <div class="trust-row">
@@ -316,13 +305,13 @@ const checkoutTranslations = {
     promoPlaceholder: 'Ex: BIENVENUE10',
     applyBtn: 'Appliquer',
     submitBtn: 'Continuer sur WhatsApp',
-    orderSaved: 'Commande enregistrée.',
-    redirectMsg: 'WhatsApp va s\'ouvrir avec votre commande. On vous envoie ensuite un lien sécurisé pour transmettre vos accès. Vous payez une fois Premium actif.',
     clickHere: 'cliquez ici',
     sslEncrypted: 'Aucune carte demandée',
     refund30d: 'Rien à payer si l\'activation échoue',
     activation24h: 'Actif en 30 min max après vos identifiants',
     footerTerms: 'En commandant, vous acceptez les',
+    footerCgv: 'CGV',
+    footerAnd: 'et la',
     footerPrivacy: 'politique de confidentialité',
     footerCopyright: 'Kareer est un service indépendant, sans lien avec LinkedIn Corporation.'
   },
@@ -349,13 +338,13 @@ const checkoutTranslations = {
     promoPlaceholder: 'Ex: WELCOME10',
     applyBtn: 'Apply',
     submitBtn: 'Continue on WhatsApp',
-    orderSaved: 'Order saved.',
-    redirectMsg: 'WhatsApp will open with your order. We then send you a secure link to submit your login details. You pay once Premium is live.',
     clickHere: 'click here',
     sslEncrypted: 'No card required',
     refund30d: 'Nothing to pay if activation fails',
     activation24h: 'Live within 30 min of your login details',
     footerTerms: 'By ordering, you accept the',
+    footerCgv: 'terms of sale',
+    footerAnd: 'and the',
     footerPrivacy: 'privacy policy',
     footerCopyright: 'Kareer is an independent service with no connection to LinkedIn Corporation.'
   },
@@ -382,13 +371,13 @@ const checkoutTranslations = {
     promoPlaceholder: 'Ej: BIENVENIDO10',
     applyBtn: 'Aplicar',
     submitBtn: 'Continuar en WhatsApp',
-    orderSaved: 'Pedido guardado.',
-    redirectMsg: 'WhatsApp se abrirá con tu pedido. Después te enviamos un enlace seguro para enviar tus datos de acceso. Pagas cuando Premium esté activo.',
     clickHere: 'haz clic aquí',
     sslEncrypted: 'Sin tarjeta',
     refund30d: 'Nada que pagar si la activación falla',
     activation24h: 'Activo en 30 min máx. tras tus datos',
-    footerTerms: 'Al ordenar, aceptas los',
+    footerTerms: 'Al hacer el pedido, aceptas las',
+    footerCgv: 'condiciones de venta',
+    footerAnd: 'y la',
     footerPrivacy: 'política de privacidad',
     footerCopyright: 'Kareer es un servicio independiente, sin relación con LinkedIn Corporation.'
   },
@@ -415,13 +404,13 @@ const checkoutTranslations = {
     promoPlaceholder: 'Z.B.: WILLKOMMEN10',
     applyBtn: 'Anwenden',
     submitBtn: 'Weiter zu WhatsApp',
-    orderSaved: 'Bestellung gespeichert.',
-    redirectMsg: 'WhatsApp öffnet sich mit Ihrer Bestellung. Danach schicken wir Ihnen einen sicheren Link für Ihre Zugangsdaten. Sie zahlen, sobald Premium aktiv ist.',
     clickHere: 'hier klicken',
     sslEncrypted: 'Keine Karte nötig',
     refund30d: 'Nichts zu zahlen, wenn die Aktivierung scheitert',
     activation24h: 'Aktiv in max. 30 Min. nach Ihren Zugangsdaten',
     footerTerms: 'Mit der Bestellung akzeptieren Sie die',
+    footerCgv: 'AGB',
+    footerAnd: 'und die',
     footerPrivacy: 'Datenschutzrichtlinie',
     footerCopyright: 'Kareer ist ein unabhängiger Dienst ohne Verbindung zur LinkedIn Corporation.'
   }
@@ -464,12 +453,10 @@ function applyTranslations() {
     document.getElementById('promoCodeInput').placeholder = t.promoPlaceholder;
     document.getElementById('promoBtn').textContent = t.applyBtn;
     document.getElementById('submitBtnText').textContent = t.submitBtn;
-    document.querySelector('.success-state h2').textContent = t.orderSaved;
-    document.querySelector('.success-state p').textContent = t.redirectMsg;
     document.querySelectorAll('.trust-item')[0].childNodes[2].textContent = ' ' + t.sslEncrypted;
     document.querySelectorAll('.trust-item')[1].childNodes[2].textContent = ' ' + t.refund30d;
     document.querySelectorAll('.trust-item')[2].childNodes[2].textContent = ' ' + t.activation24h;
-    document.querySelector('.checkout-footer p').innerHTML = `${t.footerTerms} <a href="cgv.html">CGV</a> et la <a href="confidentialite.html">${t.footerPrivacy}</a>.`;
+    document.querySelector('.checkout-footer p').innerHTML = `${t.footerTerms} <a href="cgv.html">${t.footerCgv}</a> ${t.footerAnd} <a href="confidentialite.html">${t.footerPrivacy}</a>.`;
     document.querySelectorAll('.checkout-footer p')[1].textContent = t.footerCopyright;
 }
 
@@ -503,13 +490,6 @@ features.forEach(f => {
 
 // Appliquer les traductions au chargement
 applyTranslations();
-
-function buildWhatsAppMessage(plan, amount, linkedinEmail, orderId) {
-    return `Plan : ${plan.name} - ${plan.type}\n` +
-        `Montant : ${amount} EUR\n` +
-        `Email LinkedIn : ${linkedinEmail}\n` +
-        `Commande : ${orderId}`;
-}
 
 // Apply promo code
 async function applyPromoCode() {
@@ -608,28 +588,16 @@ async function submitOrder() {
     spinner.style.display = 'block';
     hideError();
 
-    const orderId = `kareer_${planId}_${Date.now()}`;
     const referralCode = document.getElementById('referralCodeInput')?.value.trim().toUpperCase();
-    
-    // Calculer le montant final (avec réduction parrainage + code promo)
-    const referralDiscount = referralCode ? 10 : 0;
-    const promoDiscount = appliedPromo ? appliedPromo.discount : 0;
-    const totalDiscount = referralDiscount + promoDiscount;
-    const finalAmount = Math.max(0, plan.price - totalDiscount);
-    
     const orderData = {
-        orderId,
         planId,
         linkedinEmail,
         customerEmail: contactEmail || linkedinEmail,
         language: userLang,
         referralCode: referralCode || null,
         promoCode: appliedPromo ? appliedPromo.code : null,
-        discount: appliedPromo ? appliedPromo.discount : 0,
     };
-    
-    // Save order to admin dashboard
-    let createdOrder = null;
+
     try {
         const response = await fetch('/api/create-order', {
             method: 'POST',
@@ -637,29 +605,33 @@ async function submitOrder() {
             body: JSON.stringify(orderData),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Erreur lors de la creation de commande');
-        createdOrder = data;
+        if (!response.ok) throw new Error(orderErrorMessage(data.error));
+        // The confirmation page shows the order number and opens WhatsApp on a tap,
+        // which browsers allow (an automatic pop-up after a network call is usually blocked).
+        window.location.href = 'merci.html?id=' + encodeURIComponent(data.reference || data.orderId) + '&lang=' + encodeURIComponent(userLang);
     } catch (e) {
         btn.disabled = false;
         btnText.style.display = 'inline';
         spinner.style.display = 'none';
         return showError(e.message);
     }
+}
 
-    // Build WhatsApp message
-    const serverOrderId = createdOrder.orderId || orderId;
-    const serverAmount = createdOrder.amount != null ? createdOrder.amount : finalAmount;
-    const msg = buildWhatsAppMessage(plan, serverAmount, linkedinEmail, serverOrderId);
-    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-
-    // Show success + redirect
-    document.getElementById('formSection').style.display = 'none';
-    document.getElementById('featuresBlock').style.display = 'none';
-    const successState = document.getElementById('successState');
-    successState.classList.add('visible');
-    document.getElementById('waFallbackLink').href = waUrl;
-
-    setTimeout(() => { window.open(waUrl, '_blank'); }, 1500);
+// API errors are in English; show the customer something readable in their language.
+function orderErrorMessage(code) {
+    const messages = {
+        fr: { email: 'Adresse e-mail invalide. Vérifiez-la et réessayez.', promo: 'Ce code promo ne peut pas être utilisé pour cette commande.', referral: 'Ce code de parrainage ne peut pas être utilisé.', rate: 'Trop de tentatives. Patientez une minute.', other: 'La commande n\'a pas pu être enregistrée. Réessayez ou écrivez-nous sur WhatsApp.' },
+        en: { email: 'Invalid email address. Please check it and try again.', promo: 'This promo code cannot be used for this order.', referral: 'This referral code cannot be used.', rate: 'Too many attempts. Please wait a minute.', other: 'We could not save your order. Try again or message us on WhatsApp.' },
+        es: { email: 'Correo no válido. Revísalo e inténtalo de nuevo.', promo: 'Este código promocional no se puede usar en este pedido.', referral: 'Este código de recomendación no se puede usar.', rate: 'Demasiados intentos. Espera un minuto.', other: 'No hemos podido registrar el pedido. Inténtalo de nuevo o escríbenos por WhatsApp.' },
+        de: { email: 'Ungültige E-Mail-Adresse. Bitte prüfen und erneut versuchen.', promo: 'Dieser Aktionscode gilt nicht für diese Bestellung.', referral: 'Dieser Empfehlungscode kann nicht verwendet werden.', rate: 'Zu viele Versuche. Bitte eine Minute warten.', other: 'Die Bestellung konnte nicht gespeichert werden. Versuchen Sie es erneut oder schreiben Sie uns auf WhatsApp.' }
+    }[userLang] || null;
+    const m = messages || { email: 'Invalid email address.', promo: 'Promo code not valid.', referral: 'Referral code not valid.', rate: 'Too many attempts.', other: 'Order failed.' };
+    const text = String(code || '');
+    if (/email/i.test(text)) return m.email;
+    if (/promo/i.test(text)) return m.promo;
+    if (/referral|self-referral/i.test(text)) return m.referral;
+    if (/too many/i.test(text)) return m.rate;
+    return m.other;
 }
 
 function showError(msg) {

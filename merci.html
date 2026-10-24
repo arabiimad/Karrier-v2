@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body data-title-key="merci_page_title">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-wa" viewBox="0 0 24 24"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.42.25-.69.25-1.29.18-1.41-.08-.12-.28-.2-.57-.35m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.88 9.88m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.41z"/></symbol></svg>
@@ -57,42 +57,47 @@
 
     <main class="wrap">
         <section class="page-hero">
-            <h1 class="page-title" data-i18n="merci_title">Votre commande est partie sur WhatsApp.</h1>
-            <p class="page-subtitle" data-i18n="merci_subtitle">Si la conversation ne s'est pas ouverte, écrivez-nous avec le bouton ci-dessous. Voici la suite.</p>
+            <h1 class="page-title" data-i18n="merci_title">Votre commande est enregistrée.</h1>
+            <p class="page-subtitle" data-i18n="merci_subtitle">Un e-mail de confirmation vient de partir. Il reste une étape de votre côté : confirmer sur WhatsApp.</p>
         </section>
-
+        <div class="receipt receipt-flat" id="orderReceipt" hidden>
+            <div class="receipt-head"><span data-i18n="merci_receipt_head">Commande</span><span id="orderRef"></span></div>
+            <dl class="receipt-lines">
+                <div><dt data-i18n="merci_offer">Offre</dt><dd id="orderPlan"></dd></div>
+                <div class="total"><dt data-i18n="merci_amount">Montant</dt><dd id="orderAmount"></dd></div>
+            </dl>
+            <p class="receipt-foot" data-i18n="merci_after">À régler sur WhatsApp, une fois Premium actif.</p>
+        </div>
         <ol class="step-list done-steps">
             <li>
                 <span class="step-n" aria-hidden="true">1</span>
                 <div>
-                    <h2 class="h3" data-i18n="merci_step1_t">Commande reçue</h2>
-                    <p data-i18n="merci_step1_d">Votre commande est enregistrée et l'équipe la voit dans WhatsApp.</p>
+                    <h2 class="h3" data-i18n="merci_step1_t">Confirmez sur WhatsApp</h2>
+                    <p data-i18n="merci_step1_d">Le message est déjà rédigé avec votre numéro de commande. Nous répondons pendant nos horaires.</p>
                 </div>
             </li>
             <li>
                 <span class="step-n" aria-hidden="true">2</span>
                 <div>
-                    <h2 class="h3" data-i18n="merci_step2_t">Lien sécurisé et activation</h2>
-                    <p data-i18n="merci_step2_d">On vous envoie un lien pour transmettre vos identifiants. Une fois reçus, Premium est actif en 5 à 30 minutes (pendant nos horaires).</p>
+                    <h2 class="h3" data-i18n="merci_step2_t">Transmettez votre mot de passe</h2>
+                    <p data-i18n="merci_step2_d">Vous recevez un lien sécurisé par e-mail. Premium est actif 5 à 30 minutes après réception de vos identifiants (pendant nos horaires).</p>
                 </div>
             </li>
             <li>
                 <span class="step-n" aria-hidden="true">3</span>
                 <div>
-                    <h2 class="h3" data-i18n="merci_step3_t">Paiement</h2>
-                    <p data-i18n="merci_step3_d">Vous réglez sur WhatsApp une fois Premium actif sur votre compte.</p>
+                    <h2 class="h3" data-i18n="merci_step3_t">Vérifiez, puis réglez</h2>
+                    <p data-i18n="merci_step3_d">Vous vérifiez que Premium est actif sur votre compte, puis vous réglez sur WhatsApp.</p>
                 </div>
             </li>
         </ol>
-
         <p class="fine" data-i18n="merci_guarantee">Si l'activation n'aboutit pas, vous ne payez rien.</p>
-
         <div class="done-actions">
-            <a class="btn btn-wa" href="https://wa.me/212651064637?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ma%20commande%20Kareer." target="_blank" rel="noopener" data-wa="order">
+            <a class="btn btn-wa" id="waConfirm" href="https://wa.me/212651064637" target="_blank" rel="noopener">
                 <svg aria-hidden="true"><use href="#i-wa"/></svg>
-                <span data-i18n="merci_wa">Écrire sur WhatsApp</span>
+                <span data-i18n="merci_wa">Confirmer sur WhatsApp</span>
             </a>
-            <a class="btn btn-ghost" href="/" data-i18n="merci_back">Retour à l'accueil</a>
+            <a class="btn btn-ghost" id="trackLink" href="suivi.html" data-i18n="merci_track">Suivre ma commande</a>
         </div>
     </main>
 
@@ -118,5 +123,57 @@
 
     <script src="i18n.js?v=3"></script>
     <script src="script.js?v=3"></script>
+    <script>
+    // Fills the order summary and the prefilled WhatsApp message from the order id in the URL.
+    (function () {
+        var id = new URLSearchParams(window.location.search).get('id');
+        var order = null;
+        var AUDIENCE = {
+            fr: { student: 'Étudiant', salary: 'Salarié' },
+            en: { student: 'Student', salary: 'Employee' },
+            es: { student: 'Estudiante', salary: 'Asalariado' },
+            de: { student: 'Studierende', salary: 'Angestellte' }
+        };
+        var LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE' };
+
+        function audienceKey(value) {
+            var key = String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            if (/^(student|etudiant)/.test(key)) return 'student';
+            if (/^(salary|salarie)/.test(key)) return 'salary';
+            return null;
+        }
+
+        function render() {
+            var lang = window.currentLang || 'fr';
+            var wa = document.getElementById('waConfirm');
+            if (!order) {
+                wa.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(tr('wa_order'));
+                return;
+            }
+            var amount = new Intl.NumberFormat(LOCALES[lang] || 'fr-FR', {
+                style: 'currency', currency: order.currency || 'EUR',
+                minimumFractionDigits: Number.isInteger(order.amount) ? 0 : 2
+            }).format(order.amount || 0);
+            var who = (AUDIENCE[lang] || AUDIENCE.fr)[audienceKey(order.audience)];
+            var plan = (order.planLabel || order.plan) + (who ? ' · ' + who : '');
+            var ref = order.reference || order.sessionId;
+            document.getElementById('orderRef').textContent = ref;
+            document.getElementById('orderPlan').textContent = plan;
+            document.getElementById('orderAmount').textContent = amount;
+            document.getElementById('orderReceipt').hidden = false;
+            document.getElementById('trackLink').href = 'suivi.html?id=' + encodeURIComponent(ref);
+            var text = tr('wa_confirm').replace('{ref}', ref).replace('{plan}', plan).replace('{amount}', amount);
+            wa.href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+        }
+
+        document.addEventListener('kareer:lang', render);
+        if (id) {
+            fetch('/api/order-status?id=' + encodeURIComponent(id))
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) { order = data; render(); })
+                .catch(function () {});
+        }
+    })();
+    </script>
 </body>
 </html>

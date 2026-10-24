@@ -1,14 +1,15 @@
 require('./_env');
 const crypto = require('crypto');
-const { Resend } = require('resend');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
 const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
+  WHATSAPP_DISPLAY,
+  adminEmail,
   escapeHtml,
-  getSiteUrl
+  formatDate,
+  getSiteUrl,
+  renderEmail,
+  sendEmail
 } = require('./_email');
 
 const INBOX_INDEX = 'inbox:index';
@@ -299,6 +300,7 @@ async function findOrderMatches(email) {
 
     return orders.slice(0, 5).map(order => ({
       sessionId: order.sessionId,
+      reference: order.reference || null,
       status: order.status,
       plan: order.plan,
       amount: order.amount,
@@ -311,40 +313,55 @@ async function findOrderMatches(email) {
   }
 }
 
+// A reply from the team looks like a normal email, with the customer's message quoted below.
+function buildReplyHtml(message, item) {
+  const font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const paragraphs = message.split(/\n{2,}/).map(paragraph =>
+    `<p style="margin:0 0 14px;font-family:${font};font-size:15px;line-height:1.6;color:#16181B">${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`
+  ).join('');
+  const original = String(item.text || '').trim().slice(0, 4000);
+  const quoteHeader = `Le ${formatDate(item.receivedAt, 'fr')}, ${item.from || item.fromEmail} a écrit :`;
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:24px 16px;background:#FFFFFF">
+  <div style="max-width:620px">
+    ${paragraphs}
+    <p style="margin:18px 0 0;font-family:${font};font-size:14px;line-height:1.55;color:#16181B"><strong>L'équipe Kareer</strong><br>
+      <span style="color:#6A717C">WhatsApp ${WHATSAPP_DISPLAY} · <a href="${getSiteUrl()}" style="color:#1B4DB8;text-decoration:none">kareer.pro</a></span></p>
+    ${original ? `<div style="margin-top:26px;padding-left:12px;border-left:2px solid #DDE2E8;font-family:${font};font-size:13px;line-height:1.55;color:#6A717C">
+      <p style="margin:0 0 8px">${escapeHtml(quoteHeader)}</p>
+      <p style="margin:0">${escapeHtml(original).replace(/\n/g, '<br>')}</p>
+    </div>` : ''}
+  </div>
+</body></html>`;
+}
+
 async function replyToInboxMessage(item, body, res) {
   const message = String(body.message || body.text || '').trim();
   if (!message) return res.status(400).json({ error: 'Message requis' });
-  if (!process.env.RESEND_API_KEY) return res.status(500).json({ error: 'RESEND_API_KEY not configured' });
+  if (!process.env.RESEND_API_KEY && !process.env.EMAIL_OUTBOX_DIR) return res.status(500).json({ error: 'RESEND_API_KEY not configured' });
 
   const mailbox = allowedMailboxes().includes(String(body.fromAddress || '').toLowerCase())
     ? String(body.fromAddress).toLowerCase()
     : item.mailbox || 'contact@kareer.pro';
   const recipient = item.replyTo || item.fromEmail;
   const subject = /^re:/i.test(item.subject || '') ? item.subject : `Re: ${item.subject || '(sans objet)'}`;
-  const siteUrl = getSiteUrl();
-  const content = `
-    ${message.split(/\n{2,}/).map(paragraph =>
-      `<p style="margin:0 0 16px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`
-    ).join('')}
-  `;
+  const original = String(item.text || '').trim();
+  const text = original
+    ? `${message}\n\nL'équipe Kareer\nWhatsApp ${WHATSAPP_DISPLAY} · kareer.pro\n\nLe ${formatDate(item.receivedAt, 'fr')}, ${item.from || item.fromEmail} a écrit :\n${original.split('\n').map(line => `> ${line}`).join('\n')}`
+    : `${message}\n\nL'équipe Kareer\nWhatsApp ${WHATSAPP_DISPLAY} · kareer.pro`;
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const result = await resend.emails.send({
+  const result = await sendEmail({
     from: `Kareer <${mailbox}>`,
     to: recipient,
     subject,
-    html: buildEmailHtml({
-      siteUrl,
-      title: 'Réponse de Kareer',
-      preheader: message.slice(0, 120),
-      content,
-      footer: 'Vous recevez cet email car vous avez contacté Kareer.',
-      lang: 'fr'
-    }),
-    text: message,
+    html: buildReplyHtml(message, item),
+    text,
     replyTo: mailbox,
     headers: item.messageId ? { 'In-Reply-To': item.messageId, References: item.messageId } : undefined
   });
+  if (!result.sent) {
+    return res.status(502).json({ error: result.error || 'Envoi impossible' });
+  }
 
   const now = new Date().toISOString();
   item.messages = item.messages || [];
@@ -354,7 +371,7 @@ async function replyToInboxMessage(item, body, res) {
     to: recipient,
     subject,
     text: message,
-    resendId: result && result.id ? result.id : null,
+    resendId: result.id || null,
     createdAt: now
   });
   item.status = 'replied';
@@ -367,40 +384,34 @@ async function replyToInboxMessage(item, body, res) {
 }
 
 async function notifyAdmin(item) {
-  if (!process.env.RESEND_API_KEY) return false;
-
-  const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
-  const siteUrl = getSiteUrl();
   const preview = (item.text || '(message sans texte)').slice(0, 800);
-  const content = `
-    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Un client a répondu à ${escapeHtml(item.mailbox)}.</p>
-    ${detailTable([
-      { label: 'De', value: item.from },
-      { label: 'À', value: item.to.join(', ') },
-      { label: 'Sujet', value: item.subject },
-      { label: 'Message', value: preview }
-    ])}
-    ${item.orderMatches && item.orderMatches.length ? `<p style="margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.6">Commande liée possible : ${escapeHtml(item.orderMatches[0].sessionId)} (${escapeHtml(item.orderMatches[0].status)})</p>` : ''}
-    ${emailButton('Ouvrir la boîte de réception', `${siteUrl}/admin`)}
-  `;
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: 'Kareer Inbox <notifications@kareer.pro>',
-    to: adminEmail,
-    subject: `Nouveau message client — ${item.subject}`,
-    html: buildEmailHtml({
-      siteUrl,
-      title: 'Nouveau message client',
-      preheader: `${item.fromEmail}: ${item.subject}`,
-      content,
-      footer: 'Notification interne Kareer.',
-      lang: 'fr'
-    }),
-    text: `Nouveau message client\n\nDe: ${item.from}\nÀ: ${item.to.join(', ')}\nSujet: ${item.subject}\n\n${preview}\n\nAdmin: ${siteUrl}/admin`
+  const match = item.orderMatches && item.orderMatches[0];
+  const body = renderEmail({
+    lang: 'fr',
+    title: 'Nouveau message client',
+    preheader: `${item.fromEmail} : ${item.subject}`,
+    signature: false,
+    footer: 'Notification interne Kareer.',
+    blocks: [
+      { type: 'details', rows: [
+        { label: 'De', value: item.from },
+        { label: 'À', value: (item.to || []).join(', ') },
+        { label: 'Sujet', value: item.subject },
+        match ? { label: 'Commande liée', value: `${match.reference || match.sessionId} (${match.status})` } : null
+      ] },
+      { type: 'note', text: preview },
+      { type: 'button', label: 'Répondre depuis le tableau de bord', href: `${getSiteUrl()}/admin` }
+    ]
   });
-
-  return true;
+  const mail = await sendEmail({
+    from: 'Kareer Inbox <notifications@kareer.pro>',
+    to: adminEmail(),
+    subject: `Message client : ${item.subject || '(sans objet)'}`,
+    html: body.html,
+    text: body.text,
+    replyTo: item.replyTo || item.fromEmail
+  });
+  return mail.sent;
 }
 
 async function getInboxItem(id) {

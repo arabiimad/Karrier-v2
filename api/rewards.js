@@ -1,6 +1,48 @@
 const kv = require('./_kv');
 const crypto = require('crypto');
 const { verifyAdminToken } = require('./_verify-admin');
+const { adminEmail, getSiteUrl, renderEmail, sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+
+function parseValue(data) {
+  if (!data) return null;
+  if (typeof data !== 'string') return data;
+  try { return JSON.parse(data); } catch (e) { return data; }
+}
+
+// referral:email:<email> should hold a code. An old bug stored the whole referral there;
+// find the real code again and repair the mapping.
+async function codeForEmail(email) {
+  const key = `referral:email:${String(email || '').toLowerCase()}`;
+  const value = parseValue(await kv.get(key));
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (value.code) return value.code;
+  const keys = await kv.keys('referral:REF*');
+  for (const refKey of keys) {
+    const referral = parseValue(await kv.get(refKey));
+    if (referral && String(referral.referrerEmail || '').toLowerCase() === String(email).toLowerCase()) {
+      const code = refKey.replace('referral:', '');
+      await kv.set(key, code);
+      return code;
+    }
+  }
+  return null;
+}
+
+function publicReferral(code, referral) {
+  const copy = { code, ...referral };
+  if (copy.paymentInfo) {
+    copy.paymentInfo = {
+      accountName: copy.paymentInfo.accountName || '',
+      ibanMasked: customerEmails.maskIban(copy.paymentInfo.iban)
+    };
+  }
+  (copy.transferRequests || []).forEach(request => {
+    if (request.paymentInfo) request.paymentInfo = { accountName: request.paymentInfo.accountName, ibanMasked: customerEmails.maskIban(request.paymentInfo.iban) };
+  });
+  return copy;
+}
 
 // Générer un code promo aléatoire
 function generatePromoCode(prefix = 'KAREER') {
@@ -297,21 +339,13 @@ module.exports = async (req, res) => {
         }
 
         if (email) {
-          const key = `referral:email:${email.toLowerCase()}`;
-          const codeData = await kv.get(key);
-          
-          if (!codeData) {
+          const code = await codeForEmail(email);
+          const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
+          if (!referral) {
             return res.status(404).json({ error: 'Aucun code de parrainage trouvé' });
           }
-
-          const code = typeof codeData === 'string' ? codeData : codeData.code;
-          const referralData = await kv.get(`referral:${code}`);
-          const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-
-          return res.status(200).json({
-            code,
-            ...referral
-          });
+          // The IBAN is never sent back in full: anyone can type an email address here.
+          return res.status(200).json(publicReferral(code, referral));
         }
 
         if (isAdmin) {
@@ -344,16 +378,12 @@ module.exports = async (req, res) => {
           }
 
           const emailKey = `referral:email:${referrerEmail.toLowerCase()}`;
-          const existingCode = await kv.get(emailKey);
-          
-          if (existingCode) {
-            const code = typeof existingCode === 'string' ? existingCode : existingCode.code;
-            const referralData = await kv.get(`referral:${code}`);
-            const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-            
+          const existingCode = await codeForEmail(referrerEmail);
+          const existingReferral = existingCode ? parseValue(await kv.get(`referral:${existingCode}`)) : null;
+
+          if (existingReferral) {
             return res.status(200).json({
-              code,
-              ...referral,
+              ...publicReferral(existingCode, existingReferral),
               alreadyExists: true
             });
           }
@@ -473,23 +503,28 @@ module.exports = async (req, res) => {
           return res.status(400).json({ error: 'Email requis' });
         }
 
-        const key = `referral:email:${email.toLowerCase()}`;
-        const codeData = await kv.get(key);
-        
-        if (!codeData) {
+        const code = await codeForEmail(email);
+        const referral = code ? parseValue(await kv.get(`referral:${code}`)) : null;
+        if (!referral) {
           return res.status(404).json({ error: 'Code de parrainage non trouvé' });
         }
 
-        const code = typeof codeData === 'string' ? codeData : codeData.code;
-        const referralData = await kv.get(`referral:${code}`);
-        const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-
         if (rewardMode) {
-          referral.rewardMode = rewardMode;
+          // The referral page calls the promo mode "discount".
+          const mode = rewardMode === 'discount' ? 'promo' : rewardMode;
+          if (!['promo', 'transfer'].includes(mode)) {
+            return res.status(400).json({ error: 'Mode de récompense invalide' });
+          }
+          referral.rewardMode = mode;
         }
 
         if (paymentInfo) {
-          referral.paymentInfo = paymentInfo;
+          const iban = String(paymentInfo.iban || '').replace(/\s+/g, '').toUpperCase();
+          const accountName = String(paymentInfo.accountName || '').trim().slice(0, 120);
+          if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban) || !accountName) {
+            return res.status(400).json({ error: 'IBAN ou titulaire invalide' });
+          }
+          referral.paymentInfo = { iban, accountName };
         }
 
         if (requestTransfer && referral.pendingBalance > 0) {
@@ -508,7 +543,9 @@ module.exports = async (req, res) => {
           referral.transferRequests.push(transferRequest);
           
           await sendTransferRequestEmails({
-            referrerEmail: email,
+            referrerEmail: referral.referrerEmail || email,
+            language: referral.language,
+            code,
             amount: referral.pendingBalance,
             iban: referral.paymentInfo.iban,
             accountName: referral.paymentInfo.accountName
@@ -518,13 +555,13 @@ module.exports = async (req, res) => {
           referral.pendingBalance = 0;
         }
 
-        await kv.set(key, referral);
+        await kv.set(`referral:${code}`, referral);
 
         return res.status(200).json({
           success: true,
           rewardMode: referral.rewardMode,
           pendingBalance: referral.pendingBalance,
-          transferRequests: referral.transferRequests || []
+          transferRequests: publicReferral(code, referral).transferRequests || []
         });
       }
     }
@@ -537,223 +574,29 @@ module.exports = async (req, res) => {
   }
 };
 
-// Fonction pour envoyer les emails de parrainage
-async function sendReferralEmails(data) {
-  if (!process.env.RESEND_API_KEY) return;
-
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
-    const { buildEmailHtml } = require('./_email');
-
-    if (data.referrerEmail) {
-      const referrerContent = data.referrerMode === 'transfer' 
-        ? `
-          <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-            Bonne nouvelle ! <strong>${data.refereeName || data.refereeEmail}</strong> a utilisé votre code de parrainage <strong>${data.referralCode}</strong>.
-          </p>
-          <div style="background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:12px;padding:24px;margin:24px 0;text-align:center">
-            <div style="font-size:14px;color:#64748b;margin-bottom:8px">💰 Votre nouveau solde</div>
-            <div style="font-size:2.5rem;font-weight:800;background:linear-gradient(135deg, #1565C0, #8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${data.referrerBalance}€</div>
-            <div style="font-size:13px;color:#64748b;margin-top:8px">+10€ ajoutés à votre solde</div>
-          </div>
-          <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-            Vous pouvez demander un virement dès que vous le souhaitez depuis votre page de parrainage.
-          </p>
-          <div style="text-align:center;margin-top:28px">
-            <a href="${siteUrl}/parrainage.html" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-              💸 Gérer mes gains
-            </a>
-          </div>
-        `
-        : `
-          <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-            Bonne nouvelle ! <strong>${data.refereeName || data.refereeEmail}</strong> a utilisé votre code de parrainage <strong>${data.referralCode}</strong>.
-          </p>
-          <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:24px;margin:24px 0;text-align:center">
-            <div style="font-size:14px;color:#166534;margin-bottom:12px">🎁 Votre code promo de récompense</div>
-            <div style="background:#fff;border:2px dashed #86efac;border-radius:8px;padding:16px;margin:12px 0">
-              <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:#15803d;font-family:monospace">${data.referrerPromoCode}</div>
-            </div>
-            <div style="font-size:15px;color:#15803d;font-weight:600;margin-top:12px">Valeur : 10€ de réduction</div>
-          </div>
-          <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-            Utilisez ce code lors de votre prochaine commande pour bénéficier de 10€ de réduction immédiate.
-          </p>
-          <div style="text-align:center;margin-top:28px">
-            <a href="${siteUrl}/#pricing" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-              🛒 Commander maintenant
-            </a>
-          </div>
-        `;
-
-      await resend.emails.send({
-        from: 'Kareer <notifications@kareer.pro>',
-        to: data.referrerEmail,
-        subject: '🎉 Nouveau parrainage réussi ! Votre récompense est prête',
-        html: buildEmailHtml({
-          siteUrl,
-          headerColor: '#10b981',
-          title: '🎉 Parrainage réussi !',
-          preheader: 'Votre ami a utilisé votre code de parrainage',
-          content: referrerContent
-        })
-      });
-    }
-
-    if (data.refereeEmail) {
-      const refereeContent = `
-        <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-          Bienvenue chez Kareer ! Grâce au code de parrainage de <strong>${data.referrerName || 'votre ami'}</strong>, vous bénéficiez d'une réduction exclusive.
-        </p>
-        <div style="background:#f0f9ff;border:2px solid #7dd3fc;border-radius:12px;padding:24px;margin:24px 0;text-align:center">
-          <div style="font-size:14px;color:#0369a1;margin-bottom:12px">🎁 Votre code promo de bienvenue</div>
-          <div style="background:#fff;border:2px dashed #7dd3fc;border-radius:8px;padding:16px;margin:12px 0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:#0284c7;font-family:monospace">${data.refereePromoCode}</div>
-          </div>
-          <div style="font-size:15px;color:#0284c7;font-weight:600;margin-top:12px">Valeur : 10€ de réduction</div>
-        </div>
-        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-          Ce code est valable sur votre première commande. Profitez-en pour découvrir LinkedIn Premium à prix réduit !
-        </p>
-        <div style="background:rgba(21,101,192,0.05);border-radius:8px;padding:16px;margin:20px 0">
-          <p style="margin:6px 0;color:#333;font-size:14px">✅ Activation en 24-48h</p>
-          <p style="margin:6px 0;color:#333;font-size:14px">💬 Support WhatsApp dédié</p>
-          <p style="margin:6px 0;color:#333;font-size:14px">🔒 Paiement 100% sécurisé</p>
-        </div>
-        <div style="text-align:center;margin-top:28px">
-          <a href="${siteUrl}/#pricing" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-            🚀 Découvrir nos offres
-          </a>
-        </div>
-      `;
-
-      await resend.emails.send({
-        from: 'Kareer <notifications@kareer.pro>',
-        to: data.refereeEmail,
-        subject: '🎁 Votre code promo de 10€ vous attend !',
-        html: buildEmailHtml({
-          siteUrl,
-          headerColor: '#0284c7',
-          title: 'Bienvenue chez Kareer !',
-          preheader: 'Votre réduction de 10€ est prête',
-          content: refereeContent
-        })
-      });
-    }
-  } catch (error) {
-    console.error('Erreur envoi emails parrainage:', error.message);
-  }
-}
-
-// Fonction pour envoyer les emails de demande de virement
+// Transfer request: confirmation to the customer, full details to the team.
 async function sendTransferRequestEmails(data) {
-  if (!process.env.RESEND_API_KEY) return;
+  await sendEmail({ to: data.referrerEmail, ...customerEmails.transferRequested(data) });
 
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
-    const { buildEmailHtml } = require('./_email');
-    const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
-
-    const clientContent = `
-      <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-        Votre demande de virement a bien été enregistrée. Nous allons la traiter dans les plus brefs délais.
-      </p>
-      <div style="background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:12px;padding:24px;margin:24px 0">
-        <table style="width:100%;border-collapse:collapse">
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px">Montant demandé</td>
-            <td style="padding:10px 0;text-align:right;font-size:20px;font-weight:800;color:#1565C0">${data.amount}€</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;border-top:1px solid rgba(0,0,0,0.1)">IBAN</td>
-            <td style="padding:10px 0;text-align:right;font-family:monospace;font-size:13px;border-top:1px solid rgba(0,0,0,0.1)">${data.iban.substring(0, 10)}...</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;border-top:1px solid rgba(0,0,0,0.1)">Titulaire</td>
-            <td style="padding:10px 0;text-align:right;font-size:14px;border-top:1px solid rgba(0,0,0,0.1)">${data.accountName}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;border-top:1px solid rgba(0,0,0,0.1)">Statut</td>
-            <td style="padding:10px 0;text-align:right;font-size:14px;color:#f59e0b;font-weight:600;border-top:1px solid rgba(0,0,0,0.1)">⏳ En attente</td>
-          </tr>
-        </table>
-      </div>
-      <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-        <strong>Délai de traitement :</strong> 24-48 heures ouvrées<br>
-        Vous recevrez un email de confirmation dès que le virement sera effectué.
-      </p>
-      <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:6px;margin:20px 0">
-        <p style="margin:0;color:#92400e;font-size:13px">
-          💡 <strong>Astuce :</strong> Continuez à parrainer vos amis pour augmenter vos gains !
-        </p>
-      </div>
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: data.referrerEmail,
-      subject: '💸 Demande de virement enregistrée',
-      html: buildEmailHtml({
-        siteUrl,
-        headerColor: '#f59e0b',
-        title: 'Demande de virement reçue',
-        preheader: `Votre demande de ${data.amount}€ est en cours de traitement`,
-        content: clientContent
-      })
-    });
-
-    const adminContent = `
-      <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-        Une nouvelle demande de virement de parrainage a été effectuée.
-      </p>
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin:24px 0">
-        <table style="width:100%;border-collapse:collapse">
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600">Client</td>
-            <td style="padding:10px 0;text-align:right;font-size:14px">${data.referrerEmail}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;border-top:1px solid #e2e8f0">Montant</td>
-            <td style="padding:10px 0;text-align:right;font-size:20px;font-weight:800;color:#10b981;border-top:1px solid #e2e8f0">${data.amount}€</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;border-top:1px solid #e2e8f0">IBAN</td>
-            <td style="padding:10px 0;text-align:right;font-family:monospace;font-size:13px;border-top:1px solid #e2e8f0">${data.iban}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;border-top:1px solid #e2e8f0">Titulaire</td>
-            <td style="padding:10px 0;text-align:right;font-size:14px;border-top:1px solid #e2e8f0">${data.accountName}</td>
-          </tr>
-          <tr>
-            <td style="padding:10px 0;color:#64748b;font-size:14px;font-weight:600;border-top:1px solid #e2e8f0">Date</td>
-            <td style="padding:10px 0;text-align:right;font-size:14px;border-top:1px solid #e2e8f0">${new Date().toLocaleDateString('fr-FR')}</td>
-          </tr>
-        </table>
-      </div>
-      <div style="text-align:center;margin-top:28px">
-        <a href="${siteUrl}/admin" style="background:#1565C0;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-          📊 Voir dans l'admin
-        </a>
-      </div>
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: adminEmail,
-      subject: `💸 Nouvelle demande de virement — ${data.amount}€`,
-      html: buildEmailHtml({
-        siteUrl,
-        headerColor: '#f59e0b',
-        title: 'Demande de virement',
-        preheader: `${data.referrerEmail} demande un virement de ${data.amount}€`,
-        content: adminContent
-      })
-    });
-  } catch (error) {
-    console.error('Erreur envoi emails virement:', error.message);
-  }
+  const amount = `${data.amount} €`;
+  const body = renderEmail({
+    lang: 'fr',
+    title: 'Demande de virement de parrainage',
+    preheader: `${data.referrerEmail} demande ${amount}.`,
+    signature: false,
+    footer: 'Notification interne Kareer.',
+    blocks: [
+      { type: 'p', text: `${data.referrerEmail} demande le virement de son solde de parrainage.` },
+      { type: 'details', rows: [
+        { label: 'Client', value: data.referrerEmail },
+        { label: 'Code', value: data.code, mono: true },
+        { label: 'Montant', value: amount },
+        { label: 'Titulaire', value: data.accountName },
+        { label: 'IBAN', value: data.iban, mono: true }
+      ] },
+      { type: 'note', tone: 'highlight', title: 'Avant de virer', text: 'La page de parrainage ne demande pas de connexion : n\'importe qui connaissant l\'adresse e-mail peut saisir un IBAN. Confirmez le changement avec le client sur WhatsApp ou par e-mail avant le virement.' },
+      { type: 'button', label: 'Ouvrir le tableau de bord', href: `${getSiteUrl()}/admin` }
+    ]
+  });
+  await sendEmail({ to: adminEmail(), subject: `Virement parrainage à faire : ${amount} pour ${data.referrerEmail}`, html: body.html, text: body.text, replyTo: data.referrerEmail });
 }

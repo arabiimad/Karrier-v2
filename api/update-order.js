@@ -2,21 +2,13 @@ require('./_env');
 const crypto = require('crypto');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
-const { Resend } = require('resend');
-const { generateToken, hashToken, decryptSecret } = require('./_credentials');
-const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
-  escapeHtml,
-  formatCurrency,
-  formatPlan,
-  getSiteUrl
-} = require('./_email');
+const { decryptSecret } = require('./_credentials');
+const { sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { ensureReference, issueCredentialLink } = require('./_orders');
 const { isPaid } = require('./_payment');
 
 const VALID_STATUSES = ['pending', 'pending_payment', 'awaiting_credentials', 'activating', 'done', 'refunded'];
-const LINK_TTL_MS = 72 * 60 * 60 * 1000;
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -109,7 +101,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { session_id, status, note } = req.body;
+    const { session_id, status, note, notify } = req.body;
 
     if (!session_id || !status) {
       return res.status(400).json({ error: 'Missing session_id or status' });
@@ -124,7 +116,9 @@ module.exports = async (req, res) => {
     }
 
     const order = typeof data === 'string' ? JSON.parse(data) : data;
+    await ensureReference(order);
     const previousStatus = order.status;
+    const wasPaid = isPaid(order);
     order.status = status;
     order.updatedAt = new Date().toISOString();
 
@@ -133,64 +127,16 @@ module.exports = async (req, res) => {
       order.notes.push({ text: note, date: new Date().toISOString(), by: 'admin' });
     }
 
-    // Activation: set dates and generate referral code when transitioning to 'done'
+    // Activation: 12 months of Premium, a referral code for the customer, reward for whoever referred them.
     if (status === 'done' && previousStatus !== 'done') {
       order.activatedAt = new Date().toISOString();
       order.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-      order.referralCode = 'REF' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      order.customerReferralCode = order.referralCode;
-
-      // Store referral in KV with correct structure
-      await kvStore.set('referral:' + order.referralCode, JSON.stringify({
-        referrerEmail: order.customerEmail,
-        referrerName: order.customerEmail ? order.customerEmail.split('@')[0] : 'Client',
-        referralCount: 0,
-        referrals: [],
-        rewardMode: 'promo',
-        pendingBalance: 0,
-        transferRequests: [],
-        sessionId: session_id,
-        plan: order.plan,
-        createdAt: new Date().toISOString()
-      }));
-
-      // Create email mapping for easy lookup
-      await kvStore.set(`referral:email:${order.customerEmail.toLowerCase()}`, order.referralCode);
-
-      // Update referrals index
-      const refIndexData = await kvStore.get('referrals:index');
-      const refIndex = refIndexData ? (typeof refIndexData === 'string' ? JSON.parse(refIndexData) : refIndexData) : [];
-      refIndex.push(order.referralCode);
-      await kvStore.set('referrals:index', JSON.stringify(refIndex));
-
-      // Si cette commande a utilisé un code de parrainage, notifier le parrain
-      if (order.referralCode && order.referralCode.startsWith('REF')) {
-        try {
-          const referralData = await kvStore.get(`referral:${order.referralCode}`);
-          if (referralData) {
-            const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-            
-            // Trouver le filleul dans la liste
-            const referee = referral.referrals?.find(r => r.email === order.customerEmail.toLowerCase());
-            if (referee && referee.referrerPromoCode) {
-              // Envoyer l'email au parrain
-              await sendReferrerEmail({
-                referrerEmail: referral.referrerEmail,
-                referrerName: referral.referrerName,
-                referrerPromoCode: referee.referrerPromoCode,
-                referrerMode: referral.rewardMode,
-                referrerBalance: referral.pendingBalance,
-                refereeName: referee.name || order.customerEmail.split('@')[0],
-                referralCode: order.referralCode
-              });
-            }
-          }
-        } catch (err) {
-          console.error('[Referral] Error sending referrer notification:', err);
-        }
-      }
+      if (!order.referralCode) await ensureReferralCode(order);
       await rewardReferrerIfNeeded(order);
       deleteCredentials(order);
+    }
+    if (status === 'refunded' && previousStatus !== 'refunded' && !order.refundedAt) {
+      order.refundedAt = new Date().toISOString();
     }
 
     await kvStore.set(`order:${session_id}`, JSON.stringify(order));
@@ -203,11 +149,13 @@ module.exports = async (req, res) => {
       timestamp: new Date().toISOString()
     });
 
-    if (previousStatus !== status) {
-      await sendStatusEmail(order, previousStatus, status);
+    let emailSent = false;
+    if (previousStatus !== status && notify !== false) {
+      const mail = await sendStatusEmail(order, status, wasPaid);
+      emailSent = !!mail.sent;
     }
 
-    res.status(200).json({ success: true, order: sanitizeOrder(order) });
+    res.status(200).json({ success: true, emailSent, order: sanitizeOrder(order) });
 
   } catch (error) {
     console.error('Update order error:', error.message);
@@ -229,28 +177,10 @@ async function createCredentialLink(sessionId, res) {
     return res.status(400).json({ error: 'Credentials already received' });
   }
 
-  const token = generateToken();
-  const tokenHash = hashToken(token);
-  const now = new Date().toISOString();
-  const expiresAt = new Date(Date.now() + LINK_TTL_MS).toISOString();
-  const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
-  const link = `${siteUrl.replace(/\/$/, '')}/credentials.html?token=${encodeURIComponent(token)}`;
-
-  if (order.credentialLink && order.credentialLink.tokenHash) {
-    await kvStore.del(`credential-token:${order.credentialLink.tokenHash}`);
-  }
-
-  order.status = 'awaiting_credentials';
-  order.credentialLink = { tokenHash, sentAt: now, expiresAt, usedAt: null };
-  order.credentialLinkSentAt = now;
-  order.updatedAt = now;
-
-  await kvStore.set(`credential-token:${tokenHash}`, sessionId);
-  await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
-  await logAction(kvStore, { action: 'credential_link_created', sessionId, timestamp: now });
-
-  const emailSent = await sendCredentialLinkEmail(order, link, expiresAt);
-  return res.status(200).json({ success: true, link, expiresAt, emailSent });
+  await ensureReference(order);
+  const { link, expiresAt } = await issueCredentialLink(order);
+  const mail = await sendEmail({ to: order.customerEmail, ...customerEmails.credentialLink(order, link, expiresAt) });
+  return res.status(200).json({ success: true, link, expiresAt, emailSent: mail.sent });
 }
 
 async function revealCredentials(sessionId, res) {
@@ -288,72 +218,43 @@ async function revealCredentials(sessionId, res) {
   });
 }
 
-async function sendCredentialLinkEmail(order, link, expiresAt) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return false;
-
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const lang = order.language || 'fr';
-    const isFr = lang === 'fr';
-    const siteUrl = getSiteUrl();
-    const expiresLabel = new Date(expiresAt).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    const subject = isFr
-      ? 'Lien sécurisé pour votre activation Kareer'
-      : 'Secure link for your Kareer activation';
-    const title = isFr ? 'Transmettez vos accès' : 'Send your login details';
-    const intro = isFr
-      ? 'Pour démarrer l’activation, transmettez votre mot de passe LinkedIn via notre page sécurisée. Vous payez une fois Premium actif.'
-      : 'To start activation, submit your LinkedIn password through our secure page. You pay once Premium is live.';
-    const securityNote = isFr
-      ? 'Votre mot de passe est chiffré côté serveur, accessible uniquement ponctuellement par l’équipe d’activation, puis supprimé après activation.'
-      : 'Your password is encrypted server-side, only available temporarily to the activation team, then deleted after activation.';
-    const buttonLabel = isFr ? 'Transmettre mes identifiants' : 'Submit my credentials';
-    const fallbackLabel = isFr ? 'Si le bouton ne fonctionne pas, copiez ce lien :' : 'If the button does not work, copy this link:';
-    const preheader = isFr
-      ? 'Utilisez ce lien sécurisé pour transmettre vos identifiants LinkedIn. Vous payez une fois Premium actif.'
-      : 'Use this secure link to submit your LinkedIn credentials. You pay once Premium is live.';
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(intro)}</p>
-      ${detailTable([
-        { label: isFr ? 'Commande' : 'Order', value: order.sessionId },
-        { label: isFr ? 'Compte LinkedIn' : 'LinkedIn account', value: order.linkedinEmail || '-' },
-        { label: isFr ? 'Expiration du lien' : 'Link expires', value: expiresLabel }
-      ])}
-      ${emailButton(buttonLabel, link)}
-      <p style="margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.6">${escapeHtml(securityNote)}</p>
-      <p style="margin:18px 0 0;color:#64748b;font-size:12px;line-height:1.5">${escapeHtml(fallbackLabel)}<br>
-        <a href="${escapeHtml(link)}" style="color:#1565C0;word-break:break-all">${escapeHtml(link)}</a>
-      </p>
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject,
-      html: buildEmailHtml({
-        siteUrl,
-        title,
-        preheader,
-        content,
-        footer: isFr
-          ? 'Lien sécurisé envoyé par l’équipe Kareer.'
-          : 'Secure link sent by the Kareer team.',
-        lang
-      }),
-      text: `${title}\n\n${intro}\n\n${isFr ? 'Commande' : 'Order'}: ${order.sessionId}\n${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}: ${order.linkedinEmail || '-'}\n${isFr ? 'Expiration du lien' : 'Link expires'}: ${expiresLabel}\n\n${buttonLabel}: ${link}\n\n${securityNote}`
-    });
-
-    return true;
-  } catch (error) {
-    console.error('Credential email error:', error.message);
-    return false;
+// The customer's own code, reused if they already have one from an earlier order.
+async function ensureReferralCode(order) {
+  const email = String(order.customerEmail || '').trim().toLowerCase();
+  if (!email) return;
+  const existing = await kvStore.get(`referral:email:${email}`);
+  if (typeof existing === 'string' && /^REF[A-Z0-9]{4,}$/.test(existing) && await kvStore.get(`referral:${existing}`)) {
+    order.referralCode = existing;
+    order.customerReferralCode = existing;
+    return;
   }
+
+  let code;
+  do {
+    code = 'REF' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+  } while (await kvStore.get(`referral:${code}`));
+
+  order.referralCode = code;
+  order.customerReferralCode = code;
+  await kvStore.set(`referral:${code}`, JSON.stringify({
+    referrerEmail: email,
+    referrerName: email.split('@')[0],
+    language: order.language || 'fr',
+    referralCount: 0,
+    referrals: [],
+    rewardMode: 'promo',
+    pendingBalance: 0,
+    transferRequests: [],
+    sessionId: order.sessionId,
+    plan: order.plan,
+    createdAt: new Date().toISOString()
+  }));
+  await kvStore.set(`referral:email:${email}`, code);
+
+  const refIndexData = await kvStore.get('referrals:index');
+  const refIndex = refIndexData ? (typeof refIndexData === 'string' ? JSON.parse(refIndexData) : refIndexData) : [];
+  if (!refIndex.includes(code)) refIndex.push(code);
+  await kvStore.set('referrals:index', JSON.stringify(refIndex));
 }
 
 async function rewardReferrerIfNeeded(order) {
@@ -406,16 +307,16 @@ async function rewardReferrerIfNeeded(order) {
       await kvStore.set(`referral:${usedCode}`, JSON.stringify(referral));
     }
 
-    const latestReferee = referral.referrals.find(r => String(r.email || '').toLowerCase() === customerEmail);
-    if (latestReferee && latestReferee.referrerPromoCode) {
-      await sendReferrerEmail({
-        referrerEmail: referral.referrerEmail,
-        referrerName: referral.referrerName,
-        referrerPromoCode: latestReferee.referrerPromoCode,
-        referrerMode: referral.rewardMode,
-        referrerBalance: referral.pendingBalance,
-        refereeName: latestReferee.name || customerEmail.split('@')[0],
-        referralCode: usedCode
+    if (!alreadyRecorded && referral.referrerEmail) {
+      await sendEmail({
+        to: referral.referrerEmail,
+        ...customerEmails.referralReward({
+          language: referral.language,
+          code: usedCode,
+          mode: referral.rewardMode,
+          promoCode: referrerPromoCode,
+          balance: referral.pendingBalance
+        })
       });
     }
 
@@ -433,13 +334,23 @@ async function markPaid(sessionId, body, res) {
 
   const order = typeof data === 'string' ? JSON.parse(data) : data;
   const paid = body.paid !== false;
+  const wasPaid = isPaid(order);
+  await ensureReference(order);
   const now = new Date().toISOString();
 
   order.paid = paid;
   order.paidAt = paid ? (order.paidAt || now) : null;
-  if (paid && body.method) order.paymentMethod = String(body.method).slice(0, 60);
+  if (paid && body.method) order.paymentMethod = String(body.method).trim().slice(0, 60);
   if (!paid) delete order.paymentMethod;
   order.updatedAt = now;
+
+  // The customer's receipt, sent once per order: unmarking and marking again does not resend it.
+  let receiptSent = false;
+  if (paid && !wasPaid && !order.receiptSentAt && body.notify !== false) {
+    const mail = await sendEmail({ to: order.customerEmail, ...customerEmails.paymentReceived(order) });
+    receiptSent = !!mail.sent;
+    if (receiptSent) order.receiptSentAt = now;
+  }
 
   await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
   await logAction(kvStore, {
@@ -448,7 +359,7 @@ async function markPaid(sessionId, body, res) {
     timestamp: now
   });
 
-  return res.status(200).json({ success: true, order: sanitizeOrder(order) });
+  return res.status(200).json({ success: true, receiptSent, order: sanitizeOrder(order) });
 }
 
 async function loadOrder(sessionId) {
@@ -514,101 +425,14 @@ function sanitizeOrder(order) {
   return copy;
 }
 
-async function sendStatusEmail(order, fromStatus, toStatus) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
-
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const lang = order.language || 'fr';
-    const siteUrl = getSiteUrl();
-
-    const messages = {
-      fr: {
-        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu vos accès et votre LinkedIn Premium est en cours d\'activation (5 à 30 minutes). Vous recevrez une confirmation dès que ce sera terminé. Le paiement se fait ensuite sur WhatsApp.' },
-        done: { subject: 'Votre compte LinkedIn Premium est activé !', title: 'C\'est fait !', body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant profiter de toutes les fonctionnalités Premium sur LinkedIn. Si ce n\'est pas déjà fait, le règlement se fait sur WhatsApp avec notre équipe.' },
-        refunded: { subject: 'Votre remboursement a été effectué', title: 'Remboursement confirmé', body: 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans 5-10 jours ouvrés.' },
-        pending: { subject: 'Commande reçue', title: 'Commande reçue', body: 'Nous avons bien reçu votre commande. Vous allez recevoir un lien sécurisé pour transmettre vos accès LinkedIn. Le paiement se fait une fois Premium actif.' }
-      },
-      en: {
-        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your login details and your LinkedIn Premium is being activated (5 to 30 minutes). You will receive a confirmation once it\'s done. Payment comes after, on WhatsApp.' },
-        done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn. If you haven\'t paid yet, payment is done on WhatsApp with our team.' },
-        refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
-        pending: { subject: 'Order received', title: 'Order received', body: 'We have received your order. You will get a secure link to submit your LinkedIn login details. Payment comes once Premium is live.' }
-      },
-      es: {
-        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tus datos de acceso y tu LinkedIn Premium está siendo activado (de 5 a 30 minutos). Recibirás una confirmación cuando esté listo. El pago se hace después, por WhatsApp.' },
-        done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn. Si aún no has pagado, el pago se hace por WhatsApp con nuestro equipo.' },
-        refunded: { subject: 'Tu reembolso ha sido procesado', title: 'Reembolso confirmado', body: 'Tu pedido ha sido reembolsado. El monto será acreditado en tu cuenta en 5-10 días hábiles.' },
-        pending: { subject: 'Pedido recibido', title: 'Pedido recibido', body: 'Hemos recibido tu pedido. Recibirás un enlace seguro para enviar tus datos de acceso de LinkedIn. El pago se hace cuando Premium esté activo.' }
-      },
-      de: {
-        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zugangsdaten erhalten und Ihr LinkedIn Premium wird aktiviert (5 bis 30 Minuten). Sie erhalten eine Bestätigung, sobald es fertig ist. Bezahlt wird danach per WhatsApp.' },
-        done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen. Falls noch nicht geschehen, erfolgt die Zahlung per WhatsApp mit unserem Team.' },
-        refunded: { subject: 'Ihre Rückerstattung wurde bearbeitet', title: 'Rückerstattung bestätigt', body: 'Ihre Bestellung wurde erstattet. Der Betrag wird innerhalb von 5-10 Werktagen auf Ihrem Konto gutgeschrieben.' },
-        pending: { subject: 'Bestellung erhalten', title: 'Bestellung erhalten', body: 'Wir haben Ihre Bestellung erhalten. Sie bekommen einen sicheren Link für Ihre LinkedIn-Zugangsdaten. Bezahlt wird, sobald Premium aktiv ist.' }
-      }
-    };
-
-    messages.fr.pending_payment = messages.fr.pending;
-    messages.fr.awaiting_credentials = {
-      subject: 'Lien sécurisé pour vos accès LinkedIn',
-      title: 'Transmettez vos accès',
-      body: 'Vous allez recevoir un lien sécurisé pour transmettre votre mot de passe LinkedIn. Le paiement se fait une fois Premium actif.'
-    };
-    messages.en.pending_payment = messages.en.pending;
-    messages.en.awaiting_credentials = {
-      subject: 'Secure link for your LinkedIn login',
-      title: 'Send your login details',
-      body: 'You will receive a secure link to submit your LinkedIn password. Payment comes once Premium is live.'
-    };
-    messages.es.pending_payment = messages.es.pending;
-    messages.es.awaiting_credentials = messages.en.awaiting_credentials;
-    messages.de.pending_payment = messages.de.pending;
-    messages.de.awaiting_credentials = messages.en.awaiting_credentials;
-
-    const t = (messages[lang] || messages.fr)[toStatus];
-    if (!t) return;
-
-    const referralSection = (toStatus === 'done' && order.referralCode) ? `
-      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin-top:24px">
-        <h3 style="color:#15803d;margin:0 0 8px;font-size:15px">${escapeHtml(lang === 'fr' ? 'Parrainez vos amis et gagnez' : lang === 'es' ? 'Refiere amigos y gana' : lang === 'de' ? 'Freunde werben und verdienen' : 'Refer friends and earn')}</h3>
-        <p style="color:#166534;font-size:13px;margin:0 0 12px;line-height:1.5">${escapeHtml(lang === 'fr' ? 'Partagez votre code de parrainage et obtenez des avantages exclusifs.' : lang === 'es' ? 'Comparte tu código de referido y obtén beneficios exclusivos.' : lang === 'de' ? 'Teilen Sie Ihren Empfehlungscode und erhalten Sie exklusive Vorteile.' : 'Share your referral code and get exclusive benefits.')}</p>
-        <div style="background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;font-size:20px;font-weight:800;letter-spacing:4px;color:#15803d">${escapeHtml(order.referralCode)}</div>
-        <p style="text-align:center;margin:10px 0 0;font-size:12px;color:#166534">
-          <a href="${siteUrl}/?ref=${encodeURIComponent(order.referralCode)}" style="color:#15803d">${escapeHtml(`${siteUrl}/?ref=${order.referralCode}`)}</a>
-        </p>
-      </div>` : '';
-
-    const trackLabel = lang === 'fr' ? 'Suivre ma commande' : lang === 'es' ? 'Seguir mi pedido' : lang === 'de' ? 'Meine Bestellung verfolgen' : 'Track my order';
-    const amountLabel = lang === 'fr' ? 'Montant' : lang === 'es' ? 'Monto' : lang === 'de' ? 'Betrag' : 'Amount';
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
-      ${detailTable([
-        { label: 'Plan', value: formatPlan(order.plan, order.audience, lang) },
-        { label: amountLabel, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
-        { label: lang === 'fr' ? 'Commande' : 'Order', value: order.sessionId }
-      ])}
-      ${referralSection}
-      ${emailButton(trackLabel, `${siteUrl}/suivi?id=${encodeURIComponent(order.sessionId)}`)}
-    `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject: t.subject,
-      html: buildEmailHtml({
-        siteUrl,
-        title: t.title,
-        preheader: t.body,
-        content,
-        lang
-      }),
-      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${amountLabel}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${trackLabel}: ${siteUrl}/suivi?id=${order.sessionId}`
-    });
-  } catch (error) {
-    console.error('Status email error:', error.message);
-  }
+// Only the steps the customer cares about get an email. Internal statuses stay quiet.
+async function sendStatusEmail(order, toStatus, wasPaid) {
+  let mail = null;
+  if (toStatus === 'activating') mail = customerEmails.activationStarted(order, { credentialsReceived: false });
+  else if (toStatus === 'done') mail = customerEmails.activated(order);
+  else if (toStatus === 'refunded') mail = customerEmails.refunded(order, { cancelled: !wasPaid });
+  if (!mail) return { sent: false, reason: 'no_email_for_status' };
+  return sendEmail({ to: order.customerEmail, ...mail });
 }
 
 async function logAction(kv, entry) {
@@ -620,78 +444,5 @@ async function logAction(kv, entry) {
     await kv.set('audit:log', JSON.stringify(logs));
   } catch (e) {
     console.error('Audit log error:', e.message);
-  }
-}
-
-// Fonction pour envoyer l'email au parrain quand la commande du filleul est terminée
-async function sendReferrerEmail(data) {
-  if (!process.env.RESEND_API_KEY) return;
-
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const siteUrl = process.env.SITE_URL || 'https://kareer.pro';
-    const { buildEmailHtml } = require('./_email');
-
-    const referrerContent = data.referrerMode === 'transfer' 
-      ? `
-        <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-          Félicitations ! <strong>${data.refereeName}</strong> a terminé sa commande en utilisant votre code de parrainage <strong>${data.referralCode}</strong>.
-        </p>
-        <div style="background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:12px;padding:24px;margin:24px 0;text-align:center">
-          <div style="font-size:14px;color:#64748b;margin-bottom:8px">💰 Votre nouveau solde</div>
-          <div style="font-size:2.5rem;font-weight:800;background:linear-gradient(135deg, #1565C0, #8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${data.referrerBalance}€</div>
-          <div style="font-size:13px;color:#64748b;margin-top:8px">+10€ ajoutés à votre solde</div>
-        </div>
-        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-          Continuez à parrainer pour augmenter vos gains, ou demandez un virement bancaire dès maintenant.<br>
-          <strong style="color:#f59e0b">⚠️ Attention :</strong> Demander un virement réinitialisera votre solde de parrainage à 0€.
-        </p>
-        <div style="text-align:center;margin-top:28px">
-          <a href="${siteUrl}/parrainage.html" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-            💸 Gérer mes gains
-          </a>
-        </div>
-      `
-      : `
-        <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 20px">
-          Félicitations ! <strong>${data.refereeName}</strong> a terminé sa commande en utilisant votre code de parrainage <strong>${data.referralCode}</strong>.
-        </p>
-        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:24px;margin:24px 0;text-align:center">
-          <div style="font-size:14px;color:#166534;margin-bottom:12px">🎁 Votre code promo de récompense</div>
-          <div style="background:#fff;border:2px dashed #86efac;border-radius:8px;padding:16px;margin:12px 0">
-            <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:#15803d;font-family:monospace">${data.referrerPromoCode}</div>
-          </div>
-          <div style="font-size:15px;color:#15803d;font-weight:600;margin-top:12px">Valeur : 10€ de réduction</div>
-        </div>
-        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-          Utilisez ce code lors de votre prochaine commande pour bénéficier de 10€ de réduction immédiate.
-        </p>
-        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:20px 0">
-          💡 <strong>Continuez à parrainer</strong> pour cumuler encore plus de réductions ! Vous pouvez aussi choisir de recevoir vos gains par virement bancaire depuis votre page de parrainage.
-        </p>
-        <div style="text-align:center;margin-top:28px">
-          <a href="${siteUrl}/#pricing" style="background:linear-gradient(135deg, #1565C0, #8B5CF6);color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px;margin-right:12px">
-            🛒 Commander maintenant
-          </a>
-          <a href="${siteUrl}/parrainage.html" style="background:#fff;color:#1565C0;border:2px solid #1565C0;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;font-size:15px">
-            👥 Mes parrainages
-          </a>
-        </div>
-      `;
-
-    await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: data.referrerEmail,
-      subject: '🎉 Parrainage validé ! Votre récompense de 10€ est prête',
-      html: buildEmailHtml({
-        siteUrl,
-        headerColor: '#10b981',
-        title: '🎉 Parrainage réussi !',
-        preheader: 'Votre filleul a terminé sa commande',
-        content: referrerContent
-      })
-    });
-  } catch (error) {
-    console.error('[Referral] Error sending referrer email:', error);
   }
 }

@@ -1,8 +1,11 @@
-// Simple in-memory rate limiter for serverless functions
-const rateMap = new Map();
+// Simple in-memory rate limiter for serverless functions.
+// Each limiter keeps its own counts, so traffic on one route never blocks another.
+const maps = [];
 
 function rateLimit(options) {
   const { windowMs = 60000, max = 30, keyFn } = options || {};
+  const rateMap = new Map();
+  maps.push(rateMap);
 
   return function checkRate(req) {
     const key = keyFn ? keyFn(req) : (req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown');
@@ -33,9 +36,11 @@ function rateLimit(options) {
 // Cleanup old entries every 5 minutes
 setInterval(function() {
   const now = Date.now();
-  for (const [key, entry] of rateMap) {
-    if (now > entry.resetAt + 60000) rateMap.delete(key);
+  for (const rateMap of maps) {
+    for (const [key, entry] of rateMap) {
+      if (now > entry.resetAt + 60000) rateMap.delete(key);
+    }
   }
-}, 300000);
+}, 300000).unref();
 
 module.exports = rateLimit;

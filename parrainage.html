@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="karrier-logo.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <style>
         /* Older variable names used by inline styles on this page */
         :root { --card-border: var(--rule); --text-muted: var(--ink-3); --primary: var(--blue); --bg-card: var(--card); --border: var(--rule); --success: var(--wa); --text: var(--ink); }
@@ -251,6 +251,10 @@
                     })
                 });
                 const data = await res.json();
+                if (!data.success) {
+                    showToast(data.error || 'Enregistrement impossible');
+                    return;
+                }
                 if (data.success) {
                     showToast('Informations bancaires enregistrées');
                     if (pendingBalanceAmount > 0) {
@@ -334,7 +338,7 @@
                 document.getElementById('totalEarned').textContent = (data.totalEarned || 0) + '€';
 
                 // Charger le mode de récompense
-                currentRewardMode = data.rewardMode || 'discount';
+                currentRewardMode = data.rewardMode === 'transfer' ? 'transfer' : 'discount';
                 selectRewardMode(currentRewardMode);
 
                 // Afficher le solde en attente si mode virement
@@ -346,7 +350,8 @@
 
                 // Pré-remplir les infos de paiement si elles existent
                 if (data.paymentInfo) {
-                    document.getElementById('ibanInput').value = data.paymentInfo.iban || '';
+                    // The server only sends a masked IBAN; leave the field empty for a new one.
+                    if (data.paymentInfo.ibanMasked) document.getElementById('ibanInput').placeholder = 'IBAN enregistré : ' + data.paymentInfo.ibanMasked;
                     document.getElementById('accountNameInput').value = data.paymentInfo.accountName || '';
                     if (pendingBalanceAmount > 0) {
                         document.getElementById('transferRequestSection').style.display = 'block';
