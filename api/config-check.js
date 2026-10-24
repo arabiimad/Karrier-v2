@@ -49,8 +49,8 @@ module.exports = async (req, res) => {
   if (action === 'health') {
     const checks = { status: 'ok', timestamp: new Date().toISOString(), services: {} };
     try { await kvStore.get('health:ping'); checks.services.kv = 'ok'; } catch (e) { checks.services.kv = 'error'; checks.status = 'degraded'; }
-    checks.services.stripe = process.env.STRIPE_SECRET_KEY ? 'configured' : 'missing';
-    if (!process.env.STRIPE_SECRET_KEY) checks.status = 'degraded';
+    // Payments happen on WhatsApp, so a missing Stripe key is expected.
+    checks.services.stripe = process.env.STRIPE_SECRET_KEY ? 'configured' : 'not_used';
     checks.services.email = process.env.RESEND_API_KEY ? 'configured' : 'missing';
     checks.services.telegram = (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) ? 'configured' : 'missing';
     return res.status(checks.status === 'ok' ? 200 : 503).json(checks);
@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
     webhook: !!process.env.STRIPE_WEBHOOK_SECRET,
     resend: !!process.env.RESEND_API_KEY,
     telegram: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
-    kv: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN),
+    kv: !!((process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) || process.env.REDIS_URL),
     credentialsEncryption: !!process.env.CREDENTIALS_ENCRYPTION_KEY
   };
 

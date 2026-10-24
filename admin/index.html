@@ -2,427 +2,442 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Kareer Admin</title>
     <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#EEF1F4" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="/kareer-logo.png" type="image/png">
     <link rel="stylesheet" href="/admin/style.css">
-    <link rel="stylesheet" href="/admin/promo-styles.css">
 </head>
 <body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+        <symbol id="i-orders" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.4" fill="currentColor"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.4 3.4 0 0 1 0 6.4M18 14.8c1.8.7 3 2.4 3.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+        <symbol id="i-tools" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </svg>
 
-    <!-- Login Screen -->
+    <!-- Login -->
     <div class="login-screen" id="loginScreen">
-        <div class="login-card">
-            <img src="/kareer-logo.png" alt="Kareer" class="login-logo">
-            <h1>Kareer Admin</h1>
-            <div id="loginForm">
-                <input type="password" id="loginPassword" placeholder="Mot de passe admin" autocomplete="current-password">
-                <button type="button" id="loginBtn" onclick="doLogin()">Connexion</button>
-                <p class="login-error" id="loginError"></p>
-            </div>
-        </div>
+        <form class="login-card" id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+            <div class="brand"><img src="/kareer-logo.png" alt="" width="32" height="32"><span>Kareer</span><span class="brand-tag">admin</span></div>
+            <label for="loginPassword">Mot de passe</label>
+            <input type="password" id="loginPassword" class="input" autocomplete="current-password" required>
+            <button type="submit" class="btn btn-primary" id="loginBtn">Se connecter</button>
+            <p class="login-error" id="loginError" role="alert"></p>
+        </form>
     </div>
 
-    <!-- Dashboard -->
-    <div class="dashboard" id="dashboard" style="display:none;">
-        <!-- Header -->
-        <header class="admin-header">
-            <div class="admin-header-inner">
-                <div class="admin-brand">
-                    <img src="/kareer-logo.png" alt="Kareer" class="admin-logo">
-                    <span>Kareer Admin</span>
+    <!-- App -->
+    <div class="app" id="dashboard" hidden>
+        <aside class="sidebar" id="sidebar">
+            <div class="brand"><img src="/kareer-logo.png" alt="" width="28" height="28"><span>Kareer</span><span class="brand-tag">admin</span></div>
+            <nav class="nav" aria-label="Sections">
+                <button type="button" class="nav-item active" data-section="home"><svg aria-hidden="true"><use href="#i-home"/></svg><span>Aujourd'hui</span><span class="nav-count" id="navCountHome" hidden></span></button>
+                <button type="button" class="nav-item" data-section="orders"><svg aria-hidden="true"><use href="#i-orders"/></svg><span>Commandes</span></button>
+                <button type="button" class="nav-item" data-section="inbox"><svg aria-hidden="true"><use href="#i-mail"/></svg><span>Messages</span><span class="nav-count" id="navCountInbox" hidden></span></button>
+                <button type="button" class="nav-item" data-section="analytics"><svg aria-hidden="true"><use href="#i-chart"/></svg><span>Statistiques</span></button>
+                <button type="button" class="nav-item nav-secondary" data-section="promos"><svg aria-hidden="true"><use href="#i-tag"/></svg><span>Codes promo</span></button>
+                <button type="button" class="nav-item nav-secondary" data-section="referrals"><svg aria-hidden="true"><use href="#i-users"/></svg><span>Parrainage</span><span class="nav-count" id="navCountReferrals" hidden></span></button>
+                <button type="button" class="nav-item nav-secondary" data-section="ambassadors"><svg aria-hidden="true"><use href="#i-star"/></svg><span>Ambassadeurs</span><span class="nav-count" id="navCountAmbassadors" hidden></span></button>
+                <button type="button" class="nav-item nav-secondary" data-section="tools"><svg aria-hidden="true"><use href="#i-tools"/></svg><span>Outils</span></button>
+                <button type="button" class="nav-item nav-more" id="navMore" aria-expanded="false" aria-controls="moreSheet"><svg aria-hidden="true"><use href="#i-more"/></svg><span>Plus</span><span class="nav-count" id="navCountMore" hidden></span></button>
+            </nav>
+            <div class="sidebar-foot">
+                <span class="conn" id="connectionDot" title="Connecté"><span class="conn-dot"></span><span id="connectionText">Connecté</span></span>
+                <button type="button" class="btn btn-quiet btn-small" id="logoutBtn"><svg aria-hidden="true"><use href="#i-out"/></svg>Déconnexion</button>
+            </div>
+        </aside>
+
+        <div class="more-sheet" id="moreSheet" hidden>
+            <button type="button" class="nav-item" data-section="promos"><svg aria-hidden="true"><use href="#i-tag"/></svg><span>Codes promo</span></button>
+            <button type="button" class="nav-item" data-section="referrals"><svg aria-hidden="true"><use href="#i-users"/></svg><span>Parrainage</span></button>
+            <button type="button" class="nav-item" data-section="ambassadors"><svg aria-hidden="true"><use href="#i-star"/></svg><span>Ambassadeurs</span><span class="nav-count" id="navCountAmbassadorsMobile" hidden></span></button>
+            <button type="button" class="nav-item" data-section="tools"><svg aria-hidden="true"><use href="#i-tools"/></svg><span>Outils</span></button>
+            <button type="button" class="nav-item" id="logoutBtnMobile"><svg aria-hidden="true"><use href="#i-out"/></svg><span>Déconnexion</span></button>
+        </div>
+
+        <main class="main">
+            <!-- Today -->
+            <section class="view active" id="view-home" aria-labelledby="h-home">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-home">Aujourd'hui</h1>
+                        <p class="page-sub" id="homeDate"></p>
+                    </div>
+                    <button type="button" class="btn btn-quiet" data-refresh><svg aria-hidden="true"><use href="#i-refresh"/></svg>Actualiser</button>
+                </header>
+
+                <div class="kpis">
+                    <div class="kpi">
+                        <p class="kpi-label">Encaissé</p>
+                        <p class="kpi-value" id="kpiRevenue">—</p>
+                        <p class="kpi-sub" id="kpiRevenueSub">&nbsp;</p>
+                    </div>
+                    <button type="button" class="kpi kpi-link" data-view="to_collect">
+                        <span class="kpi-label">À encaisser</span>
+                        <span class="kpi-value kpi-warn" id="kpiDue">—</span>
+                        <span class="kpi-sub" id="kpiDueSub">&nbsp;</span>
+                    </button>
+                    <div class="kpi">
+                        <p class="kpi-label">Commandes</p>
+                        <p class="kpi-value" id="kpiOrders">—</p>
+                        <p class="kpi-sub" id="kpiOrdersSub">&nbsp;</p>
+                    </div>
+                    <div class="kpi">
+                        <p class="kpi-label">Délai d'activation moyen</p>
+                        <p class="kpi-value" id="kpiActivation">—</p>
+                        <p class="kpi-sub" id="kpiActivationSub">objectif : 30 min max</p>
+                    </div>
                 </div>
-                <div class="header-actions">
-                    <span class="connection-dot" id="connectionDot" title="Connecté"></span>
-                    <span class="live-clock" id="liveClock"></span>
-                    <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+
+                <div class="todo" id="todoContainer">
+                    <p class="empty">Chargement…</p>
                 </div>
-            </div>
-        </header>
-
-        <!-- Stats -->
-        <section class="stats-row" id="statsRow">
-            <div class="stat-card">
-                <div class="stat-icon">💰</div>
-                <div class="stat-label">Revenu total</div>
-                <div class="stat-value" id="statRevenue">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-label">Commandes</div>
-                <div class="stat-value" id="statOrders">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-label">En attente</div>
-                <div class="stat-value stat-pending" id="statPending">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-label">En activation</div>
-                <div class="stat-value stat-activating" id="statActivating">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-label">Terminées</div>
-                <div class="stat-value stat-done" id="statDone">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📅</div>
-                <div class="stat-label">Aujourd'hui</div>
-                <div class="stat-value" id="statToday">—</div>
-            </div>
-        </section>
-
-        <!-- Tabs Navigation -->
-        <nav class="tabs-nav">
-            <button class="tab-btn active" data-tab="orders">📋 Commandes</button>
-            <button class="tab-btn" data-tab="inbox">✉️ Inbox</button>
-            <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
-            <button class="tab-btn" data-tab="automation">🤖 Automatisations</button>
-            <button class="tab-btn" data-tab="settings">⚙️ Outils</button>
-            <button class="tab-btn" data-tab="promos">🏷️ Codes Promo</button>
-            <button class="tab-btn" data-tab="referrals">👥 Parrainage</button>
-        </nav>
-
-        <!-- TAB: Orders -->
-        <div class="tab-content active" id="tab-orders">
-            <section class="filters-row">
-                <select id="filterStatus">
-                    <option value="">Tous les statuts</option>
-                    <option value="pending_payment">Paiement en attente</option>
-                    <option value="awaiting_credentials">Identifiants demandes</option>
-                    <option value="activating">En activation</option>
-                    <option value="done">Terminé</option>
-                    <option value="refunded">Remboursé</option>
-                </select>
-                <input type="text" id="searchInput" placeholder="Rechercher email, plan..." class="search-input">
-                <button class="refresh-btn" id="refreshBtn"><span class="refresh-icon" id="refreshIcon">🔄</span> Actualiser</button>
-                <span class="orders-count" id="ordersCount"></span>
             </section>
 
-            <section class="orders-section">
-                <div class="table-wrapper">
-                    <table class="orders-table" id="ordersTable">
+            <!-- Orders -->
+            <section class="view" id="view-orders" aria-labelledby="h-orders">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-orders">Commandes</h1>
+                        <p class="page-sub" id="ordersCount"></p>
+                    </div>
+                    <button type="button" class="btn btn-quiet" id="refreshBtn"><svg aria-hidden="true"><use href="#i-refresh"/></svg>Actualiser</button>
+                </header>
+
+                <div class="queue-bar" role="group" aria-label="Files de travail">
+                    <button type="button" class="queue-chip active" data-view="">Toutes <span class="queue-count" id="q_all"></span></button>
+                    <button type="button" class="queue-chip" data-view="to_link">Lien à envoyer <span class="queue-count" id="q_to_link"></span></button>
+                    <button type="button" class="queue-chip" data-view="waiting_credentials">Attente identifiants <span class="queue-count" id="q_waiting_credentials"></span></button>
+                    <button type="button" class="queue-chip" data-view="to_activate">À activer <span class="queue-count" id="q_to_activate"></span></button>
+                    <button type="button" class="queue-chip" data-view="to_collect">À encaisser <span class="queue-count" id="q_to_collect"></span></button>
+                    <button type="button" class="queue-chip" data-view="student_check">Justificatif à vérifier <span class="queue-count" id="q_student_check"></span></button>
+                </div>
+
+                <div class="toolbar">
+                    <input type="search" id="searchInput" class="input input-search" placeholder="Rechercher un e-mail, un numéro KR-…, une offre" aria-label="Rechercher">
+                    <select id="filterStatus" class="input" aria-label="Statut">
+                        <option value="">Tous les statuts</option>
+                        <option value="pending_payment">Nouvelle</option>
+                        <option value="awaiting_credentials">Attente identifiants</option>
+                        <option value="activating">À activer</option>
+                        <option value="done">Activée</option>
+                        <option value="refunded">Remboursée</option>
+                    </select>
+                    <select id="filterPayment" class="input" aria-label="Paiement">
+                        <option value="">Payées et non payées</option>
+                        <option value="paid">Payées</option>
+                        <option value="unpaid">Non payées</option>
+                    </select>
+                </div>
+
+                <div class="table-card">
+                    <table class="orders-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Plan</th>
-                                <th>Audience</th>
-                                <th>Montant</th>
-                                <th>Email client</th>
-                                <th>Email LinkedIn</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
+                                <th scope="col">Commande</th>
+                                <th scope="col">Client</th>
+                                <th scope="col">Montant</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Prochaine action</th>
                             </tr>
                         </thead>
                         <tbody id="ordersBody">
-                            <tr><td colspan="8" class="empty-state">Chargement...</td></tr>
+                            <tr><td colspan="5" class="empty">Chargement…</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="pagination" id="pagination"></div>
             </section>
-        </div>
 
-        <!-- TAB: Inbox -->
-        <div class="tab-content" id="tab-inbox">
-            <section class="filters-row">
-                <button class="refresh-btn" id="refreshInbox">Actualiser</button>
-                <span class="orders-count" id="inboxCount"></span>
+            <!-- Inbox -->
+            <section class="view" id="view-inbox" aria-labelledby="h-inbox">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-inbox">Messages</h1>
+                        <p class="page-sub" id="inboxCount"></p>
+                    </div>
+                    <button type="button" class="btn btn-quiet" id="refreshInbox"><svg aria-hidden="true"><use href="#i-refresh"/></svg>Actualiser</button>
+                </header>
+                <div class="inbox">
+                    <div class="inbox-list" id="inboxList"><p class="empty">Chargement…</p></div>
+                    <div class="inbox-detail" id="inboxDetail"><p class="empty">Choisissez un message pour le lire et y répondre.</p></div>
+                </div>
             </section>
-            <div class="inbox-layout">
-                <section class="inbox-list-panel">
-                    <div id="inboxList" class="inbox-list">
-                        <div class="empty-state">Chargement...</div>
+
+            <!-- Analytics -->
+            <section class="view" id="view-analytics" aria-labelledby="h-analytics">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-analytics">Statistiques</h1>
+                        <p class="page-sub">Le chiffre d'affaires ne compte que les commandes payées et non remboursées.</p>
                     </div>
-                </section>
-                <section class="inbox-detail-panel">
-                    <div id="inboxDetail" class="inbox-detail-empty">
-                        Sélectionnez un message pour lire et répondre.
-                    </div>
-                </section>
-            </div>
-        </div>
-
-        <!-- TAB: Analytics -->
-        <div class="tab-content" id="tab-analytics">
-            <div class="analytics-controls">
-                <select id="analyticsPeriod">
-                    <option value="7">7 derniers jours</option>
-                    <option value="30" selected>30 derniers jours</option>
-                    <option value="90">90 derniers jours</option>
-                    <option value="365">12 derniers mois</option>
-                </select>
-                <button class="refresh-btn" id="refreshAnalytics">📊 Charger</button>
-            </div>
-
-            <div class="analytics-grid">
-                <div class="analytics-card analytics-card-wide">
-                    <h3>📈 Revenu journalier</h3>
-                    <div class="chart-container" id="revenueChart"></div>
-                </div>
-                <div class="analytics-card">
-                    <h3>📦 Répartition par plan</h3>
-                    <div id="planBreakdown" class="breakdown-list"></div>
-                </div>
-                <div class="analytics-card">
-                    <h3>👥 Répartition par audience</h3>
-                    <div id="audienceBreakdown" class="breakdown-list"></div>
-                </div>
-                <div class="analytics-card">
-                    <h3>🌍 Répartition par langue</h3>
-                    <div id="languageBreakdown" class="breakdown-list"></div>
-                </div>
-                <div class="analytics-card">
-                    <h3>📊 Indicateurs clés</h3>
-                    <div id="kpiSection" class="kpi-list"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: Automation -->
-        <div class="tab-content" id="tab-automation">
-            <div class="automation-grid">
-                <div class="auto-card">
-                    <div class="auto-icon">⚡</div>
-                    <h3>Traiter les commandes en attente</h3>
-                    <p>Traite uniquement les anciennes commandes en attente qui ont deja des identifiants.</p>
-                    <button class="auto-btn" id="btnProcessPending">Exécuter</button>
-                    <div class="auto-result" id="resultProcessPending"></div>
-                </div>
-
-                <div class="auto-card">
-                    <div class="auto-icon">📧</div>
-                    <h3>Envoyer un rappel client</h3>
-                    <p>Envoie un email de mise à jour au client pour une commande spécifique.</p>
-                    <input type="text" id="reminderSessionId" placeholder="Session ID" class="auto-input">
-                    <button class="auto-btn" id="btnSendReminder">Envoyer</button>
-                    <div class="auto-result" id="resultSendReminder"></div>
-                </div>
-
-                <div class="auto-card">
-                    <div class="auto-icon">🎁</div>
-                    <h3>Email anciens clients</h3>
-                    <p>Envoie l'offre de retour avec le code ANCIENCLIENT10 et crée le code promo si besoin.</p>
-                    <input type="email" id="legacyClientEmail" placeholder="Email client" class="auto-input">
-                    <input type="text" id="legacyClientFirstName" placeholder="Prénom" class="auto-input">
-                    <button class="auto-btn" id="btnSendLegacyClientOffer">Envoyer l'offre</button>
-                    <div class="auto-result" id="resultLegacyClientOffer"></div>
-                </div>
-
-                <div class="auto-card">
-                    <div class="auto-icon">🔄</div>
-                    <h3>Mise à jour en masse</h3>
-                    <p>Change le statut de toutes les commandes d'un statut à un autre.</p>
-                    <div class="auto-row">
-                        <select id="bulkFrom" class="auto-select">
-                            <option value="pending_payment">Paiement en attente</option>
-                            <option value="awaiting_credentials">Identifiants demandes</option>
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
+                    <div class="head-actions">
+                        <select id="analyticsPeriod" class="input" aria-label="Période">
+                            <option value="7">7 derniers jours</option>
+                            <option value="30" selected>30 derniers jours</option>
+                            <option value="90">90 derniers jours</option>
+                            <option value="365">12 derniers mois</option>
                         </select>
-                        <span class="auto-arrow">→</span>
-                        <select id="bulkTo" class="auto-select">
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
-                            <option value="refunded">Remboursé</option>
-                        </select>
+                        <button type="button" class="btn btn-quiet" id="refreshAnalytics"><svg aria-hidden="true"><use href="#i-refresh"/></svg>Actualiser</button>
                     </div>
-                    <button class="auto-btn auto-btn-warning" id="btnBulkUpdate">Appliquer</button>
-                    <div class="auto-result" id="resultBulkUpdate"></div>
-                </div>
-
-                <div class="auto-card">
-                    <div class="auto-icon">💸</div>
-                    <h3>Rembourser une commande</h3>
-                    <p>Effectue un remboursement Stripe et notifie le client par email.</p>
-                    <input type="text" id="refundSessionId" placeholder="Session ID" class="auto-input">
-                    <select id="refundReason" class="auto-select">
-                        <option value="requested_by_customer">Demande client</option>
-                        <option value="duplicate">Doublon</option>
-                        <option value="fraudulent">Fraude</option>
-                    </select>
-                    <button class="auto-btn auto-btn-danger" id="btnRefund">Rembourser</button>
-                    <div class="auto-result" id="resultRefund"></div>
-                </div>
-
-                <div class="auto-card">
-                    <div class="auto-icon">🧹</div>
-                    <h3>Nettoyage ancien</h3>
-                    <p>Supprime les commandes terminées/remboursées de plus de X jours.</p>
-                    <input type="number" id="cleanupDays" value="90" min="30" class="auto-input" style="width:100px">
-                    <span>jours</span>
-                    <button class="auto-btn auto-btn-warning" id="btnCleanup">Nettoyer</button>
-                    <div class="auto-result" id="resultCleanup"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: Settings / Tools -->
-        <div class="tab-content" id="tab-settings">
-            <div class="settings-grid">
-                <div class="settings-card">
-                    <h3>📥 Exporter les commandes</h3>
-                    <p>Téléchargez toutes les commandes en CSV ou JSON.</p>
-                    <div class="settings-row">
-                        <select id="exportFormat">
-                            <option value="csv">CSV</option>
-                            <option value="json">JSON</option>
-                        </select>
-                        <select id="exportStatus">
-                            <option value="">Tous les statuts</option>
-                            <option value="pending_payment">Paiement en attente</option>
-                            <option value="awaiting_credentials">Identifiants demandes</option>
-                            <option value="activating">En activation</option>
-                            <option value="done">Terminé</option>
-                            <option value="refunded">Remboursé</option>
-                        </select>
-                        <button class="auto-btn" id="btnExport">Télécharger</button>
+                </header>
+                <div class="grid-2">
+                    <div class="card card-wide">
+                        <h2 class="card-title">Encaissé par jour de commande</h2>
+                        <div class="chart" id="revenueChart"></div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Indicateurs</h2>
+                        <dl class="kv" id="kpiSection"></dl>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Par offre</h2>
+                        <div class="breakdown" id="planBreakdown"></div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Par profil</h2>
+                        <div class="breakdown" id="audienceBreakdown"></div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Par langue</h2>
+                        <div class="breakdown" id="languageBreakdown"></div>
                     </div>
                 </div>
+            </section>
 
-                <div class="settings-card">
-                    <h3>🔗 Liens rapides</h3>
-                    <div class="quick-links">
-                        <a href="https://dashboard.stripe.com" target="_blank" class="quick-link">💳 Stripe Dashboard</a>
-                        <a href="https://vercel.com/dashboard" target="_blank" class="quick-link">▲ Vercel Dashboard</a>
-                        <a href="https://kareer.pro" target="_blank" class="quick-link">🌐 Site Kareer</a>
-                        <a href="https://kareer.pro/contact" target="_blank" class="quick-link">📞 Page Contact</a>
+            <!-- Promos -->
+            <section class="view" id="view-promos" aria-labelledby="h-promos">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-promos">Codes promo</h1>
+                        <p class="page-sub">Les codes s'appliquent au moment de la commande, sur la page de paiement.</p>
                     </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3>📋 Configuration API</h3>
-                    <div class="config-info">
-                        <div class="config-row"><span>Stripe</span><span class="config-badge" id="cfgStripe">—</span></div>
-                        <div class="config-row"><span>Webhook</span><span class="config-badge" id="cfgWebhook">—</span></div>
-                        <div class="config-row"><span>Resend (Email)</span><span class="config-badge" id="cfgResend">—</span></div>
-                        <div class="config-row"><span>Telegram</span><span class="config-badge" id="cfgTelegram">—</span></div>
-                        <div class="config-row"><span>Vercel KV</span><span class="config-badge" id="cfgKV">—</span></div>
-                        <div class="config-row"><span>Chiffrement credentials</span><span class="config-badge" id="cfgCredentials">—</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB: Promos -->
-        <div class="tab-content" id="tab-promos">
-            <div class="promo-form-container">
-                <div class="promo-form-header">
-                    <div class="promo-form-icon">🏷️</div>
-                    <h2 class="promo-form-title">Créer un code promo</h2>
-                </div>
-                <form id="createPromoForm" onsubmit="createPromoCode(event)" class="promo-form-grid">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">🎫</span> Code promo</label>
-                            <input type="text" id="promoCode" placeholder="Ex: BIENVENUE10" class="promo-input" style="text-transform:uppercase">
-                            <small class="promo-input-hint">Laisser vide pour générer automatiquement</small>
+                </header>
+                <div class="grid-promos">
+                    <form class="card" id="createPromoForm" onsubmit="createPromoCode(event)">
+                        <h2 class="card-title">Nouveau code</h2>
+                        <div class="form-grid">
+                            <label class="field">Code
+                                <input type="text" id="promoCode" class="input mono-input" placeholder="BIENVENUE10" autocomplete="off">
+                                <small>Vide : un code est généré.</small>
+                            </label>
+                            <label class="field">Type
+                                <select id="promoType" class="input" onchange="updatePromoValuePlaceholder()">
+                                    <option value="fixed">Montant fixe (€)</option>
+                                    <option value="percentage">Pourcentage (%)</option>
+                                </select>
+                            </label>
+                            <label class="field">Valeur
+                                <input type="number" id="promoValue" class="input" placeholder="10" required min="0" step="0.01">
+                            </label>
+                            <label class="field">Montant minimum (€)
+                                <input type="number" id="promoMinAmount" class="input" placeholder="0" min="0" step="0.01">
+                            </label>
+                            <label class="field">Utilisations max
+                                <input type="number" id="promoMaxUses" class="input" placeholder="0 = illimité" min="0">
+                            </label>
+                            <label class="field">Expire le
+                                <input type="date" id="promoExpiry" class="input">
+                            </label>
+                            <label class="field field-wide">Description
+                                <input type="text" id="promoDescription" class="input" placeholder="Offre de bienvenue">
+                            </label>
+                            <label class="field field-wide">Offres concernées
+                                <select id="promoPlans" class="input">
+                                    <option value="all">Toutes les offres</option>
+                                    <option value="career-student,career-salary">Career</option>
+                                    <option value="business-student,business-salary">Business</option>
+                                    <option value="sales-nav">Sales Navigator</option>
+                                    <option value="recruiter">Recruiter Lite</option>
+                                </select>
+                            </label>
                         </div>
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">💰</span> Type de réduction</label>
-                            <select id="promoType" required class="promo-input" onchange="updatePromoValuePlaceholder()">
-                                <option value="fixed">Montant fixe (€)</option>
-                                <option value="percentage">Pourcentage (%)</option>
+                        <button type="submit" class="btn btn-primary">Créer le code</button>
+                    </form>
+                    <div class="promo-list" id="promosList"><p class="empty">Chargement…</p></div>
+                </div>
+            </section>
+
+            <!-- Referrals -->
+            <section class="view" id="view-referrals" aria-labelledby="h-referrals">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-referrals">Parrainage</h1>
+                        <p class="page-sub">Clients uniquement : chaque client activé reçoit un code. 10 € de moins pour la personne qui commande, 10 € pour le parrain quand la commande est réglée.</p>
+                    </div>
+                </header>
+                <div class="kpis kpis-3">
+                    <div class="kpi"><p class="kpi-label">Parrains actifs</p><p class="kpi-value" id="totalReferrers">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Commandes parrainées réglées</p><p class="kpi-value" id="totalReferrals">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Soldes à verser</p><p class="kpi-value" id="totalReferralEarnings">0 €</p><p class="kpi-sub" id="totalReferralTransfers"></p></div>
+                </div>
+                <div class="promo-list" id="referralsList"><p class="empty">Chargement…</p></div>
+            </section>
+
+            <!-- Ambassadors -->
+            <section class="view" id="view-ambassadors" aria-labelledby="h-ambassadors">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-ambassadors">Ambassadeurs</h1>
+                        <p class="page-sub">Étudiants, créateurs, salariés, clients ou non. Chacun a son code, avec la réduction et le gain que vous fixez. Le gain est crédité quand la commande est réglée.</p>
+                    </div>
+                </header>
+                <section class="ref-section" id="ambApplicationsBox" hidden>
+                    <h2 class="card-title">Demandes à valider</h2>
+                    <p class="card-text">Le code proposé est réservé mais ne donne rien tant que vous n'avez pas accepté. Vous pouvez le modifier, ainsi que la réduction et le gain, avant d'accepter.</p>
+                    <div class="promo-list" id="ambApplicationsList"></div>
+                </section>
+                <div class="kpis kpis-3">
+                    <div class="kpi"><p class="kpi-label">Ambassadeurs actifs</p><p class="kpi-value" id="totalAmbassadors">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Commandes réglées</p><p class="kpi-value" id="totalAmbassadorOrders">0</p></div>
+                    <div class="kpi"><p class="kpi-label">Soldes à verser</p><p class="kpi-value" id="totalAmbassadorBalances">0 €</p><p class="kpi-sub" id="totalAmbassadorTransfers"></p></div>
+                </div>
+                <div class="promo-list" id="ambassadorsList"><p class="empty">Chargement…</p></div>
+            </section>
+
+            <!-- Tools -->
+            <section class="view" id="view-tools" aria-labelledby="h-tools">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-tools">Outils</h1>
+                        <p class="page-sub">Export, état des services et actions groupées.</p>
+                    </div>
+                </header>
+                <div class="grid-tools">
+                    <div class="card">
+                        <h2 class="card-title">Exporter les commandes</h2>
+                        <p class="card-text">CSV ou JSON, avec le statut de paiement.</p>
+                        <div class="row">
+                            <select id="exportFormat" class="input" aria-label="Format"><option value="csv">CSV</option><option value="json">JSON</option></select>
+                            <select id="exportStatus" class="input" aria-label="Statut">
+                                <option value="">Tous les statuts</option>
+                                <option value="pending_payment">Nouvelle</option>
+                                <option value="awaiting_credentials">Attente identifiants</option>
+                                <option value="activating">À activer</option>
+                                <option value="done">Activée</option>
+                                <option value="refunded">Remboursée</option>
+                            </select>
+                            <button type="button" class="btn" id="btnExport">Télécharger</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Services</h2>
+                        <dl class="kv">
+                            <div><dt>Stripe</dt><dd><span class="pill" id="cfgStripe">—</span></dd></div>
+                            <div><dt>Webhook Stripe</dt><dd><span class="pill" id="cfgWebhook">—</span></dd></div>
+                            <div><dt>E-mails (Resend)</dt><dd><span class="pill" id="cfgResend">—</span></dd></div>
+                            <div><dt>Telegram</dt><dd><span class="pill" id="cfgTelegram">—</span></dd></div>
+                            <div><dt>Base de données</dt><dd><span class="pill" id="cfgKV">—</span></dd></div>
+                            <div><dt>Chiffrement des identifiants</dt><dd><span class="pill" id="cfgCredentials">—</span></dd></div>
+                        </dl>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Rappel à un client</h2>
+                        <p class="card-text">Envoie un e-mail avec l'état de sa commande.</p>
+                        <input type="text" id="reminderSessionId" class="input mono-input" placeholder="Numéro de commande (kareer_…)" aria-label="Numéro de commande">
+                        <button type="button" class="btn" id="btnSendReminder">Envoyer</button>
+                        <p class="result" id="resultSendReminder"></p>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Offre anciens clients</h2>
+                        <p class="card-text">Envoie l'offre de retour avec le code ANCIENCLIENT10 (créé si besoin).</p>
+                        <input type="email" id="legacyClientEmail" class="input" placeholder="E-mail du client" aria-label="E-mail du client">
+                        <input type="text" id="legacyClientFirstName" class="input" placeholder="Prénom" aria-label="Prénom">
+                        <button type="button" class="btn" id="btnSendLegacyClientOffer">Envoyer l'offre</button>
+                        <p class="result" id="resultLegacyClientOffer"></p>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Rembourser une commande</h2>
+                        <p class="card-text">Le remboursement se fait hors du site, par le même moyen que le paiement. Ici, on l'enregistre et on prévient le client.</p>
+                        <input type="text" id="refundSessionId" class="input mono-input" placeholder="Numéro de commande (kareer_…)" aria-label="Numéro de commande">
+                        <select id="refundReason" class="input" aria-label="Motif">
+                            <option value="requested_by_customer">Demande du client</option>
+                            <option value="duplicate">Doublon</option>
+                            <option value="fraudulent">Fraude</option>
+                        </select>
+                        <button type="button" class="btn btn-danger" id="btnRefund">Enregistrer le remboursement</button>
+                        <p class="result" id="resultRefund"></p>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Changer le statut en masse</h2>
+                        <p class="card-text">Toutes les commandes d'un statut passent à un autre.</p>
+                        <div class="row">
+                            <select id="bulkFrom" class="input" aria-label="Depuis">
+                                <option value="pending_payment">Nouvelle</option>
+                                <option value="awaiting_credentials">Attente identifiants</option>
+                                <option value="activating">À activer</option>
+                                <option value="done">Activée</option>
+                            </select>
+                            <span class="arrow" aria-hidden="true">→</span>
+                            <select id="bulkTo" class="input" aria-label="Vers">
+                                <option value="activating">À activer</option>
+                                <option value="done">Activée</option>
+                                <option value="refunded">Remboursée</option>
                             </select>
                         </div>
+                        <button type="button" class="btn btn-warn" id="btnBulkUpdate">Appliquer</button>
+                        <p class="result" id="resultBulkUpdate"></p>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">📊</span> Valeur</label>
-                            <input type="number" id="promoValue" placeholder="10" required min="0" step="0.01" class="promo-input">
-                        </div>
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">💵</span> Montant minimum (€)</label>
-                            <input type="number" id="promoMinAmount" placeholder="0" min="0" step="0.01" class="promo-input">
-                        </div>
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">🔢</span> Max utilisations</label>
-                            <input type="number" id="promoMaxUses" placeholder="0 = illimité" min="0" class="promo-input">
-                        </div>
+                    <div class="card">
+                        <h2 class="card-title">Anciennes commandes en attente</h2>
+                        <p class="card-text">Relance le traitement des anciennes commandes en attente qui ont déjà des identifiants.</p>
+                        <button type="button" class="btn" id="btnProcessPending">Lancer</button>
+                        <p class="result" id="resultProcessPending"></p>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">📝</span> Description</label>
-                            <input type="text" id="promoDescription" placeholder="Ex: Offre de bienvenue" class="promo-input">
+                    <div class="card">
+                        <h2 class="card-title">Nettoyage</h2>
+                        <p class="card-text">Supprime les commandes activées ou remboursées depuis plus de X jours.</p>
+                        <div class="row">
+                            <input type="number" id="cleanupDays" class="input input-narrow" value="90" min="30" aria-label="Nombre de jours">
+                            <span>jours</span>
+                            <button type="button" class="btn btn-warn" id="btnCleanup">Nettoyer</button>
                         </div>
-                        <div class="promo-input-group">
-                            <label class="promo-input-label"><span class="icon">📅</span> Date d'expiration</label>
-                            <input type="date" id="promoExpiry" class="promo-input">
-                        </div>
+                        <p class="result" id="resultCleanup"></p>
                     </div>
-                    <div class="promo-input-group">
-                        <label class="promo-input-label"><span class="icon">🎯</span> Plans applicables</label>
-                        <select id="promoPlans" class="promo-input">
-                            <option value="all">Tous les plans</option>
-                            <option value="career-student,career-salary">Career uniquement</option>
-                            <option value="business-student,business-salary">Business uniquement</option>
-                            <option value="sales-nav">Sales Navigator uniquement</option>
-                            <option value="recruiter">Recruiter uniquement</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="promo-submit-btn">✨ Créer le code promo</button>
-                </form>
-            </div>
-            <div class="promo-list-container">
-                <div class="promo-list-header">
-                    <h2 class="promo-list-title">📋 Codes promo actifs</h2>
-                </div>
-                <div id="promosList">Chargement...</div>
-            </div>
-        </div>
-
-        <!-- TAB: Referrals -->
-        <div class="tab-content" id="tab-referrals">
-            <div class="promo-list-container">
-                <div class="promo-list-header">
-                    <h2 class="promo-list-title">👥 Système de Parrainage</h2>
-                    <div class="promo-stats">
-                        <div class="promo-stat">
-                            <div class="promo-stat-value" id="totalReferrers">0</div>
-                            <div class="promo-stat-label">Parrains actifs</div>
-                        </div>
-                        <div class="promo-stat">
-                            <div class="promo-stat-value" id="totalReferrals">0</div>
-                            <div class="promo-stat-label">Total filleuls</div>
-                        </div>
-                        <div class="promo-stat">
-                            <div class="promo-stat-value" id="totalReferralEarnings">0€</div>
-                            <div class="promo-stat-label">Récompenses distribuées</div>
-                        </div>
+                    <div class="card">
+                        <h2 class="card-title">Liens</h2>
+                        <ul class="links">
+                            <li><a href="https://kareer.pro" target="_blank" rel="noopener">Site Kareer</a></li>
+                            <li><a href="https://kareer.pro/contact" target="_blank" rel="noopener">Page contact</a></li>
+                            <li><a href="https://vercel.com/dashboard" target="_blank" rel="noopener">Vercel</a></li>
+                            <li><a href="https://dashboard.stripe.com" target="_blank" rel="noopener">Stripe</a></li>
+                        </ul>
                     </div>
                 </div>
-                <div id="referralsList">Chargement...</div>
-            </div>
-        </div>
-
-        <!-- Order detail modal -->
-        <div class="modal-overlay" id="modalOverlay" style="display:none;">
-            <div class="modal-card" id="modalCard">
-                <button class="modal-close" id="modalClose">&times;</button>
-                <h2>Détails de la commande</h2>
-                <div id="modalContent"></div>
-                <div class="modal-actions" id="modalActions"></div>
-            </div>
-        </div>
-
+            </section>
+        </main>
     </div>
 
-    <!-- Toast notifications (outside dashboard so always accessible) -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Order panel -->
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+        <div id="drawerBody"></div>
+    </aside>
+
+    <div class="toasts" id="toastContainer" aria-live="polite"></div>
 
     <script>
-    // Inline login function - guaranteed to work
+    // Kept inline so the login works even if the main script fails to load.
     function doLogin() {
         var pwd = document.getElementById('loginPassword').value;
         if (!pwd) return;
         var btn = document.getElementById('loginBtn');
         var err = document.getElementById('loginError');
-        btn.disabled = true; btn.textContent = 'Connexion...';
+        btn.disabled = true; btn.textContent = 'Connexion…';
         err.textContent = '';
         fetch('/api/config-check', {
             method: 'POST',
@@ -430,30 +445,19 @@
             body: JSON.stringify({ password: pwd })
         }).then(function(r) {
             return r.json().then(function(d) { return { ok: r.ok, status: r.status, data: d }; });
-        })
-        .then(function(r) {
+        }).then(function(r) {
             if (r.ok && r.data.token) {
-                try { sessionStorage.setItem('karrier_admin_token', r.data.token); } catch(x){}
-                // Sync with script.js global
+                try { sessionStorage.setItem('karrier_admin_token', r.data.token); } catch (x) {}
                 authToken = r.data.token;
-                if (typeof showDashboard === 'function') {
-                    showDashboard();
-                } else {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                }
+                if (typeof showDashboard === 'function') showDashboard();
             } else if (r.status === 429) {
-                err.textContent = 'Trop de tentatives. Réessayez dans ' + (r.data.retryAfter || 60) + 's';
+                err.textContent = 'Trop de tentatives. Réessayez dans ' + (r.data.retryAfter || 60) + ' s.';
             } else {
-                err.textContent = r.data.error || 'Mot de passe incorrect';
+                err.textContent = 'Mot de passe incorrect.';
             }
-        }).catch(function(e) { err.textContent = 'Erreur réseau: ' + e.message; })
-        .finally(function() { btn.disabled = false; btn.textContent = 'Connexion'; });
+        }).catch(function(e) { err.textContent = 'Erreur réseau : ' + e.message; })
+        .finally(function() { btn.disabled = false; btn.textContent = 'Se connecter'; });
     }
-    // Enter key support
-    document.getElementById('loginPassword').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
-    });
     </script>
     <script src="/admin/script.js"></script>
 </body>

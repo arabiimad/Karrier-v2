@@ -4,6 +4,10 @@ const rateLimit = require('./_rate-limit');
 const checkRate = rateLimit({ windowMs: 60000, max: 30 });
 const kvStore = require('./_kv');
 const { hashToken, encryptSecret, isExpired } = require('./_credentials');
+const { sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { alertTeam, ensureReference, findOrder } = require('./_orders');
+const { isPaid } = require('./_payment');
 
 const CREDENTIAL_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -30,6 +34,9 @@ module.exports = async (req, res) => {
         expiresAt: order.credentialLink.expiresAt,
         order: {
           sessionId: order.sessionId,
+          reference: order.reference || null,
+          language: order.language || 'fr',
+          planId: order.plan,
           plan: order.planLabel || order.plan,
           audience: order.audience,
           amount: order.amount,
@@ -57,6 +64,7 @@ module.exports = async (req, res) => {
 
       const now = new Date().toISOString();
       const order = lookup.order;
+      await ensureReference(order);
       order.credentials = {
         linkedinPassword: encryptSecret(linkedinPassword),
         submittedAt: now,
@@ -78,7 +86,13 @@ module.exports = async (req, res) => {
         timestamp: now
       });
 
-      return res.status(200).json({ success: true, status: order.status });
+      // The 30-minute clock starts now: tell the team first, then the customer.
+      await Promise.allSettled([
+        alertTeam('credentials', order),
+        sendEmail({ to: order.customerEmail, ...customerEmails.activationStarted(order, { credentialsReceived: true }) })
+      ]);
+
+      return res.status(200).json({ success: true, status: order.status, language: order.language || 'fr' });
     } catch (error) {
       console.error('Submit credentials error:', error.message);
       return res.status(500).json({ error: 'Failed to submit credentials' });
@@ -224,23 +238,28 @@ module.exports = async (req, res) => {
   // ── Default: get order status by session_id ──────────────────────────────
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { session_id } = req.query;
-  if (!session_id) {
+  const lookup = req.query.session_id || req.query.id || req.query.ref;
+  if (!lookup) {
     return res.status(400).json({ error: 'Missing session_id' });
   }
 
   try {
-    const data = await kvStore.get(`order:${session_id}`);
-    if (!data) {
+    const order = await findOrder(String(lookup).trim());
+    if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    const order = typeof data === 'string' ? JSON.parse(data) : data;
-
-    // Return public fields only — no credentials
+    // Public fields only: no credentials, no email addresses.
     const response = {
+      sessionId: order.sessionId,
+      reference: order.reference || null,
+      language: order.language || 'fr',
       status: order.status,
+      paid: isPaid(order),
+      paidAt: order.paidAt || null,
+      credentialsReceived: !!(order.credentialsSubmittedAt || order.hasCredentials),
       plan: order.plan,
+      planLabel: order.planLabel || null,
       audience: order.audience,
       amount: order.amount,
       currency: order.currency,

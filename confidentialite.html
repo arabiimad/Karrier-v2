@@ -3,47 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Politique de confidentialité — Kareer</title>
+    <title>Politique de confidentialité · Kareer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="kareer-logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="description" content="Comment Kareer traite vos données : e-mail, identifiants LinkedIn chiffrés puis supprimés après activation, durées de conservation et vos droits.">
+    <link rel="canonical" href="https://kareer.pro/confidentialite">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <meta name="theme-color" content="#EEF1F4" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121314" media="(prefers-color-scheme: dark)">
 </head>
 <body>
-    <canvas id="particles"></canvas>
-
-    <header class="header">
-        <div class="container header-inner">
-            <a href="index.html" class="logo">
-                <img src="kareer-logo.png" alt="Kareer" class="logo-img">
-                <span class="logo-text">Kareer</span>
+    <header class="site-header">
+        <div class="wrap header-row">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
             </a>
-            <nav class="nav-links">
-                <a href="index.html" class="nav-link">Tarifs</a>
-                <a href="index.html#faq" class="nav-link">FAQ</a>
-                <a href="contact.html" class="nav-link">Contact</a>
+            <nav class="nav" aria-label="Navigation principale">
+                <a href="/#tarifs">Tarifs</a>
+                <a href="/#etapes">Comment ça marche</a>
+                <a href="/#faq">Questions</a>
+                <a href="contact.html">Contact</a>
             </nav>
-            <a href="index.html#pricing" class="header-cta">Voir les offres</a>
+            <div class="header-tools">
+                <a class="btn btn-primary btn-small" href="/#tarifs">Commander</a>
+                <details class="menu">
+                    <summary>Menu</summary>
+                    <div class="menu-panel">
+                        <a href="/#tarifs">Tarifs</a>
+                        <a href="/#etapes">Comment ça marche</a>
+                        <a href="/#faq">Questions</a>
+                        <a href="contact.html">Contact</a>
+                    </div>
+                </details>
+            </div>
         </div>
     </header>
 
+    <main class="wrap">
     <section class="page-hero">
-        <div class="container">
-            <h1 class="page-title animate-fade-up">Politique de confidentialité</h1>
-            <p class="page-subtitle animate-fade-up delay-1">Comment nous protégeons vos données personnelles</p>
+        <div>
+            <h1 class="page-title">Politique de confidentialité</h1>
+            <p class="page-subtitle">Comment nous protégeons vos données personnelles</p>
         </div>
     </section>
 
     <section class="legal-content">
-        <div class="container">
-            <div class="legal-card animate-fade-up">
+        <div>
+            <div class="legal-card">
                 <h2>1. Responsable du traitement</h2>
                 <p>Le responsable du traitement des données personnelles collectées via le site kareer.pro est Kareer. Pour toute question, vous pouvez nous contacter à <a href="mailto:contact@kareer.pro">contact@kareer.pro</a>.</p>
 
                 <h2>2. Données collectées</h2>
                 <p>Nous collectons les données suivantes :</p>
                 <ul>
-                    <li><strong>Lors d'un achat :</strong> nom, prénom, adresse email, informations de paiement (traitées par Gumroad).</li>
+                    <li><strong>Lors d'une commande :</strong> adresse e-mail de contact, adresse e-mail du compte LinkedIn, offre choisie, codes promo ou de parrainage utilisés.</li>
+                    <li><strong>Pour l'activation :</strong> le mot de passe du compte LinkedIn, transmis par un lien sécurisé. Il est conservé chiffré, lisible uniquement par l'équipe d'activation, et supprimé après l'activation, au plus tard 7 jours après sa transmission.</li>
+                    <li><strong>Sur WhatsApp :</strong> votre numéro de téléphone et nos échanges.</li>
+                    <li><strong>Lors du paiement :</strong> le montant, la date et le moyen de paiement utilisé. Aucune donnée de carte bancaire n'est stockée par Kareer.</li>
+                    <li><strong>Pour le parrainage :</strong> si vous demandez un virement, le nom du titulaire du compte et l'IBAN.</li>
                     <li><strong>Lors de l'utilisation du formulaire de contact :</strong> nom, email, message.</li>
                     <li><strong>Navigation :</strong> données anonymisées de navigation (cookies techniques).</li>
                 </ul>
@@ -52,7 +72,7 @@
                 <p>Vos données sont utilisées pour :</p>
                 <ul>
                     <li>Traiter votre commande et activer votre abonnement</li>
-                    <li>Vous envoyer les factures et confirmations</li>
+                    <li>Vous envoyer les confirmations, reçus et rappels liés à votre commande</li>
                     <li>Répondre à vos demandes de support</li>
                     <li>Améliorer nos services</li>
                 </ul>
@@ -63,12 +83,13 @@
                 <h2>5. Partage des données</h2>
                 <p>Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec :</p>
                 <ul>
-                    <li><strong>Gumroad :</strong> pour le traitement des paiements</li>
-                    <li><strong>Hébergeur :</strong> pour le fonctionnement technique du site</li>
+                    <li><strong>Resend :</strong> pour l'envoi des e-mails liés à votre commande</li>
+                    <li><strong>WhatsApp (Meta) :</strong> pour nos échanges avec vous</li>
+                    <li><strong>Hébergeur et base de données :</strong> pour le fonctionnement technique du site</li>
                 </ul>
 
                 <h2>6. Durée de conservation</h2>
-                <p>Vos données sont conservées pendant la durée de votre abonnement, puis 3 ans après la fin de la relation commerciale conformément aux obligations légales.</p>
+                <p>Vos données sont conservées pendant la durée de votre abonnement, puis 3 ans après la fin de la relation commerciale conformément aux obligations légales. Le mot de passe LinkedIn fait exception : il est supprimé après l'activation, au plus tard 7 jours après sa transmission.</p>
 
                 <h2>7. Vos droits (RGPD)</h2>
                 <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez des droits suivants :</p>
@@ -90,30 +111,28 @@
             </div>
         </div>
     </section>
+    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-brand">
-                    <img src="kareer-logo.png" alt="Kareer" class="footer-logo-img">
-                    <span class="logo-text">Kareer</span>
-                </div>
-                <nav class="footer-links">
-                    <a href="mentions-legales.html">Mentions légales</a>
-                    <a href="cgv.html">CGV</a>
-                    <a href="confidentialite.html">Confidentialité</a>
-                    <a href="contact.html">Contact</a>
-                </nav>
-                <p class="footer-disclaimer">Kareer n'est pas affilié à LinkedIn Corporation. LinkedIn&trade; est une marque déposée de LinkedIn Corporation.</p>
-                <p class="footer-copyright">&copy; 2025 Kareer. Tous droits réservés.</p>
+    <footer class="site-footer">
+        <div class="wrap footer-grid">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
+            </a>
+            <nav class="footer-links" aria-label="Liens utiles">
+                <a href="suivi.html">Suivre une commande</a>
+                <a href="contact.html">Contact</a>
+                <a href="cgv.html">CGV</a>
+                <a href="confidentialite.html">Confidentialité</a>
+                <a href="mentions-legales.html">Mentions légales</a>
+            </nav>
+            <div class="footer-note">
+                <p>Kareer est un service indépendant, sans lien avec LinkedIn Corporation. LinkedIn est une marque déposée de LinkedIn Corporation.</p>
+                <p>© 2026 Kareer</p>
             </div>
         </div>
     </footer>
 
-    <button class="back-to-top" id="backToTop" aria-label="Retour en haut">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-    </button>
-
-    <script src="script.js"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>

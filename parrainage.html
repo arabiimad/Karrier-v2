@@ -3,665 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parrainage — Kareer</title>
-    <meta name="description" content="Parrainez vos amis et gagnez 10€ de réduction sur votre prochaine commande LinkedIn Premium !">
+    <title>Parrainage · Kareer</title>
+    <meta name="description" content="Clients Kareer : partagez votre code de parrainage. La personne qui commande paie 10 € de moins, vous gagnez 10 € à virer ou à utiliser pour votre abonnement.">
+    <link rel="canonical" href="https://kareer.pro/parrainage">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Parrainage Kareer">
+    <meta property="og:description" content="Clients Kareer : la personne qui commande avec votre code paie 10 € de moins, et vous gagnez 10 € dès qu'elle a réglé.">
+    <meta property="og:url" content="https://kareer.pro/parrainage">
+    <meta property="og:image" content="https://kareer.pro/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Kareer">
+    <meta property="og:locale" content="fr_FR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Parrainage Kareer">
+    <meta name="twitter:description" content="Clients Kareer : la personne qui commande avec votre code paie 10 € de moins, et vous gagnez 10 € dès qu'elle a réglé.">
+    <meta name="twitter:image" content="https://kareer.pro/og-image.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="kareer-logo.png" type="image/png">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .referral-hero {
-            background: linear-gradient(135deg, #1565C0 0%, #8B5CF6 100%);
-            padding: 80px 20px;
-            text-align: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        .referral-hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
-            animation: float 20s linear infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-100px); }
-        }
-        .referral-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
-        }
-        .referral-hero p {
-            font-size: 1.2rem;
-            opacity: 0.95;
-            max-width: 600px;
-            margin: 0 auto 32px;
-            position: relative;
-            z-index: 1;
-        }
-        .referral-container {
-            max-width: 900px;
-            margin: -60px auto 60px;
-            padding: 0 20px;
-            position: relative;
-            z-index: 2;
-        }
-        .referral-card {
-            background: var(--card);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .referral-code-section {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .referral-code-label {
-            font-size: 14px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-        }
-        .referral-code-display {
-            background: linear-gradient(135deg, rgba(21, 101, 192, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-            border: 2px dashed var(--primary);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
-            position: relative;
-        }
-        .referral-code-text {
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 4px;
-            color: var(--primary-light);
-            margin-bottom: 8px;
-        }
-        .referral-code-hint {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .referral-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .referral-btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .referral-btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            color: white;
-            box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
-        }
-        .referral-btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(21, 101, 192, 0.4);
-        }
-        .referral-btn-secondary {
-            background: var(--bg-card);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .referral-btn-secondary:hover {
-            background: var(--bg-hover);
-            border-color: var(--primary);
-        }
-        .referral-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .referral-stat {
-            background: linear-gradient(135deg, rgba(21, 101, 192, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-        }
-        .referral-stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-        }
-        .referral-stat-label {
-            font-size: 14px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .referral-how-it-works {
-            margin-bottom: 40px;
-        }
-        .referral-how-it-works h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-        .referral-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 24px;
-        }
-        .referral-step {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            position: relative;
-        }
-        .referral-step-number {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: white;
-            margin-bottom: 16px;
-        }
-        .referral-step h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .referral-step p {
-            font-size: 14px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-        .referral-list {
-            margin-top: 40px;
-        }
-        .referral-list h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        .referral-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .referral-item-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .referral-item-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: white;
-        }
-        .referral-item-details h4 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        .referral-item-details p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .referral-item-reward {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--success);
-        }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--success);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .reward-mode-btn {
-            padding: 12px 24px;
-            border: 2px solid var(--border);
-            background: var(--bg-card);
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .reward-mode-btn:hover {
-            border-color: var(--primary);
-            background: rgba(21, 101, 192, 0.05);
-        }
-        .reward-mode-btn.active {
-            border-color: var(--primary);
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            color: white;
-        }
-        @media (max-width: 768px) {
-            .referral-hero h1 {
-                font-size: 2rem;
-            }
-            .referral-code-text {
-                font-size: 1.5rem;
-                letter-spacing: 2px;
-            }
-            .referral-card {
-                padding: 24px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="programme.css?v=1">
 </head>
 <body>
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="status"></div>
+
+    <header class="ref-top">
+        <a class="brand" href="/"><img src="kareer-logo.png" alt=""><span>Kareer</span></a>
+        <div class="ref-langs" role="group" aria-label="Langue">
+            <button type="button" data-lang="fr">FR</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="de">DE</button>
+        </div>
+    </header>
 
     <div class="referral-hero">
-        <h1>🎁 Parrainez vos amis</h1>
-        <p>Gagnez 10€ pour chaque ami parrainé, et votre ami reçoit aussi 10€ de réduction !</p>
+        <p class="kicker" data-t="kicker">Réservé aux clients</p>
+        <h1 data-t="title">Parrainage</h1>
+        <p data-t="lede">Vous avez commandé chez Kareer ? Partagez votre code : la personne qui commande paie 10 € de moins, et vous gagnez 10 € dès qu'elle a réglé. Votre solde se vire sur votre compte ou paie votre propre abonnement.</p>
     </div>
 
     <div class="referral-container">
-        <div class="referral-card">
-            <!-- Code de parrainage -->
+        <!-- Sign-in: email, then the 6-digit code sent to it -->
+        <section class="signin" id="signin">
+            <h2 data-t="signinTitle">Ouvrir votre espace</h2>
+            <p data-t="signinText">Saisissez l'adresse e-mail utilisée pour votre commande. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.</p>
+            <form id="emailForm" novalidate>
+                <div class="field">
+                    <label for="emailInput" data-t="emailLabel">Adresse e-mail</label>
+                    <input type="email" id="emailInput" autocomplete="email" required>
+                </div>
+                <button type="submit" class="referral-btn referral-btn-primary" id="sendBtn" data-t="sendCode">Recevoir un code</button>
+            </form>
+            <form id="codeForm" novalidate hidden>
+                <p id="codeSent"></p>
+                <div class="field">
+                    <label for="codeInput" data-t="codeLabel">Code reçu par e-mail</label>
+                    <input type="text" id="codeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
+                </div>
+                <div class="row-actions">
+                    <button type="submit" class="referral-btn referral-btn-primary" id="verifyBtn" data-t="verify">Valider</button>
+                    <button type="button" class="link-btn" id="resendBtn" data-t="resend">Renvoyer le code</button>
+                    <button type="button" class="link-btn" id="changeBtn" data-t="change">Changer d'adresse</button>
+                </div>
+            </form>
+            <p class="signin-msg" id="signinMsg" role="status"></p>
+        </section>
+
+        <div class="session-bar" id="sessionBar" hidden><span id="signedAs"></span><button type="button" class="link-btn" id="logoutBtn" data-t="logout">Se déconnecter</button></div>
+
+        <!-- Signed in, but no order activated with this address -->
+        <section class="state-box" id="noCodeBox" hidden>
+            <h2 data-t="noCodeTitle">Pas encore de code de parrainage</h2>
+            <p id="noCodeText"></p>
+            <div class="row-actions">
+                <a class="referral-btn referral-btn-primary" href="ambassadeur" data-keep-lang="ambassadeur" data-t="noCodeAmb">Devenir ambassadeur</a>
+                <a class="referral-btn" href="/#tarifs" data-t="noCodeOrder">Voir les offres</a>
+            </div>
+        </section>
+
+        <!-- Active code -->
+        <div class="referral-card" id="dashboard" hidden>
             <div class="referral-code-section">
-                <div class="referral-code-label">Votre code de parrainage</div>
+                <div class="referral-code-label" data-t="codeTitle">Votre code de parrainage</div>
                 <div class="referral-code-display">
-                    <div class="referral-code-text" id="referralCode">Chargement...</div>
-                    <div class="referral-code-hint">Partagez ce code avec vos amis</div>
+                    <div class="referral-code-text" id="referralCode"></div>
+                    <div class="referral-code-hint" id="codeTerms"></div>
                 </div>
                 <div class="referral-actions">
-                    <button class="referral-btn referral-btn-primary" onclick="copyCode()">
-                        📋 Copier le code
-                    </button>
-                    <button class="referral-btn referral-btn-secondary" onclick="shareWhatsApp()">
-                        💬 Partager sur WhatsApp
-                    </button>
-                    <button class="referral-btn referral-btn-secondary" onclick="shareEmail()">
-                        ✉️ Partager par Email
-                    </button>
+                    <button type="button" class="referral-btn referral-btn-primary" id="copyBtn" data-t="copy">Copier le code</button>
+                    <button type="button" class="referral-btn" id="copyLinkBtn" data-t="copyLink">Copier le lien</button>
+                    <button type="button" class="referral-btn" id="shareWaBtn" data-t="shareWa">Partager sur WhatsApp</button>
+                    <button type="button" class="referral-btn" id="shareMailBtn" data-t="shareMail">Partager par e-mail</button>
                 </div>
             </div>
 
-            <!-- Statistiques -->
             <div class="referral-stats">
-                <div class="referral-stat">
-                    <div class="referral-stat-value" id="referralCount">0</div>
-                    <div class="referral-stat-label">Amis parrainés</div>
-                </div>
-                <div class="referral-stat">
-                    <div class="referral-stat-value" id="totalEarned">0€</div>
-                    <div class="referral-stat-label">Gains totaux</div>
-                </div>
-                <div class="referral-stat" id="pendingBalanceStat" style="display:none">
-                    <div class="referral-stat-value" id="pendingBalance">0€</div>
-                    <div class="referral-stat-label">Solde en attente</div>
-                </div>
+                <div class="referral-stat"><div class="referral-stat-value" id="referralCount">0</div><div class="referral-stat-label" data-t="statCount">Commandes réglées avec votre code</div></div>
+                <div class="referral-stat"><div class="referral-stat-value" id="totalEarned">0 €</div><div class="referral-stat-label" data-t="statEarned">Gains totaux</div></div>
             </div>
 
-            <!-- Mode de récompense -->
-            <div class="referral-reward-mode" style="margin-bottom:40px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px">
-                <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">💰 Mode de récompense</h3>
-                <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
-                    Choisissez comment vous souhaitez recevoir vos récompenses de parrainage (10€ par filleul)
-                </p>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
-                    <button class="reward-mode-btn active" data-mode="discount" onclick="selectRewardMode('discount')">
-                        🎟️ Codes promo
-                    </button>
-                    <button class="reward-mode-btn" data-mode="transfer" onclick="selectRewardMode('transfer')">
-                        💸 Virement bancaire
-                    </button>
+            <section class="wallet">
+                <div class="wallet-head">
+                    <div><h3 data-t="walletTitle">Votre solde</h3><p id="walletText"></p></div>
+                    <div class="wallet-amount" id="balance">0 €</div>
                 </div>
-                <div id="rewardModeDescription" style="font-size:13px;color:var(--text-muted);padding:12px;background:rgba(21,101,192,0.05);border-radius:8px">
-                    Vous recevrez un code promo de 10€ pour chaque ami parrainé
+                <div class="wallet-tabs" role="group">
+                    <button type="button" data-panel="transfer" aria-pressed="true" data-t="tabTransfer">Recevoir par virement</button>
+                    <button type="button" data-panel="subscription" aria-pressed="false" data-t="tabSubscription">Payer un abonnement</button>
                 </div>
 
-                <!-- Section virement -->
-                <div id="transferSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
-                    <h4 style="font-size:15px;font-weight:600;margin-bottom:12px">Informations bancaires</h4>
-                    <input type="text" id="ibanInput" placeholder="IBAN (ex: FR76 XXXX XXXX XXXX XXXX XXXX XXX)" 
-                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-family:monospace">
-                    <input type="text" id="accountNameInput" placeholder="Nom du titulaire du compte" 
-                           style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-                    <button onclick="savePaymentInfo()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">
-                        💾 Enregistrer les informations
-                    </button>
-                    
-                    <div id="transferRequestSection" style="display:none;margin-top:20px">
-                        <div style="padding:16px;background:linear-gradient(135deg, rgba(21,101,192,0.1), rgba(139,92,246,0.1));border-radius:8px;margin-bottom:12px">
-                            <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">Solde disponible pour virement</div>
-                            <div style="font-size:2rem;font-weight:800;color:var(--primary)" id="transferableBalance">0€</div>
-                        </div>
-                        <button onclick="requestTransfer()" id="requestTransferBtn" 
-                                style="width:100%;padding:14px;background:linear-gradient(135deg, var(--success), #059669);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px">
-                            💸 Demander un virement
-                        </button>
+                <div class="panel" id="panelTransfer">
+                    <p class="hint" data-t="transferHint">Le solde entier vous est viré, sans minimum. Nous traitons les demandes sous 48 heures ouvrées.</p>
+                    <div class="bank">
+                        <h4 data-t="bankTitle">Coordonnées bancaires</h4>
+                        <input type="text" id="ibanInput" autocomplete="off" spellcheck="false" placeholder="IBAN (FR76 …)" aria-label="IBAN">
+                        <p class="hint" id="ibanSaved" hidden></p>
+                        <input type="text" id="holderInput" autocomplete="name" aria-label="Titulaire">
+                        <div><button type="button" class="referral-btn" id="saveBankBtn" data-t="save">Enregistrer</button></div>
+                    </div>
+                    <div><button type="button" class="referral-btn referral-btn-primary" id="transferBtn"></button></div>
+                </div>
+
+                <div class="panel" id="panelSubscription" hidden>
+                    <p class="hint" data-t="subHint">Transformez votre solde en code de réduction, à saisir au moment de commander.</p>
+                    <div class="amount-row">
+                        <label for="amountInput" data-t="amountLabel">Montant</label>
+                        <input type="number" id="amountInput" min="1" step="1" inputmode="numeric">
+                        <button type="button" class="referral-btn referral-btn-primary" id="useBalanceBtn" data-t="createCode">Créer mon code</button>
+                    </div>
+                    <div class="new-code" id="newCode" hidden>
+                        <div><div class="hint" data-t="yourCode">Votre code de réduction</div><strong id="newCodeValue"></strong></div>
+                        <div class="row-actions"><button type="button" class="referral-btn" id="copyNewCode" data-t="copyShort">Copier</button><a class="referral-btn referral-btn-primary" href="/#tarifs" data-t="chooseOffer">Choisir mon offre</a></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Comment ça marche -->
-            <div class="referral-how-it-works">
-                <h2>💡 Comment ça marche ?</h2>
-                <div class="referral-steps">
-                    <div class="referral-step">
-                        <div class="referral-step-number">1</div>
-                        <h3>Partagez votre code</h3>
-                        <p>Envoyez votre code de parrainage unique à vos amis par WhatsApp, email ou réseaux sociaux.</p>
-                    </div>
-                    <div class="referral-step">
-                        <div class="referral-step-number">2</div>
-                        <h3>Votre ami commande</h3>
-                        <p>Votre ami utilise votre code lors de sa première commande et reçoit 10€ de réduction immédiate.</p>
-                    </div>
-                    <div class="referral-step">
-                        <div class="referral-step-number">3</div>
-                        <h3>Vous gagnez 10€</h3>
-                        <p>Dès que votre ami valide sa commande, vous recevez un code promo de 10€ pour votre prochaine commande !</p>
-                    </div>
+                <div class="history" id="historyBox" hidden>
+                    <p class="history-title" data-t="historyTitle">Historique</p>
+                    <div id="historyList"></div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Liste des parrainages -->
-            <div class="referral-list" id="referralListSection" style="display:none">
-                <h2>👥 Vos parrainages</h2>
+            <div class="referral-list" id="listBox" hidden>
+                <h2 data-t="listTitle">Vos parrainages</h2>
                 <div id="referralList"></div>
             </div>
+        </div>
+
+        <div class="referral-how-it-works">
+            <h2 data-t="howTitle">Comment ça marche</h2>
+            <div class="referral-steps">
+                <div class="referral-step"><div class="referral-step-number">1</div><h3 data-t="h1t">Commandez</h3><p data-t="h1d">Votre code est créé à l'activation de votre première commande. Il figure dans l'e-mail « Premium est actif ».</p></div>
+                <div class="referral-step"><div class="referral-step-number">2</div><h3 data-t="h2t">Partagez-le</h3><p data-t="h2d">La personne qui commande avec votre code paie 10 € de moins.</p></div>
+                <div class="referral-step"><div class="referral-step-number">3</div><h3 data-t="h3t">Gagnez 10 €</h3><p data-t="h3d">Dès qu'elle a réglé sa commande. Votre solde se vire sur votre compte ou paie votre abonnement.</p></div>
+            </div>
+            <p class="cross-link"><span data-t="crossText">Pas encore client, ou vous voulez partager Kareer avec votre école, votre audience ou vos collègues ?</span> <a href="ambassadeur" data-keep-lang="ambassadeur" data-t="crossLink">Le programme ambassadeur est ouvert à tous.</a></p>
         </div>
     </div>
 
     <script>
-        let userEmail = '';
-        let referralCode = '';
-        let currentRewardMode = 'discount';
-        let pendingBalanceAmount = 0;
-
-        // Sélectionner le mode de récompense
-        function selectRewardMode(mode) {
-            currentRewardMode = mode;
-            
-            // Mettre à jour l'UI
-            document.querySelectorAll('.reward-mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.mode === mode) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // Afficher/masquer la section virement
-            const transferSection = document.getElementById('transferSection');
-            const description = document.getElementById('rewardModeDescription');
-            
-            if (mode === 'transfer') {
-                transferSection.style.display = 'block';
-                description.textContent = 'Vos récompenses seront cumulées et vous pourrez demander un virement bancaire';
-                if (pendingBalanceAmount > 0) {
-                    document.getElementById('transferRequestSection').style.display = 'block';
-                    document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                }
-            } else {
-                transferSection.style.display = 'none';
-                description.textContent = 'Vous recevrez un code promo de 10€ pour chaque ami parrainé';
-            }
-
-            // Sauvegarder le choix
-            saveRewardMode(mode);
-        }
-
-        // Sauvegarder le mode de récompense
-        async function saveRewardMode(mode) {
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        rewardMode: mode
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('✅ Mode de récompense mis à jour !');
-                }
-            } catch (err) {
-                console.error('Erreur:', err);
-            }
-        }
-
-        // Sauvegarder les informations de paiement
-        async function savePaymentInfo() {
-            const iban = document.getElementById('ibanInput').value.trim();
-            const accountName = document.getElementById('accountNameInput').value.trim();
-
-            if (!iban || !accountName) {
-                showToast('❌ Veuillez remplir tous les champs');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        paymentInfo: { iban, accountName }
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('✅ Informations bancaires enregistrées !');
-                    if (pendingBalanceAmount > 0) {
-                        document.getElementById('transferRequestSection').style.display = 'block';
-                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                    }
-                }
-            } catch (err) {
-                showToast('❌ Erreur lors de l\'enregistrement');
+    window.KAREER_PROGRAMME = {
+        program: 'referral',
+        strings: {
+            fr: {
+                pageTitle: 'Parrainage · Kareer', kicker: 'Réservé aux clients', title: 'Parrainage',
+                lede: "Vous avez commandé chez Kareer ? Partagez votre code : la personne qui commande paie 10 € de moins, et vous gagnez 10 € dès qu'elle a réglé. Votre solde se vire sur votre compte ou paie votre propre abonnement.",
+                signinTitle: 'Ouvrir votre espace', signinText: "Saisissez l'adresse e-mail utilisée pour votre commande. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.",
+                noCodeTitle: 'Pas encore de code de parrainage',
+                noCodeText: "Aucun code de parrainage n'est lié à {email}. Le code est réservé aux clients : il est créé à l'activation de la première commande, avec l'adresse e-mail de cette commande. Pas client ? Le programme ambassadeur ne demande aucune commande.",
+                noCodeAmb: 'Devenir ambassadeur', noCodeOrder: 'Voir les offres',
+                codeTitle: 'Votre code de parrainage', statCount: 'Commandes réglées avec votre code', listTitle: 'Vos parrainages',
+                howTitle: 'Comment ça marche', h1t: 'Commandez', h1d: "Votre code est créé à l'activation de votre première commande. Il figure dans l'e-mail « Premium est actif ».",
+                h2t: 'Partagez-le', h2d: 'La personne qui commande avec votre code paie 10 € de moins.',
+                h3t: 'Gagnez 10 €', h3d: "Dès qu'elle a réglé sa commande. Votre solde se vire sur votre compte ou paie votre abonnement.",
+                crossText: 'Pas encore client, ou vous voulez partager Kareer avec votre école, votre audience ou vos collègues ?', crossLink: 'Le programme ambassadeur est ouvert à tous.'
+            },
+            en: {
+                pageTitle: 'Referrals · Kareer', kicker: 'For customers', title: 'Referrals',
+                lede: 'Ordered from Kareer? Share your code: whoever orders with it pays €10 less, and you earn €10 as soon as they have paid. Your balance is transferred to your account or pays for your own subscription.',
+                signinTitle: 'Open your page', signinText: 'Enter the email address you used for your order. We send you a 6-digit code to check it is you.',
+                noCodeTitle: 'No referral code yet',
+                noCodeText: 'There is no referral code for {email}. Referral codes are for customers: one is created when the first order is activated, with the email address of that order. Not a customer? The ambassador programme needs no order.',
+                noCodeAmb: 'Become an ambassador', noCodeOrder: 'See the offers',
+                codeTitle: 'Your referral code', statCount: 'Orders paid with your code', listTitle: 'Your referrals',
+                howTitle: 'How it works', h1t: 'Order', h1d: 'Your code is created when your first order is activated. It is in the "Premium is live" email.',
+                h2t: 'Share it', h2d: 'Whoever orders with your code pays €10 less.',
+                h3t: 'Earn €10', h3d: 'As soon as they have paid. Your balance is transferred to you or pays for your subscription.',
+                crossText: 'Not a customer yet, or want to share Kareer with your school, your audience or your colleagues?', crossLink: 'The ambassador programme is open to everyone.'
+            },
+            es: {
+                pageTitle: 'Recomendaciones · Kareer', kicker: 'Para clientes', title: 'Recomendaciones',
+                lede: '¿Has pedido en Kareer? Comparte tu código: quien pida con él paga 10 € menos, y tú ganas 10 € en cuanto haya pagado. Tu saldo se transfiere a tu cuenta o paga tu propia suscripción.',
+                signinTitle: 'Abre tu página', signinText: 'Escribe el correo que usaste para tu pedido. Te enviamos un código de 6 cifras para comprobar que eres tú.',
+                noCodeTitle: 'Todavía no tienes código de recomendación',
+                noCodeText: 'No hay ningún código de recomendación para {email}. El código es para clientes: se crea al activarse el primer pedido, con el correo de ese pedido. ¿No eres cliente? El programa de embajadores no pide ningún pedido.',
+                noCodeAmb: 'Hacerme embajador', noCodeOrder: 'Ver las ofertas',
+                codeTitle: 'Tu código de recomendación', statCount: 'Pedidos pagados con tu código', listTitle: 'Tus recomendaciones',
+                howTitle: 'Cómo funciona', h1t: 'Haz tu pedido', h1d: 'Tu código se crea al activarse tu primer pedido. Aparece en el correo «Premium está activo».',
+                h2t: 'Compártelo', h2d: 'Quien pida con tu código paga 10 € menos.',
+                h3t: 'Gana 10 €', h3d: 'En cuanto haya pagado su pedido. Tu saldo se transfiere a tu cuenta o paga tu suscripción.',
+                crossText: '¿Todavía no eres cliente, o quieres compartir Kareer con tu escuela, tu audiencia o tus compañeros?', crossLink: 'El programa de embajadores está abierto a todos.'
+            },
+            de: {
+                pageTitle: 'Empfehlungen · Kareer', kicker: 'Für Kunden', title: 'Empfehlungen',
+                lede: 'Sie haben bei Kareer bestellt? Teilen Sie Ihren Code: Wer damit bestellt, zahlt 10 € weniger, und Sie verdienen 10 €, sobald die Person bezahlt hat. Ihr Guthaben wird Ihnen überwiesen oder bezahlt Ihr eigenes Abo.',
+                signinTitle: 'Ihre Seite öffnen', signinText: 'Geben Sie die E-Mail-Adresse Ihrer Bestellung ein. Wir senden Ihnen einen 6-stelligen Code, um zu prüfen, dass Sie es sind.',
+                noCodeTitle: 'Noch kein Empfehlungscode',
+                noCodeText: 'Für {email} gibt es keinen Empfehlungscode. Der Code ist für Kunden: Er wird bei der Aktivierung der ersten Bestellung erstellt, mit der E-Mail-Adresse dieser Bestellung. Noch kein Kunde? Für das Botschafterprogramm ist keine Bestellung nötig.',
+                noCodeAmb: 'Botschafter werden', noCodeOrder: 'Angebote ansehen',
+                codeTitle: 'Ihr Empfehlungscode', statCount: 'Mit Ihrem Code bezahlte Bestellungen', listTitle: 'Ihre Empfehlungen',
+                howTitle: 'So funktioniert es', h1t: 'Bestellen', h1d: 'Ihr Code wird bei der Aktivierung Ihrer ersten Bestellung erstellt. Er steht in der E-Mail „Premium ist aktiv“.',
+                h2t: 'Teilen', h2d: 'Wer mit Ihrem Code bestellt, zahlt 10 € weniger.',
+                h3t: '10 € verdienen', h3d: 'Sobald die Bestellung bezahlt ist. Ihr Guthaben wird überwiesen oder bezahlt Ihr Abo.',
+                crossText: 'Noch kein Kunde, oder Sie möchten Kareer an Ihrer Hochschule, mit Ihrer Community oder Ihren Kollegen teilen?', crossLink: 'Das Botschafterprogramm steht allen offen.'
             }
         }
-
-        // Demander un virement
-        async function requestTransfer() {
-            if (pendingBalanceAmount === 0) {
-                showToast('❌ Aucun solde disponible');
-                return;
-            }
-
-            if (!confirm(`Demander un virement de ${pendingBalanceAmount}€ ?`)) {
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/rewards?type=referral', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: userEmail,
-                        requestTransfer: true
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('✅ Demande de virement envoyée ! Vous serez contacté sous 48h.');
-                    pendingBalanceAmount = 0;
-                    document.getElementById('pendingBalance').textContent = '0€';
-                    document.getElementById('transferableBalance').textContent = '0€';
-                    document.getElementById('requestTransferBtn').disabled = true;
-                    document.getElementById('requestTransferBtn').textContent = '✓ Demande envoyée';
-                }
-            } catch (err) {
-                showToast('❌ Erreur lors de la demande');
-            }
-        }
-
-        // Demander l'email de l'utilisateur
-        function initReferral() {
-            const email = prompt('Entrez votre email pour accéder à votre code de parrainage :');
-            if (!email || !email.includes('@')) {
-                alert('Email invalide');
-                return;
-            }
-            userEmail = email;
-            loadReferralData();
-        }
-
-        // Charger les données de parrainage
-        async function loadReferralData() {
-            try {
-                const res = await fetch(`/api/rewards?type=referral&email=${encodeURIComponent(userEmail)}`);
-                const data = await res.json();
-                
-                if (res.status === 403 || data.hasOrdered === false) {
-                    // L'utilisateur n'a pas encore commandé
-                    document.querySelector('.referral-card').innerHTML = `
-                        <div style="text-align:center;padding:60px 20px">
-                            <div style="font-size:4rem;margin-bottom:20px">🛒</div>
-                            <h2 style="font-size:1.5rem;margin-bottom:16px;color:var(--text)">Commandez d'abord pour parrainer !</h2>
-                            <p style="color:var(--text-muted);margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto">
-                                Pour accéder au programme de parrainage et obtenir votre code unique, 
-                                vous devez d'abord passer une commande sur Kareer.
-                            </p>
-                            <a href="/" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg, var(--primary), var(--purple));color:white;text-decoration:none;border-radius:10px;font-weight:600">
-                                🚀 Découvrir nos offres
-                            </a>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                referralCode = data.code;
-                document.getElementById('referralCode').textContent = data.code;
-                document.getElementById('referralCount').textContent = data.referralCount || 0;
-                document.getElementById('totalEarned').textContent = (data.totalEarned || 0) + '€';
-
-                // Charger le mode de récompense
-                currentRewardMode = data.rewardMode || 'discount';
-                selectRewardMode(currentRewardMode);
-
-                // Afficher le solde en attente si mode virement
-                pendingBalanceAmount = data.pendingBalance || 0;
-                if (pendingBalanceAmount > 0) {
-                    document.getElementById('pendingBalanceStat').style.display = 'block';
-                    document.getElementById('pendingBalance').textContent = pendingBalanceAmount + '€';
-                }
-
-                // Pré-remplir les infos de paiement si elles existent
-                if (data.paymentInfo) {
-                    document.getElementById('ibanInput').value = data.paymentInfo.iban || '';
-                    document.getElementById('accountNameInput').value = data.paymentInfo.accountName || '';
-                    if (pendingBalanceAmount > 0) {
-                        document.getElementById('transferRequestSection').style.display = 'block';
-                        document.getElementById('transferableBalance').textContent = pendingBalanceAmount + '€';
-                    }
-                }
-
-                // Afficher la liste des parrainages
-                if (data.referrals && data.referrals.length > 0) {
-                    document.getElementById('referralListSection').style.display = 'block';
-                    displayReferrals(data.referrals);
-                }
-            } catch (err) {
-                console.error('Erreur:', err);
-                document.getElementById('referralCode').textContent = 'Erreur de chargement';
-            }
-        }
-
-        // Afficher la liste des parrainages
-        function displayReferrals(referrals) {
-            const list = document.getElementById('referralList');
-            list.innerHTML = referrals.map(ref => `
-                <div class="referral-item">
-                    <div class="referral-item-info">
-                        <div class="referral-item-avatar">👤</div>
-                        <div class="referral-item-details">
-                            <h4>${ref.refereeName || ref.refereeEmail}</h4>
-                            <p>${new Date(ref.referredAt).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                    </div>
-                    <div class="referral-item-reward">+10€</div>
-                </div>
-            `).join('');
-        }
-
-        // Copier le code
-        function copyCode() {
-            navigator.clipboard.writeText(referralCode).then(() => {
-                showToast('✅ Code copié dans le presse-papier !');
-            });
-        }
-
-        // Partager sur WhatsApp
-        function shareWhatsApp() {
-            const message = `🎁 Profite de 10€ de réduction sur LinkedIn Premium avec mon code de parrainage : ${referralCode}\n\nCommande sur https://kareer.pro et utilise mon code pour bénéficier de ta réduction ! 🚀`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-        }
-
-        // Partager par Email
-        function shareEmail() {
-            const subject = '🎁 10€ de réduction sur LinkedIn Premium';
-            const body = `Salut !\n\nJe t'offre 10€ de réduction sur LinkedIn Premium !\n\nUtilise mon code de parrainage : ${referralCode}\n\nCommande sur https://kareer.pro et profite de ta réduction immédiate.\n\nÀ bientôt ! 🚀`;
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        }
-
-        // Afficher un toast
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Initialiser au chargement
-        initReferral();
+    };
     </script>
+    <script src="programme.js?v=1"></script>
 </body>
 </html>

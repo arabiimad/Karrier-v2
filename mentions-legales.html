@@ -3,54 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mentions légales — Kareer</title>
+    <title>Mentions légales · Kareer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="kareer-logo.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="description" content="Mentions légales du site kareer.pro : éditeur, hébergement et contact.">
+    <link rel="canonical" href="https://kareer.pro/mentions-legales">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="icon" href="karrier-logo.png" type="image/png">
+    <meta name="theme-color" content="#EEF1F4" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121314" media="(prefers-color-scheme: dark)">
 </head>
 <body>
-    <canvas id="particles"></canvas>
-
-    <header class="header">
-        <div class="container header-inner">
-            <a href="index.html" class="logo">
-                <img src="kareer-logo.png" alt="Kareer" class="logo-img">
-                <span class="logo-text">Kareer</span>
+    <header class="site-header">
+        <div class="wrap header-row">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
             </a>
-            <nav class="nav-links">
-                <a href="index.html" class="nav-link">Tarifs</a>
-                <a href="index.html#faq" class="nav-link">FAQ</a>
-                <a href="contact.html" class="nav-link">Contact</a>
+            <nav class="nav" aria-label="Navigation principale">
+                <a href="/#tarifs">Tarifs</a>
+                <a href="/#etapes">Comment ça marche</a>
+                <a href="/#faq">Questions</a>
+                <a href="contact.html">Contact</a>
             </nav>
-            <a href="index.html#pricing" class="header-cta">Voir les offres</a>
+            <div class="header-tools">
+                <a class="btn btn-primary btn-small" href="/#tarifs">Commander</a>
+                <details class="menu">
+                    <summary>Menu</summary>
+                    <div class="menu-panel">
+                        <a href="/#tarifs">Tarifs</a>
+                        <a href="/#etapes">Comment ça marche</a>
+                        <a href="/#faq">Questions</a>
+                        <a href="contact.html">Contact</a>
+                    </div>
+                </details>
+            </div>
         </div>
     </header>
 
+    <main class="wrap">
     <section class="page-hero">
-        <div class="container">
-            <h1 class="page-title animate-fade-up">Mentions légales</h1>
-            <p class="page-subtitle animate-fade-up delay-1">Informations légales relatives au site kareer.pro</p>
+        <div>
+            <h1 class="page-title">Mentions légales</h1>
+            <p class="page-subtitle">Informations légales relatives au site kareer.pro</p>
         </div>
     </section>
 
     <section class="legal-content">
-        <div class="container">
-            <div class="legal-card animate-fade-up">
+        <div>
+            <div class="legal-card">
                 <h2>1. Éditeur du site</h2>
                 <p>Le site <strong>kareer.pro</strong> est édité par Kareer.</p>
                 <ul>
-                    <li><strong>Raison sociale :</strong> Kareer</li>
-                    <li><strong>Adresse :</strong> [Adresse de l'entreprise]</li>
-                    <li><strong>Email :</strong> <a href="mailto:contact@kareer.pro">contact@kareer.pro</a></li>
-                    <li><strong>Directeur de la publication :</strong> [Nom du responsable]</li>
+                    <li><strong>Nom :</strong> Kareer</li>
+                    <li><strong>E-mail :</strong> <a href="mailto:contact@kareer.pro">contact@kareer.pro</a></li>
+                    <li><strong>WhatsApp :</strong> <a href="https://wa.me/@kareer.pro" target="_blank" rel="noopener">@Kareer.pro</a></li>
                 </ul>
 
                 <h2>2. Hébergement</h2>
                 <p>Le site est hébergé par :</p>
                 <ul>
-                    <li><strong>Hébergeur :</strong> [Nom de l'hébergeur]</li>
-                    <li><strong>Adresse :</strong> [Adresse de l'hébergeur]</li>
+                    <li><strong>Hébergeur :</strong> Vercel Inc.</li>
+                    <li><strong>Adresse :</strong> 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis</li>
+                    <li><strong>Site :</strong> <a href="https://vercel.com" target="_blank" rel="noopener">vercel.com</a></li>
                 </ul>
 
                 <h2>3. Propriété intellectuelle</h2>
@@ -70,30 +86,28 @@
             </div>
         </div>
     </section>
+    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="footer-brand">
-                    <img src="kareer-logo.png" alt="Kareer" class="footer-logo-img">
-                    <span class="logo-text">Kareer</span>
-                </div>
-                <nav class="footer-links">
-                    <a href="mentions-legales.html">Mentions légales</a>
-                    <a href="cgv.html">CGV</a>
-                    <a href="confidentialite.html">Confidentialité</a>
-                    <a href="contact.html">Contact</a>
-                </nav>
-                <p class="footer-disclaimer">Kareer n'est pas affilié à LinkedIn Corporation. LinkedIn&trade; est une marque déposée de LinkedIn Corporation.</p>
-                <p class="footer-copyright">&copy; 2025 Kareer. Tous droits réservés.</p>
+    <footer class="site-footer">
+        <div class="wrap footer-grid">
+            <a class="brand" href="/">
+                <img src="karrier-logo.png" alt="" width="30" height="30">
+                <span>Kareer</span>
+            </a>
+            <nav class="footer-links" aria-label="Liens utiles">
+                <a href="suivi.html">Suivre une commande</a>
+                <a href="contact.html">Contact</a>
+                <a href="cgv.html">CGV</a>
+                <a href="confidentialite.html">Confidentialité</a>
+                <a href="mentions-legales.html">Mentions légales</a>
+            </nav>
+            <div class="footer-note">
+                <p>Kareer est un service indépendant, sans lien avec LinkedIn Corporation. LinkedIn est une marque déposée de LinkedIn Corporation.</p>
+                <p>© 2026 Kareer</p>
             </div>
         </div>
     </footer>
 
-    <button class="back-to-top" id="backToTop" aria-label="Retour en haut">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-    </button>
-
-    <script src="script.js"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>

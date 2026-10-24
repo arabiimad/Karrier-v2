@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassadeurs · Kareer</title>
+    <meta name="description" content="Étudiants, créateurs de contenu, salariés : devenez ambassadeur Kareer sans être client. Votre propre code, une réduction pour vos contacts et un gain sur chaque commande réglée.">
+    <link rel="canonical" href="https://kareer.pro/ambassadeur">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Devenez ambassadeur Kareer">
+    <meta property="og:description" content="Étudiants, créateurs de contenu, salariés : pas besoin d'être client. Votre propre code, une réduction pour vos contacts et un gain sur chaque commande réglée.">
+    <meta property="og:url" content="https://kareer.pro/ambassadeur">
+    <meta property="og:image" content="https://kareer.pro/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Kareer">
+    <meta property="og:locale" content="fr_FR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Devenez ambassadeur Kareer">
+    <meta name="twitter:description" content="Étudiants, créateurs de contenu, salariés : pas besoin d'être client. Votre propre code, une réduction pour vos contacts et un gain sur chaque commande réglée.">
+    <meta name="twitter:image" content="https://kareer.pro/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="kareer-logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="programme.css?v=1">
+    <style>
+        .faq { margin-bottom: 40px; border-top: 1px solid var(--rule); }
+        .faq h2 { font-size: 26px; letter-spacing: -0.025em; margin: 28px 0 8px; }
+        .faq details { border-bottom: 1px solid var(--rule); padding: 14px 0; }
+        .faq summary { cursor: pointer; font-weight: 700; font-size: 16px; }
+        .faq details p { margin-top: 8px; color: var(--ink-2); font-size: 15px; max-width: 40em; }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast" role="status"></div>
+
+    <header class="ref-top">
+        <a class="brand" href="/"><img src="kareer-logo.png" alt=""><span>Kareer</span></a>
+        <div class="ref-langs" role="group" aria-label="Langue">
+            <button type="button" data-lang="fr">FR</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="de">DE</button>
+        </div>
+    </header>
+
+    <div class="referral-hero">
+        <p class="kicker" data-t="kicker">Programme ambassadeur · ouvert à tous</p>
+        <h1 data-t="title">Partagez Kareer autour de vous, gagnez sur chaque commande</h1>
+        <p data-t="lede">Pas besoin d'être client. Vous proposez votre propre code, par exemple LUCIE10. Vos contacts paient moins cher, et vous gagnez une somme à chaque commande réglée avec ce code.</p>
+    </div>
+
+    <div class="referral-container">
+        <section class="audience" data-signed-out>
+            <h2 data-t="whoTitle">Pour qui</h2>
+            <div class="audience-grid">
+                <div class="audience-item"><h3 data-t="w1t">Étudiants</h3><p data-t="w1d">Votre promo, votre école, votre association, le groupe WhatsApp de la classe.</p></div>
+                <div class="audience-item"><h3 data-t="w2t">Créateurs de contenu</h3><p data-t="w2d">LinkedIn, Instagram, TikTok, YouTube, newsletter : votre audience profite de la réduction.</p></div>
+                <div class="audience-item"><h3 data-t="w3t">Au travail</h3><p data-t="w3d">Vos collègues, votre équipe, les personnes que vous accompagnez dans leur recherche d'emploi.</p></div>
+            </div>
+        </section>
+
+        <!-- Sign-in: email, then the 6-digit code sent to it -->
+        <section class="signin" id="signin">
+            <h2 data-t="signinTitle">Faire une demande ou ouvrir votre espace</h2>
+            <p data-t="signinText">Saisissez votre adresse e-mail. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.</p>
+            <form id="emailForm" novalidate>
+                <div class="field">
+                    <label for="emailInput" data-t="emailLabel">Adresse e-mail</label>
+                    <input type="email" id="emailInput" autocomplete="email" required>
+                </div>
+                <button type="submit" class="referral-btn referral-btn-primary" id="sendBtn" data-t="sendCode">Recevoir un code</button>
+            </form>
+            <form id="codeForm" novalidate hidden>
+                <p id="codeSent"></p>
+                <div class="field">
+                    <label for="codeInput" data-t="codeLabel">Code reçu par e-mail</label>
+                    <input type="text" id="codeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
+                </div>
+                <div class="row-actions">
+                    <button type="submit" class="referral-btn referral-btn-primary" id="verifyBtn" data-t="verify">Valider</button>
+                    <button type="button" class="link-btn" id="resendBtn" data-t="resend">Renvoyer le code</button>
+                    <button type="button" class="link-btn" id="changeBtn" data-t="change">Changer d'adresse</button>
+                </div>
+            </form>
+            <p class="signin-msg" id="signinMsg" role="status"></p>
+        </section>
+
+        <div class="session-bar" id="sessionBar" hidden><span id="signedAs"></span><button type="button" class="link-btn" id="logoutBtn" data-t="logout">Se déconnecter</button></div>
+
+        <!-- No account yet: apply -->
+        <section class="state-box" id="applyBox" hidden>
+            <h2 data-t="applyTitle">Votre demande</h2>
+            <p data-t="applyText">Quelques lignes suffisent. L'équipe répond sous 48 heures ouvrées et fixe avec vous la réduction et votre gain (en général 10 € chacun).</p>
+            <form id="applyForm" novalidate>
+                <div class="field"><label for="applyName" data-t="fName">Prénom et nom</label><input type="text" id="applyName" autocomplete="name" maxlength="80" required></div>
+                <div class="field"><label for="applySituation" data-t="fSituation">Vous êtes</label>
+                    <select id="applySituation" required>
+                        <option value="" data-t="sChoose">Choisir…</option>
+                        <option value="student" data-t="sStudent">Étudiant ou étudiante</option>
+                        <option value="graduate" data-t="sGraduate">Jeune diplômé ou diplômée</option>
+                        <option value="creator" data-t="sCreator">Créateur ou créatrice de contenu</option>
+                        <option value="professional" data-t="sProfessional">Salarié, je veux en parler à mes collègues</option>
+                        <option value="other" data-t="sOther">Autre</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="applyCode" data-t="fCode">Le code que vous voulez</label>
+                    <input type="text" id="applyCode" class="code-input" maxlength="20" autocomplete="off" spellcheck="false" placeholder="LUCIE10" required>
+                    <span class="hint" data-t="fCodeHint">4 à 20 lettres ou chiffres, sans espace. L'équipe peut l'ajuster avant de l'activer.</span>
+                </div>
+                <div class="field"><label for="applyOrg"><span data-t="fOrg">École, entreprise ou activité</span> <span class="opt" data-t="optional">(facultatif)</span></label><input type="text" id="applyOrg" maxlength="120"></div>
+                <div class="field"><label for="applyLink"><span data-t="fLink">Lien vers votre profil ou votre compte</span> <span class="opt" data-t="optional">(facultatif)</span></label><input type="text" id="applyLink" maxlength="200" placeholder="LinkedIn, Instagram, TikTok…"></div>
+                <div class="field"><label for="applyMessage"><span data-t="fMessage">Où comptez-vous partager votre code ?</span> <span class="opt" data-t="optional">(facultatif)</span></label><textarea id="applyMessage" maxlength="600"></textarea></div>
+                <p class="form-msg" id="applyMsg" role="alert"></p>
+                <button type="submit" class="referral-btn referral-btn-primary" id="applyBtn" data-t="applySend">Envoyer ma demande</button>
+            </form>
+        </section>
+
+        <!-- Application waiting for the team -->
+        <section class="state-box" id="pendingBox" hidden>
+            <h2 data-t="pendingTitle">Demande en cours d'examen</h2>
+            <p id="pendingText"></p>
+        </section>
+
+        <!-- Application refused -->
+        <section class="state-box" id="rejectedBox" hidden>
+            <h2 data-t="rejectedTitle">Demande non retenue</h2>
+            <p data-t="rejectedText">Si vous pensez qu'il manque une information, écrivez-nous à contact@kareer.pro.</p>
+        </section>
+
+        <!-- Accepted -->
+        <div class="referral-card" id="dashboard" hidden>
+            <p class="notice" id="pausedNote" hidden data-t="pausedNote">Votre code est en pause : il ne donne plus de réduction sur les nouvelles commandes. Votre solde reste disponible.</p>
+            <div class="referral-code-section">
+                <div class="referral-code-label" data-t="codeTitle">Votre code ambassadeur</div>
+                <div class="referral-code-display">
+                    <div class="referral-code-text" id="referralCode"></div>
+                    <div class="referral-code-hint" id="codeTerms"></div>
+                </div>
+                <div class="referral-actions">
+                    <button type="button" class="referral-btn referral-btn-primary" id="copyBtn" data-t="copy">Copier le code</button>
+                    <button type="button" class="referral-btn" id="copyLinkBtn" data-t="copyLink">Copier le lien</button>
+                    <button type="button" class="referral-btn" id="shareWaBtn" data-t="shareWa">Partager sur WhatsApp</button>
+                    <button type="button" class="referral-btn" id="shareMailBtn" data-t="shareMail">Partager par e-mail</button>
+                </div>
+            </div>
+
+            <div class="referral-stats">
+                <div class="referral-stat"><div class="referral-stat-value" id="referralCount">0</div><div class="referral-stat-label" data-t="statCount">Commandes réglées avec votre code</div></div>
+                <div class="referral-stat"><div class="referral-stat-value" id="totalEarned">0 €</div><div class="referral-stat-label" data-t="statEarned">Gains totaux</div></div>
+            </div>
+
+            <section class="wallet">
+                <div class="wallet-head">
+                    <div><h3 data-t="walletTitle">Votre solde</h3><p id="walletText"></p></div>
+                    <div class="wallet-amount" id="balance">0 €</div>
+                </div>
+                <div class="wallet-tabs" role="group">
+                    <button type="button" data-panel="transfer" aria-pressed="true" data-t="tabTransfer">Recevoir par virement</button>
+                    <button type="button" data-panel="subscription" aria-pressed="false" data-t="tabSubscription">Payer un abonnement</button>
+                </div>
+
+                <div class="panel" id="panelTransfer">
+                    <p class="hint" data-t="transferHint">Le solde entier vous est viré, sans minimum. Nous traitons les demandes sous 48 heures ouvrées.</p>
+                    <div class="bank">
+                        <h4 data-t="bankTitle">Coordonnées bancaires</h4>
+                        <input type="text" id="ibanInput" autocomplete="off" spellcheck="false" placeholder="IBAN (FR76 …)" aria-label="IBAN">
+                        <p class="hint" id="ibanSaved" hidden></p>
+                        <input type="text" id="holderInput" autocomplete="name" aria-label="Titulaire">
+                        <div><button type="button" class="referral-btn" id="saveBankBtn" data-t="save">Enregistrer</button></div>
+                    </div>
+                    <div><button type="button" class="referral-btn referral-btn-primary" id="transferBtn"></button></div>
+                </div>
+
+                <div class="panel" id="panelSubscription" hidden>
+                    <p class="hint" data-t="subHint">Transformez votre solde en code de réduction, à saisir au moment de commander.</p>
+                    <div class="amount-row">
+                        <label for="amountInput" data-t="amountLabel">Montant</label>
+                        <input type="number" id="amountInput" min="1" step="1" inputmode="numeric">
+                        <button type="button" class="referral-btn referral-btn-primary" id="useBalanceBtn" data-t="createCode">Créer mon code</button>
+                    </div>
+                    <div class="new-code" id="newCode" hidden>
+                        <div><div class="hint" data-t="yourCode">Votre code de réduction</div><strong id="newCodeValue"></strong></div>
+                        <div class="row-actions"><button type="button" class="referral-btn" id="copyNewCode" data-t="copyShort">Copier</button><a class="referral-btn referral-btn-primary" href="/#tarifs" data-t="chooseOffer">Choisir mon offre</a></div>
+                    </div>
+                </div>
+
+                <div class="history" id="historyBox" hidden>
+                    <p class="history-title" data-t="historyTitle">Historique</p>
+                    <div id="historyList"></div>
+                </div>
+            </section>
+
+            <div class="referral-list" id="listBox" hidden>
+                <h2 data-t="listTitle">Commandes avec votre code</h2>
+                <div id="referralList"></div>
+            </div>
+        </div>
+
+        <div class="referral-how-it-works">
+            <h2 data-t="howTitle">Comment ça marche</h2>
+            <div class="referral-steps">
+                <div class="referral-step"><div class="referral-step-number">1</div><h3 data-t="h1t">Faites votre demande</h3><p data-t="h1d">Vérifiez votre e-mail, présentez-vous et proposez votre code. Aucune commande n'est nécessaire.</p></div>
+                <div class="referral-step"><div class="referral-step-number">2</div><h3 data-t="h2t">L'équipe valide</h3><p data-t="h2d">Sous 48 heures ouvrées. Elle confirme votre code, la réduction pour vos contacts et votre gain par commande.</p></div>
+                <div class="referral-step"><div class="referral-step-number">3</div><h3 data-t="h3t">Partagez, gagnez</h3><p data-t="h3d">Chaque commande réglée avec votre code ajoute votre gain à votre solde : virement ou abonnement, sans minimum.</p></div>
+            </div>
+        </div>
+
+        <section class="faq" data-signed-out>
+            <h2 data-t="faqTitle">Questions fréquentes</h2>
+            <details><summary data-t="q1">Faut-il être client ?</summary><p data-t="a1">Non. Le programme ambassadeur est ouvert à tous, sur validation de l'équipe.</p></details>
+            <details><summary data-t="q2">Quand est-ce que je gagne ?</summary><p data-t="a2">Quand la personne qui a commandé avec votre code a réglé sa commande. Si la commande est remboursée, le gain est retiré de votre solde.</p></details>
+            <details><summary data-t="q3">Comment je récupère l'argent ?</summary><p data-t="a3">Depuis votre espace : virement de tout le solde sur votre compte bancaire, sans minimum, ou code de réduction pour votre propre abonnement.</p></details>
+            <details><summary data-t="q4">Je suis déjà client. Je peux aussi être ambassadeur ?</summary><p data-t="a4">Oui. Votre code de parrainage client et votre code ambassadeur sont séparés, avec chacun son solde.</p></details>
+        </section>
+
+        <p class="cross-link"><span data-t="crossText">Vous avez déjà commandé ?</span> <a href="parrainage" data-keep-lang="parrainage" data-t="crossLink">Votre code de parrainage client est sur la page parrainage.</a></p>
+    </div>
+
+    <script>
+    window.KAREER_PROGRAMME = {
+        program: 'ambassador',
+        strings: {
+            fr: {
+                pageTitle: 'Ambassadeurs · Kareer', kicker: 'Programme ambassadeur · ouvert à tous', title: 'Partagez Kareer autour de vous, gagnez sur chaque commande',
+                lede: "Pas besoin d'être client. Vous proposez votre propre code, par exemple LUCIE10. Vos contacts paient moins cher, et vous gagnez une somme à chaque commande réglée avec ce code.",
+                whoTitle: 'Pour qui', w1t: 'Étudiants', w1d: 'Votre promo, votre école, votre association, le groupe WhatsApp de la classe.',
+                w2t: 'Créateurs de contenu', w2d: 'LinkedIn, Instagram, TikTok, YouTube, newsletter : votre audience profite de la réduction.',
+                w3t: 'Au travail', w3d: "Vos collègues, votre équipe, les personnes que vous accompagnez dans leur recherche d'emploi.",
+                signinTitle: 'Faire une demande ou ouvrir votre espace', signinText: "Saisissez votre adresse e-mail. Nous vous envoyons un code à 6 chiffres pour vérifier que c'est bien vous.",
+                applyTitle: 'Votre demande', applyText: "Quelques lignes suffisent. L'équipe répond sous 48 heures ouvrées et fixe avec vous la réduction et votre gain (en général 10 € chacun).",
+                fName: 'Prénom et nom', fSituation: 'Vous êtes', sChoose: 'Choisir…', sStudent: 'Étudiant ou étudiante', sGraduate: 'Jeune diplômé ou diplômée', sCreator: 'Créateur ou créatrice de contenu', sProfessional: 'Salarié, je veux en parler à mes collègues', sOther: 'Autre',
+                fCode: 'Le code que vous voulez', fCodeHint: "4 à 20 lettres ou chiffres, sans espace. L'équipe peut l'ajuster avant de l'activer.",
+                fOrg: 'École, entreprise ou activité', fLink: 'Lien vers votre profil ou votre compte', fMessage: 'Où comptez-vous partager votre code ?', optional: '(facultatif)',
+                applySend: 'Envoyer ma demande', applyMissing: 'Indiquez votre nom et votre situation.',
+                code_format: 'Le code doit faire 4 à 20 lettres ou chiffres.', code_reserved: 'Ce code commence par un préfixe réservé (REF, KR, SOLDE, KAREER, PARRAIN). Choisissez-en un autre.', code_taken: 'Ce code est déjà pris. Essayez une variante, par exemple avec votre nom ou un chiffre.',
+                pendingTitle: "Demande en cours d'examen", pendingText: "Merci {name}. Nous vous répondons par e-mail, en général sous 48 heures ouvrées. Le code {code} est réservé pour vous et fonctionnera dès que la demande sera acceptée.",
+                rejectedTitle: 'Demande non retenue', rejectedText: "Si vous pensez qu'il manque une information, écrivez-nous à contact@kareer.pro.",
+                pausedNote: 'Votre code est en pause : il ne donne plus de réduction sur les nouvelles commandes. Votre solde reste disponible.',
+                codeTitle: 'Votre code ambassadeur', statCount: 'Commandes réglées avec votre code', listTitle: 'Commandes avec votre code',
+                howTitle: 'Comment ça marche', h1t: 'Faites votre demande', h1d: "Vérifiez votre e-mail, présentez-vous et proposez votre code. Aucune commande n'est nécessaire.",
+                h2t: "L'équipe valide", h2d: 'Sous 48 heures ouvrées. Elle confirme votre code, la réduction pour vos contacts et votre gain par commande.',
+                h3t: 'Partagez, gagnez', h3d: 'Chaque commande réglée avec votre code ajoute votre gain à votre solde : virement ou abonnement, sans minimum.',
+                faqTitle: 'Questions fréquentes', q1: 'Faut-il être client ?', a1: "Non. Le programme ambassadeur est ouvert à tous, sur validation de l'équipe.",
+                q2: 'Quand est-ce que je gagne ?', a2: 'Quand la personne qui a commandé avec votre code a réglé sa commande. Si la commande est remboursée, le gain est retiré de votre solde.',
+                q3: "Comment je récupère l'argent ?", a3: 'Depuis votre espace : virement de tout le solde sur votre compte bancaire, sans minimum, ou code de réduction pour votre propre abonnement.',
+                q4: 'Je suis déjà client. Je peux aussi être ambassadeur ?', a4: 'Oui. Votre code de parrainage client et votre code ambassadeur sont séparés, avec chacun son solde.',
+                crossText: 'Vous avez déjà commandé ?', crossLink: 'Votre code de parrainage client est sur la page parrainage.'
+            },
+            en: {
+                pageTitle: 'Ambassadors · Kareer', kicker: 'Ambassador programme · open to everyone', title: 'Share Kareer with the people around you, earn on every order',
+                lede: 'You do not need to be a customer. You pick your own code, for example LUCIE10. Your contacts pay less, and you earn money on every order paid with that code.',
+                whoTitle: 'Who it is for', w1t: 'Students', w1d: 'Your class, your school, your society, the class WhatsApp group.',
+                w2t: 'Content creators', w2d: 'LinkedIn, Instagram, TikTok, YouTube, newsletter: your audience gets the discount.',
+                w3t: 'At work', w3d: 'Your colleagues, your team, the people you help with their job search.',
+                signinTitle: 'Apply or open your page', signinText: 'Enter your email address. We send you a 6-digit code to check it is you.',
+                applyTitle: 'Your application', applyText: 'A few lines are enough. The team replies within 2 business days and sets the discount and your earnings with you (usually €10 each).',
+                fName: 'Full name', fSituation: 'You are', sChoose: 'Choose…', sStudent: 'A student', sGraduate: 'A recent graduate', sCreator: 'A content creator', sProfessional: 'An employee who wants to tell colleagues', sOther: 'Other',
+                fCode: 'The code you want', fCodeHint: '4 to 20 letters or digits, no spaces. The team may adjust it before turning it on.',
+                fOrg: 'School, company or activity', fLink: 'Link to your profile or account', fMessage: 'Where do you plan to share your code?', optional: '(optional)',
+                applySend: 'Send my application', applyMissing: 'Enter your name and your situation.',
+                code_format: 'The code must be 4 to 20 letters or digits.', code_reserved: 'This code starts with a reserved prefix (REF, KR, SOLDE, KAREER, PARRAIN). Choose another one.', code_taken: 'This code is already taken. Try a variation, for example with your name or a number.',
+                pendingTitle: 'Application under review', pendingText: 'Thank you, {name}. We reply by email, usually within 2 business days. The code {code} is reserved for you and will work as soon as the application is accepted.',
+                rejectedTitle: 'Application not accepted', rejectedText: 'If you think some information is missing, write to us at contact@kareer.pro.',
+                pausedNote: 'Your code is paused: it gives no discount on new orders. Your balance is still available.',
+                codeTitle: 'Your ambassador code', statCount: 'Orders paid with your code', listTitle: 'Orders with your code',
+                howTitle: 'How it works', h1t: 'Apply', h1d: 'Confirm your email, introduce yourself and suggest your code. No order needed.',
+                h2t: 'The team confirms', h2d: 'Within 2 business days. It confirms your code, the discount for your contacts and your earnings per order.',
+                h3t: 'Share and earn', h3d: 'Every order paid with your code adds your earnings to your balance: bank transfer or subscription, no minimum.',
+                faqTitle: 'Questions', q1: 'Do I need to be a customer?', a1: 'No. The ambassador programme is open to everyone, subject to the team accepting the application.',
+                q2: 'When do I earn?', a2: 'When the person who ordered with your code has paid. If the order is refunded, the earnings leave your balance.',
+                q3: 'How do I get the money?', a3: 'From your page: a bank transfer of the whole balance, with no minimum, or a discount code for your own subscription.',
+                q4: 'I am already a customer. Can I be an ambassador too?', a4: 'Yes. Your customer referral code and your ambassador code are separate, each with its own balance.',
+                crossText: 'Already ordered?', crossLink: 'Your customer referral code is on the referrals page.'
+            },
+            es: {
+                pageTitle: 'Embajadores · Kareer', kicker: 'Programa de embajadores · abierto a todos', title: 'Comparte Kareer con tu entorno y gana con cada pedido',
+                lede: 'No hace falta ser cliente. Eliges tu propio código, por ejemplo LUCIE10. Tus contactos pagan menos y tú ganas dinero con cada pedido pagado con ese código.',
+                whoTitle: 'Para quién', w1t: 'Estudiantes', w1d: 'Tu clase, tu escuela, tu asociación, el grupo de WhatsApp de clase.',
+                w2t: 'Creadores de contenido', w2d: 'LinkedIn, Instagram, TikTok, YouTube, newsletter: tu audiencia disfruta del descuento.',
+                w3t: 'En el trabajo', w3d: 'Tus compañeros, tu equipo, las personas a las que ayudas a buscar empleo.',
+                signinTitle: 'Presentar una solicitud o abrir tu página', signinText: 'Escribe tu correo. Te enviamos un código de 6 cifras para comprobar que eres tú.',
+                applyTitle: 'Tu solicitud', applyText: 'Bastan unas líneas. El equipo responde en 48 horas hábiles y fija contigo el descuento y tu ganancia (normalmente 10 € cada uno).',
+                fName: 'Nombre y apellidos', fSituation: 'Eres', sChoose: 'Elegir…', sStudent: 'Estudiante', sGraduate: 'Recién titulado o titulada', sCreator: 'Creador o creadora de contenido', sProfessional: 'Asalariado, quiero contárselo a mis compañeros', sOther: 'Otro',
+                fCode: 'El código que quieres', fCodeHint: 'De 4 a 20 letras o cifras, sin espacios. El equipo puede ajustarlo antes de activarlo.',
+                fOrg: 'Escuela, empresa o actividad', fLink: 'Enlace a tu perfil o cuenta', fMessage: '¿Dónde piensas compartir tu código?', optional: '(opcional)',
+                applySend: 'Enviar mi solicitud', applyMissing: 'Indica tu nombre y tu situación.',
+                code_format: 'El código debe tener de 4 a 20 letras o cifras.', code_reserved: 'Este código empieza por un prefijo reservado (REF, KR, SOLDE, KAREER, PARRAIN). Elige otro.', code_taken: 'Este código ya está cogido. Prueba una variante, por ejemplo con tu nombre o un número.',
+                pendingTitle: 'Solicitud en revisión', pendingText: 'Gracias, {name}. Te respondemos por correo, normalmente en 48 horas hábiles. El código {code} queda reservado para ti y funcionará en cuanto se acepte la solicitud.',
+                rejectedTitle: 'Solicitud no aceptada', rejectedText: 'Si crees que falta algún dato, escríbenos a contact@kareer.pro.',
+                pausedNote: 'Tu código está en pausa: no da descuento en los pedidos nuevos. Tu saldo sigue disponible.',
+                codeTitle: 'Tu código de embajador', statCount: 'Pedidos pagados con tu código', listTitle: 'Pedidos con tu código',
+                howTitle: 'Cómo funciona', h1t: 'Presenta tu solicitud', h1d: 'Confirma tu correo, preséntate y propón tu código. No hace falta ningún pedido.',
+                h2t: 'El equipo la valida', h2d: 'En 48 horas hábiles. Confirma tu código, el descuento para tus contactos y tu ganancia por pedido.',
+                h3t: 'Comparte y gana', h3d: 'Cada pedido pagado con tu código suma tu ganancia a tu saldo: transferencia o suscripción, sin mínimo.',
+                faqTitle: 'Preguntas frecuentes', q1: '¿Hay que ser cliente?', a1: 'No. El programa de embajadores está abierto a todos, con validación del equipo.',
+                q2: '¿Cuándo gano?', a2: 'Cuando la persona que pidió con tu código ha pagado su pedido. Si el pedido se reembolsa, la ganancia se retira de tu saldo.',
+                q3: '¿Cómo recibo el dinero?', a3: 'Desde tu página: transferencia de todo el saldo a tu cuenta, sin mínimo, o un código de descuento para tu propia suscripción.',
+                q4: 'Ya soy cliente. ¿Puedo ser embajador también?', a4: 'Sí. Tu código de recomendación de cliente y tu código de embajador son distintos, cada uno con su saldo.',
+                crossText: '¿Ya has hecho un pedido?', crossLink: 'Tu código de recomendación de cliente está en la página de recomendaciones.'
+            },
+            de: {
+                pageTitle: 'Botschafter · Kareer', kicker: 'Botschafterprogramm · offen für alle', title: 'Empfehlen Sie Kareer weiter und verdienen Sie an jeder Bestellung',
+                lede: 'Sie müssen kein Kunde sein. Sie wählen Ihren eigenen Code, zum Beispiel LUCIE10. Ihre Kontakte zahlen weniger, und Sie verdienen an jeder Bestellung, die mit diesem Code bezahlt wird.',
+                whoTitle: 'Für wen', w1t: 'Studierende', w1d: 'Ihr Jahrgang, Ihre Hochschule, Ihr Verein, die WhatsApp-Gruppe des Kurses.',
+                w2t: 'Content-Creator', w2d: 'LinkedIn, Instagram, TikTok, YouTube, Newsletter: Ihre Community bekommt den Rabatt.',
+                w3t: 'Im Job', w3d: 'Ihre Kollegen, Ihr Team, Menschen, die Sie bei der Jobsuche begleiten.',
+                signinTitle: 'Bewerben oder Ihre Seite öffnen', signinText: 'Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen 6-stelligen Code, um zu prüfen, dass Sie es sind.',
+                applyTitle: 'Ihre Bewerbung', applyText: 'Ein paar Zeilen genügen. Das Team antwortet innerhalb von 2 Werktagen und legt mit Ihnen Rabatt und Verdienst fest (meist je 10 €).',
+                fName: 'Vor- und Nachname', fSituation: 'Sie sind', sChoose: 'Auswählen…', sStudent: 'Studierende oder Studierender', sGraduate: 'Absolventin oder Absolvent', sCreator: 'Content-Creator', sProfessional: 'Angestellt und möchte es Kollegen empfehlen', sOther: 'Sonstiges',
+                fCode: 'Ihr Wunschcode', fCodeHint: '4 bis 20 Buchstaben oder Ziffern, ohne Leerzeichen. Das Team kann ihn vor der Aktivierung anpassen.',
+                fOrg: 'Hochschule, Unternehmen oder Tätigkeit', fLink: 'Link zu Ihrem Profil oder Konto', fMessage: 'Wo möchten Sie Ihren Code teilen?', optional: '(optional)',
+                applySend: 'Bewerbung senden', applyMissing: 'Bitte Namen und Situation angeben.',
+                code_format: 'Der Code muss 4 bis 20 Buchstaben oder Ziffern haben.', code_reserved: 'Dieser Code beginnt mit einem reservierten Präfix (REF, KR, SOLDE, KAREER, PARRAIN). Bitte wählen Sie einen anderen.', code_taken: 'Dieser Code ist schon vergeben. Versuchen Sie eine Variante, etwa mit Ihrem Namen oder einer Zahl.',
+                pendingTitle: 'Bewerbung wird geprüft', pendingText: 'Vielen Dank, {name}. Wir antworten per E-Mail, in der Regel innerhalb von 2 Werktagen. Der Code {code} ist für Sie reserviert und funktioniert, sobald die Bewerbung angenommen ist.',
+                rejectedTitle: 'Bewerbung nicht angenommen', rejectedText: 'Falls Ihrer Meinung nach eine Angabe fehlt, schreiben Sie uns an contact@kareer.pro.',
+                pausedNote: 'Ihr Code ist pausiert: Er gibt keinen Rabatt auf neue Bestellungen. Ihr Guthaben bleibt verfügbar.',
+                codeTitle: 'Ihr Botschafter-Code', statCount: 'Mit Ihrem Code bezahlte Bestellungen', listTitle: 'Bestellungen mit Ihrem Code',
+                howTitle: 'So funktioniert es', h1t: 'Bewerben', h1d: 'Bestätigen Sie Ihre E-Mail, stellen Sie sich vor und schlagen Sie Ihren Code vor. Keine Bestellung nötig.',
+                h2t: 'Das Team bestätigt', h2d: 'Innerhalb von 2 Werktagen. Es bestätigt Ihren Code, den Rabatt für Ihre Kontakte und Ihren Verdienst pro Bestellung.',
+                h3t: 'Teilen und verdienen', h3d: 'Jede mit Ihrem Code bezahlte Bestellung schreibt Ihrem Guthaben Ihren Verdienst gut: Überweisung oder Abo, ohne Mindestbetrag.',
+                faqTitle: 'Häufige Fragen', q1: 'Muss ich Kunde sein?', a1: 'Nein. Das Botschafterprogramm steht allen offen, nach Prüfung durch das Team.',
+                q2: 'Wann verdiene ich?', a2: 'Sobald die Person, die mit Ihrem Code bestellt hat, bezahlt hat. Wird die Bestellung erstattet, wird der Verdienst wieder abgezogen.',
+                q3: 'Wie bekomme ich das Geld?', a3: 'Auf Ihrer Seite: Überweisung des gesamten Guthabens auf Ihr Konto, ohne Mindestbetrag, oder ein Rabattcode für Ihr eigenes Abo.',
+                q4: 'Ich bin schon Kunde. Kann ich auch Botschafter sein?', a4: 'Ja. Ihr Empfehlungscode als Kunde und Ihr Botschafter-Code sind getrennt, jeweils mit eigenem Guthaben.',
+                crossText: 'Sie haben schon bestellt?', crossLink: 'Ihr Empfehlungscode als Kunde ist auf der Empfehlungsseite.'
+            }
+        }
+    };
+    </script>
+    <script src="programme.js?v=1"></script>
+    <script>
+    // Ambassador application: the proposed code is checked by the server (format, reserved prefixes, already taken).
+    (function () {
+        var P = window.KareerProgramme;
+        var codeInput = document.getElementById('applyCode');
+        var nameInput = document.getElementById('applyName');
+        var msg = document.getElementById('applyMsg');
+        var touched = false;
+        function normalize(v) { return String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20); }
+        codeInput.addEventListener('input', function () { touched = true; var v = normalize(codeInput.value); if (v !== codeInput.value) codeInput.value = v; msg.textContent = ''; });
+        // Suggest FIRSTNAME10 until the person types their own code.
+        nameInput.addEventListener('input', function () {
+            if (touched) return;
+            var first = normalize(nameInput.value.trim().split(/\s+/)[0]).slice(0, 12);
+            codeInput.value = first.length >= 2 ? first + '10' : '';
+        });
+        document.getElementById('applyForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var t = P.t();
+            var body = {
+                name: nameInput.value.trim(),
+                situation: document.getElementById('applySituation').value,
+                code: normalize(codeInput.value),
+                organisation: document.getElementById('applyOrg').value.trim(),
+                link: document.getElementById('applyLink').value.trim(),
+                message: document.getElementById('applyMessage').value.trim(),
+                lang: P.lang()
+            };
+            if (body.name.length < 2 || !body.situation) { msg.textContent = t.applyMissing; return; }
+            if (body.code.length < 4) { msg.textContent = t.code_format; codeInput.focus(); return; }
+            var btn = document.getElementById('applyBtn');
+            btn.disabled = true;
+            msg.textContent = '';
+            P.api('&action=apply', { method: 'POST', body: body }).then(function (r) {
+                if (r.status === 401) { P.signedOut(); return; }
+                if (r.status === 409) { P.reload(); return; }
+                if (!r.ok) {
+                    var err = r.data.error;
+                    msg.textContent = t[err] || (err === 'missing_fields' ? t.applyMissing : t.failed);
+                    if (/^code_/.test(err)) codeInput.focus();
+                    return;
+                }
+                P.setData(r.data);
+            }).catch(function () { msg.textContent = t.errNetwork; })
+              .finally(function () { btn.disabled = false; });
+        });
+    })();
+    </script>
+</body>
+</html>

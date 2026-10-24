@@ -1,748 +1,149 @@
-// ===== Safe localStorage helper =====
+// Behaviour for the public pages. Legal pages load this without i18n.js,
+// so everything that needs translations checks for it first.
+
 function safeGet(key) {
-    try { return localStorage.getItem(key); } catch(e) { return null; }
+    try { return localStorage.getItem(key); } catch (e) { return null; }
 }
 function safeSet(key, value) {
-    try { localStorage.setItem(key, value); } catch(e) { /* private browsing */ }
+    try { localStorage.setItem(key, value); } catch (e) {}
 }
 
-// ===== Reduced motion check =====
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// ===== Shared utilities =====
-const LOCALE_MAP = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE' };
-function getCurrentLocale() {
-    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-    return LOCALE_MAP[lang] || 'fr-FR';
-}
-function getTrans(key) {
-    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-    return (typeof translations !== 'undefined' && translations[lang]) ? translations[lang][key] || '' : '';
+function pageLang() {
+    return window.currentLang || document.documentElement.lang || 'fr';
 }
 
-// ===== Student/Salary Pricing Toggle - Impressionnant =====
-(function() {
-    const toggleOptions = document.querySelectorAll('.toggle-option');
-    const switchContainer = document.querySelector('.pricing-switch-container');
-    const descStudent = document.querySelector('.desc-student');
-    const descSalary = document.querySelector('.desc-salary');
-    
-    if (!toggleOptions.length || !switchContainer) return;
-    
-    function updatePricing(isStudent) {
-        // Update switch container class
-        if (isStudent) {
-            switchContainer.classList.remove('salary-active');
-        } else {
-            switchContainer.classList.add('salary-active');
-        }
-        
-        // Update toggle options
-        toggleOptions.forEach(option => {
-            const optionType = option.dataset.type;
-            if (optionType === 'student') {
-                option.classList.toggle('active', isStudent);
-            } else if (optionType === 'salary') {
-                option.classList.toggle('active', !isStudent);
-            }
-        });
-        
-        // Update descriptions
-        if (descStudent) descStudent.style.display = isStudent ? '' : 'none';
-        if (descSalary) descSalary.style.display = isStudent ? 'none' : '';
-        
-        // Update all pricing cards with smooth transitions
-        document.querySelectorAll('.pricing-card').forEach(card => {
-            // Add transition class for smooth animations
-            card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            
-            // Toggle price amounts with fade effect
-            const studentPrice = card.querySelector('.price-student');
-            const salaryPrice = card.querySelector('.price-salary');
-            if (studentPrice) {
-                studentPrice.style.opacity = isStudent ? '1' : '0';
-                studentPrice.style.transform = isStudent ? 'scale(1)' : 'scale(0.9)';
-                setTimeout(() => {
-                    studentPrice.style.display = isStudent ? '' : 'none';
-                }, isStudent ? 0 : 200);
-            }
-            if (salaryPrice) {
-                salaryPrice.style.opacity = isStudent ? '0' : '1';
-                salaryPrice.style.transform = isStudent ? 'scale(0.9)' : 'scale(1)';
-                setTimeout(() => {
-                    salaryPrice.style.display = isStudent ? 'none' : '';
-                }, isStudent ? 200 : 0);
-            }
-            
-            // Toggle monthly prices
-            const studentMonthly = card.querySelector('.monthly-student');
-            const salaryMonthly = card.querySelector('.monthly-salary');
-            if (studentMonthly) {
-                studentMonthly.style.opacity = isStudent ? '1' : '0';
-                setTimeout(() => {
-                    studentMonthly.style.display = isStudent ? '' : 'none';
-                }, isStudent ? 0 : 200);
-            }
-            if (salaryMonthly) {
-                salaryMonthly.style.opacity = isStudent ? '0' : '1';
-                setTimeout(() => {
-                    salaryMonthly.style.display = isStudent ? 'none' : '';
-                }, isStudent ? 200 : 0);
-            }
-            
-            // Toggle savings tags with slide effect
-            const studentSavings = card.querySelector('.savings-student');
-            const salarySavings = card.querySelector('.savings-salary');
-            if (studentSavings) {
-                studentSavings.style.opacity = isStudent ? '1' : '0';
-                studentSavings.style.transform = isStudent ? 'translateY(0)' : 'translateY(-10px)';
-                setTimeout(() => {
-                    studentSavings.style.display = isStudent ? '' : 'none';
-                }, isStudent ? 0 : 200);
-            }
-            if (salarySavings) {
-                salarySavings.style.opacity = isStudent ? '0' : '1';
-                salarySavings.style.transform = isStudent ? 'translateY(-10px)' : 'translateY(0)';
-                setTimeout(() => {
-                    salarySavings.style.display = isStudent ? 'none' : '';
-                }, isStudent ? 200 : 0);
-            }
-            
-            // Toggle savings amounts
-            const studentAmount = card.querySelector('.savings-amount.savings-student');
-            const salaryAmount = card.querySelector('.savings-amount.savings-salary');
-            if (studentAmount) {
-                studentAmount.style.opacity = isStudent ? '1' : '0';
-                setTimeout(() => {
-                    studentAmount.style.display = isStudent ? '' : 'none';
-                }, isStudent ? 0 : 200);
-            }
-            if (salaryAmount) {
-                salaryAmount.style.opacity = isStudent ? '0' : '1';
-                setTimeout(() => {
-                    salaryAmount.style.display = isStudent ? 'none' : '';
-                }, isStudent ? 200 : 0);
-            }
-        });
-        
-        // Update savings banner with animation
-        const savingsTitle = document.querySelector('[data-i18n="savings_title"]');
-        if (savingsTitle) {
-            savingsTitle.style.opacity = '0';
-            savingsTitle.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                savingsTitle.textContent = isStudent ? 
-                    'Économisez jusqu\'à 82% par rapport aux prix officiels 2026' : 
-                    'Économisez jusqu\'à 79% par rapport aux prix officiels 2026';
-                savingsTitle.style.opacity = '1';
-                savingsTitle.style.transform = 'translateY(0)';
-            }, 200);
-        }
-        
-        // Add a pulse effect to the pricing cards
-        document.querySelectorAll('.pricing-card').forEach((card, index) => {
-            setTimeout(() => {
-                card.style.transform = 'scale(1.02)';
-                setTimeout(() => {
-                    card.style.transform = 'scale(1)';
-                }, 200);
-            }, index * 100);
-        });
-    }
-    
-    // Add click handlers to toggle options
-    toggleOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            const optionType = option.dataset.type;
-            const isStudent = optionType === 'student';
-            updatePricing(isStudent);
-            
-            // Save preference
-            safeSet('kareer_pricing_type', optionType);
-        });
+function moneyFormatter(withCents) {
+    const locales = { fr: 'fr-FR', en: 'en-IE', es: 'es-ES', de: 'de-DE' };
+    const digits = withCents ? 2 : 0;
+    return new Intl.NumberFormat(locales[pageLang()] || 'fr-FR', {
+        style: 'currency', currency: 'EUR', minimumFractionDigits: digits, maximumFractionDigits: digits
     });
-    
-    // Load saved preference or default to student
-    const savedType = safeGet('kareer_pricing_type') || 'student';
-    const isStudent = savedType === 'student';
-    
-    // Initial update with slight delay for smooth entrance
-    setTimeout(() => {
-        updatePricing(isStudent);
-    }, 500);
-    
-    // Expose function globally to restore state after language change
-    window.restorePricingToggle = function() {
-        const savedType = safeGet('kareer_pricing_type') || 'student';
-        const isStudent = savedType === 'student';
-        updatePricing(isStudent);
-    };
-})();
+}
 
-// ===== Theme Toggle =====
-(function() {
-    if (document.documentElement.classList.contains('light-pending')) {
-        document.body.classList.add('light');
-        document.documentElement.classList.remove('light-pending');
-    } else {
-        const saved = safeGet('kareer_theme');
-        if (saved === 'light') document.body.classList.add('light');
-    }
+function formatMoney(amount, withCents) {
+    return moneyFormatter(withCents).format(amount);
+}
 
-    const toggle = document.getElementById('themeToggle');
-    if (toggle) {
-        toggle.addEventListener('click', () => {
-            if (!prefersReducedMotion) document.body.classList.add('theme-transitioning');
-            document.body.classList.toggle('light');
-            const isLight = document.body.classList.contains('light');
-            safeSet('kareer_theme', isLight ? 'light' : 'dark');
-            if (!prefersReducedMotion) setTimeout(() => document.body.classList.remove('theme-transitioning'), 500);
-        });
-    }
-})();
+// Big monospace prices: drop the space before the euro sign and set the sign smaller.
+function formatAmountHTML(amount) {
+    return moneyFormatter(false).formatToParts(amount).map(part => {
+        if (part.type === 'currency') return '<span class="cur">' + part.value + '</span>';
+        if (part.type === 'literal' && /^\s+$/.test(part.value)) return '';
+        return part.value;
+    }).join('');
+}
 
-// ===== Page Loader =====
-window.addEventListener('load', () => {
-    const loader = document.getElementById('loader');
-    const waSticky = document.querySelector('.whatsapp-sticky');
-    if (loader) {
-        const delay = prefersReducedMotion ? 200 : 1400;
-        setTimeout(() => {
-            loader.classList.add('hidden');
-            setTimeout(() => {
-                loader.style.display = 'none';
-                // Show sticky WA button only after loader is gone
-                if (waSticky) waSticky.classList.add('ready');
-            }, prefersReducedMotion ? 50 : 800);
-        }, delay);
-    } else {
-        // No loader — show immediately
-        if (waSticky) waSticky.classList.add('ready');
-    }
+// ----- Prices -----
+
+const PLAN_IDS = {
+    career: { student: 'career-student', salary: 'career-salary' },
+    business: { student: 'business-student', salary: 'business-salary' },
+    sales: { student: 'sales-nav', salary: 'sales-nav' },
+    recruiter: { student: 'recruiter', salary: 'recruiter' }
+};
+
+let audience = safeGet('kareer_audience') === 'salary' ? 'salary' : 'student';
+
+function renderPrices() {
+    document.querySelectorAll('[data-money]').forEach(el => {
+        const cents = el.hasAttribute('data-cents');
+        el.textContent = el.getAttribute('data-money').split('|')
+            .map(v => formatMoney(parseFloat(v), cents)).join(' / ');
+    });
+
+    const calcFmt = typeof tr === 'function' ? tr('calc_fmt') : '';
+    document.querySelectorAll('.plan[data-plan]').forEach(plan => {
+        const official = parseFloat(plan.dataset.official);
+        const price = parseFloat(plan.dataset[audience]);
+        const amountEl = plan.querySelector('[data-price]');
+        const calcEl = plan.querySelector('[data-calc]');
+        if (amountEl) amountEl.innerHTML = formatAmountHTML(price);
+        if (calcEl && calcFmt) {
+            calcEl.innerHTML = calcFmt
+                .replace('{month}', formatMoney(price / 12, true))
+                .replace('{saved}', formatMoney(official - price, true));
+        }
+    });
+
+    document.querySelectorAll('[data-order]').forEach(link => {
+        const ids = PLAN_IDS[link.dataset.order];
+        if (ids) link.href = '/checkout?plan=' + ids[audience] + '&lang=' + pageLang();
+    });
+}
+
+function setAudience(next) {
+    audience = next === 'salary' ? 'salary' : 'student';
+    safeSet('kareer_audience', audience);
+    document.querySelectorAll('[data-audience]').forEach(btn => {
+        btn.setAttribute('aria-pressed', btn.dataset.audience === audience ? 'true' : 'false');
+    });
+    renderPrices();
+}
+
+document.querySelectorAll('[data-audience]').forEach(btn => {
+    btn.addEventListener('click', () => setAudience(btn.dataset.audience));
 });
 
-// ===== Language Switcher =====
-(function() {
-    const langSwitcher = document.getElementById('langSwitcher');
-    const langBtn = document.getElementById('langBtn');
-    const langDropdown = document.getElementById('langDropdown');
-    const langFlag = document.getElementById('langFlag');
-    const langCodeEl = document.getElementById('langCode');
+// Kept for any old link that still calls it.
+window.allerCheckout = function (planType) {
+    const ids = PLAN_IDS[planType];
+    window.location.href = '/checkout?plan=' + (ids ? ids[audience] : planType) + '&lang=' + pageLang();
+};
 
-    if (langBtn && langDropdown) {
-        langBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            langSwitcher.classList.toggle('open');
-        });
+// ----- Language -----
 
-        document.addEventListener('click', () => {
-            langSwitcher.classList.remove('open');
-        });
-
-        langDropdown.querySelectorAll('.lang-option').forEach(option => {
-            option.addEventListener('click', () => {
-                const lang = option.getAttribute('data-lang');
-                langDropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                if (typeof langMeta !== 'undefined' && langMeta[lang]) {
-                    langFlag.textContent = langMeta[lang].flag;
-                    langCodeEl.textContent = langMeta[lang].code;
-                }
-                if (typeof setLanguage === 'function') setLanguage(lang);
-                langSwitcher.classList.remove('open');
-            });
-        });
-    }
-
-    document.querySelectorAll('.mobile-lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.getAttribute('data-lang');
-            document.querySelectorAll('.mobile-lang-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if (typeof setLanguage === 'function') setLanguage(lang);
-            if (langDropdown) {
-                langDropdown.querySelectorAll('.lang-option').forEach(o => {
-                    o.classList.toggle('active', o.getAttribute('data-lang') === lang);
-                });
-            }
-            if (typeof langMeta !== 'undefined' && langMeta[lang]) {
-                if (langFlag) langFlag.textContent = langMeta[lang].flag;
-                if (langCodeEl) langCodeEl.textContent = langMeta[lang].code;
-            }
-        });
-    });
-
-    const savedLang = safeGet('kareer_lang');
-    if (savedLang && savedLang !== 'fr') {
-        if (typeof setLanguage === 'function') setLanguage(savedLang);
-        if (langDropdown) {
-            langDropdown.querySelectorAll('.lang-option').forEach(o => {
-                o.classList.toggle('active', o.getAttribute('data-lang') === savedLang);
-            });
-        }
-        if (typeof langMeta !== 'undefined' && langMeta[savedLang]) {
-            if (langFlag) langFlag.textContent = langMeta[savedLang].flag;
-            if (langCodeEl) langCodeEl.textContent = langMeta[savedLang].code;
-        }
-        document.querySelectorAll('.mobile-lang-btn').forEach(b => {
-            b.classList.toggle('active', b.getAttribute('data-lang') === savedLang);
-        });
-    }
-})();
-
-// ===== Particle Background =====
-const canvas = document.getElementById('particles');
-if (canvas && !prefersReducedMotion) {
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let mouseX = 0, mouseY = 0;
-    let resizeTimer;
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(resizeCanvas, 150);
-    });
-
-    document.addEventListener('mousemove', e => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
-
-    class Particle {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = (Math.random() - 0.5) * 0.4;
-            this.speedY = (Math.random() - 0.5) * 0.4;
-            this.opacity = Math.random() * 0.5 + 0.1;
-            this.color = Math.random() > 0.5 ? '21, 101, 192' : '0, 188, 212';
-        }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            const dx = mouseX - this.x;
-            const dy = mouseY - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 200) {
-                this.x += dx * 0.001;
-                this.y += dy * 0.001;
-            }
-            if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-                this.reset();
-            }
-        }
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
-            ctx.fill();
-        }
-    }
-
-    const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? Math.min(30, Math.floor(window.innerWidth / 25)) : Math.min(80, Math.floor(window.innerWidth / 15));
-    for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
-    }
-
-    function drawLines() {
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 150) {
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(21, 101, 192, ${0.06 * (1 - dist / 150)})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-                }
-            }
-        }
-    }
-
-    let particlesAnimId = null;
-    let particlesPaused = false;
-
-    function animateParticles() {
-        if (particlesPaused) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        drawLines();
-        particlesAnimId = requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
-
-    // Pause particles when tab is hidden (performance)
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            particlesPaused = true;
-            if (particlesAnimId) cancelAnimationFrame(particlesAnimId);
-        } else {
-            particlesPaused = false;
-            animateParticles();
-        }
-    });
-}
-
-// ===== Scroll Animations =====
-const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -40px 0px' };
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-document.querySelectorAll('.animate-fade-in, .animate-fade-up, .animate-slide-left, .animate-slide-right').forEach(el => {
-    observer.observe(el);
-});
-
-// ===== Header Scroll Effect + Progress Bar =====
-const scrollProgress = document.getElementById('scrollProgress');
-const headerEl = document.querySelector('.header');
-const backToTopEl = document.getElementById('backToTop');
-let scrollTicking = false;
-
-window.addEventListener('scroll', () => {
-    if (!scrollTicking) {
-        requestAnimationFrame(() => {
-            const y = window.scrollY;
-            if (headerEl) headerEl.classList.toggle('scrolled', y > 50);
-            if (backToTopEl) backToTopEl.classList.toggle('visible', y > 400);
-            if (scrollProgress) {
-                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                scrollProgress.style.width = (docHeight > 0 ? (y / docHeight) * 100 : 0) + '%';
-            }
-            scrollTicking = false;
-        });
-        scrollTicking = true;
-    }
-});
-
-// ===== Back to Top =====
-if (backToTopEl) {
-    backToTopEl.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-}
-
-// ===== Mobile Menu =====
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const mobileMenu = document.getElementById('mobileMenu');
-if (mobileMenuBtn && mobileMenu) {
-    function closeMobileMenu() {
-        mobileMenuBtn.classList.remove('open');
-        mobileMenu.classList.remove('open');
-        mobileMenuBtn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-    }
-
-    mobileMenuBtn.addEventListener('click', () => {
-        const isOpen = mobileMenu.classList.toggle('open');
-        mobileMenuBtn.classList.toggle('open');
-        mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-        document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
-
-    mobileMenu.querySelectorAll('.mobile-link').forEach(link => {
-        link.addEventListener('click', closeMobileMenu);
-    });
-
-    // Close menu on click outside
-    document.addEventListener('click', (e) => {
-        if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-            closeMobileMenu();
-        }
-    });
-}
-
-// ===== ESC Key Handler =====
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        // Close mobile menu
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        if (mobileMenu && mobileMenu.classList.contains('open')) {
-            mobileMenuBtn.classList.remove('open');
-            mobileMenu.classList.remove('open');
-            document.body.style.overflow = '';
-        }
-        // Close language dropdown
-        const langSwitcher = document.getElementById('langSwitcher');
-        if (langSwitcher && langSwitcher.classList.contains('open')) {
-            langSwitcher.classList.remove('open');
-        }
-        // Close compare table
-        const compareTable = document.getElementById('compareTable');
-        if (compareTable && compareTable.classList.contains('open')) {
-            compareTable.classList.remove('open');
-            const compareBtn = document.getElementById('compareBtn');
-            if (compareBtn) {
-                compareBtn.setAttribute('aria-expanded', 'false');
-                const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-                const t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : null;
-                const openTxt = (t && t.compare_btn) ? t.compare_btn : 'Comparer toutes les offres';
-                compareBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg> ' + openTxt;
-            }
-        }
-    }
-});
-
-// Tabs désactivés — plus de distinction étudiant/pro
-
-// ===== Stats: static values (no counter animation) =====
-
-// ===== FAQ Accordion =====
-document.querySelectorAll('.faq-question').forEach(btn => {
+document.querySelectorAll('button[data-lang]').forEach(btn => {
     btn.addEventListener('click', () => {
-        const item = btn.parentElement;
-        const isOpen = item.classList.contains('open');
+        // Pages that exist in each language: go to that version instead of translating in place.
+        const lang = btn.dataset.lang;
+        const target = document.documentElement.hasAttribute('data-page-lang') && typeof alternateUrl === 'function' ? alternateUrl(lang) : null;
+        if (target && lang !== pageLang()) {
+            safeSet('kareer_lang', lang);
+            window.location.href = target + window.location.hash;
+            return;
+        }
+        if (typeof setLanguage === 'function') setLanguage(lang);
+        const menu = btn.closest('details');
+        if (menu) menu.open = false;
+    });
+});
+document.addEventListener('kareer:lang', renderPrices);
 
-        document.querySelectorAll('.faq-item').forEach(faq => {
-            faq.classList.remove('open');
-            const qBtn = faq.querySelector('.faq-question');
-            if (qBtn) qBtn.setAttribute('aria-expanded', 'false');
+// ----- Header and menu -----
+
+const header = document.querySelector('.site-header');
+if (header) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+}
+
+const menu = document.querySelector('.menu');
+if (menu) {
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { menu.open = false; }));
+    document.addEventListener('click', e => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') menu.open = false; });
+}
+
+// ----- Cookie notice -----
+
+const cookieNotice = document.getElementById('cookieNotice');
+if (cookieNotice && !safeGet('kareer_cookie_consent')) {
+    cookieNotice.hidden = false;
+    cookieNotice.querySelectorAll('[data-cookie]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            safeSet('kareer_cookie_consent', btn.dataset.cookie);
+            cookieNotice.hidden = true;
         });
-
-        if (!isOpen) {
-            item.classList.add('open');
-            btn.setAttribute('aria-expanded', 'true');
-        }
-    });
-});
-
-// ===== Comparison Table Toggle =====
-const compareBtn = document.getElementById('compareBtn');
-const compareTable = document.getElementById('compareTable');
-if (compareBtn && compareTable) {
-    compareBtn.addEventListener('click', () => {
-        const isOpen = compareTable.classList.toggle('open');
-        compareBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        const lang = (typeof currentLang !== 'undefined') ? currentLang : 'fr';
-        const t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : null;
-        const openTxt = (t && t.compare_btn) ? t.compare_btn : 'Comparer toutes les offres';
-        const hideText = (t && t.compare_hide) ? t.compare_hide : 'Masquer la comparaison';
-        compareBtn.innerHTML = isOpen
-            ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg> ' + hideText
-            : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg> ' + openTxt;
     });
 }
 
-// ===== Smooth scroll for anchor links =====
-document.querySelectorAll('a[href^="#"]').forEach(link => {
-    link.addEventListener('click', e => {
-        const href = link.getAttribute('href');
-        if (href === '#') return;
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-});
+setAudience(audience);
 
-// ===== Card hover (subtle) =====
-document.querySelectorAll('.pricing-card').forEach(card => {
-    card.addEventListener('mouseleave', () => {
-        const isPopular = card.classList.contains('popular');
-        card.style.transform = isPopular ? 'scale(1.03)' : '';
-    });
-});
-
-// Price counter animation removed — static values only
-
-// ===== Contact Form =====
-const contactForm = document.getElementById('contactForm');
-if (contactForm) {
-    const formSuccess = document.getElementById('formSuccess');
-    const submitBtn = document.getElementById('submitBtn');
-    const sendAnother = document.getElementById('sendAnother');
-
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    function clearErrors() {
-        contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-    }
-
-    function showError(fieldId) {
-        const field = document.getElementById(fieldId);
-        if (field) field.classList.add('error');
-    }
-
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        clearErrors();
-
-        const name = document.getElementById('name');
-        const email = document.getElementById('email');
-        const subject = document.getElementById('subject');
-        const message = document.getElementById('message');
-        let valid = true;
-
-        if (!name.value.trim()) { showError('name'); valid = false; }
-        if (!email.value.trim() || !validateEmail(email.value)) { showError('email'); valid = false; }
-        if (!subject.value) { showError('subject'); valid = false; }
-        if (!message.value.trim()) { showError('message'); valid = false; }
-
-        if (!valid) return;
-
-        const btnText = submitBtn.querySelector('.btn-text');
-        const btnLoader = submitBtn.querySelector('.btn-loader');
-        btnText.style.display = 'none';
-        btnLoader.style.display = 'inline-flex';
-        submitBtn.disabled = true;
-
-        setTimeout(() => {
-            const mailtoSubject = encodeURIComponent(`[Kareer] ${subject.options[subject.selectedIndex].text}`);
-            const mailtoBody = encodeURIComponent(
-                `Nom: ${name.value}\nEmail: ${email.value}\n\n${message.value}`
-            );
-
-            window.location.href = `mailto:contact@kareer.pro?subject=${mailtoSubject}&body=${mailtoBody}`;
-
-            contactForm.style.display = 'none';
-            formSuccess.style.display = 'block';
-
-            btnText.style.display = 'inline';
-            btnLoader.style.display = 'none';
-            submitBtn.disabled = false;
-        }, 800);
-    });
-
-    ['name', 'email', 'subject', 'message'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', () => el.classList.remove('error'));
-            el.addEventListener('change', () => el.classList.remove('error'));
-        }
-    });
-
-    if (sendAnother) {
-        sendAnother.addEventListener('click', () => {
-            contactForm.reset();
-            contactForm.style.display = 'flex';
-            formSuccess.style.display = 'none';
-        });
-    }
-}
-
-// ===== Keyboard navigation for FAQ =====
-document.querySelectorAll('.faq-question').forEach(btn => {
-    btn.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            btn.click();
-        }
-    });
-});
-
-// ===== Commander WhatsApp =====
-function commanderWhatsApp(plan) {
-    const message = encodeURIComponent(`Bonjour ! Je souhaite commander : ${plan}. Je suis prêt(e) à procéder au paiement.`);
-    window.open(`https://wa.me/212651064637?text=${message}`, '_blank');
-}
-
-// ===== Payer par Carte (NOWPayments) =====
-function getPlanId(planType) {
-    const studentEl = document.querySelector('.toggle-option[data-type="student"]');
-    const isStudent = studentEl && studentEl.classList.contains('active');
-    const planMap = {
-        'career':    isStudent ? 'career-student'   : 'career-salary',
-        'business':  isStudent ? 'business-student'  : 'business-salary',
-        'sales':     'sales-nav',
-        'recruiter': 'recruiter',
-    };
-    return planMap[planType] || planType;
-}
-
-function allerCheckout(planType) {
-    const planId = getPlanId(planType);
-    const lang = document.documentElement.lang || 'fr';
-    window.location.href = `checkout.html?plan=${planId}&lang=${lang}`;
-}
-
-// ===== Ripple Effect on CTA Buttons =====
-document.querySelectorAll('.cta-button').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        const ripple = document.createElement('span');
-        ripple.classList.add('ripple');
-        const rect = this.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-        this.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    });
-});
-
-// ===== Cookie Banner RGPD =====
-(function() {
-    const banner = document.getElementById('cookieBanner');
-    if (!banner) return;
-
-    const consent = safeGet('kareer_cookie_consent');
-    if (consent) return; // Already decided
-
-    // Show after short delay
-    setTimeout(() => banner.classList.add('visible'), 1200);
-
-    document.getElementById('cookieAccept').addEventListener('click', () => {
-        safeSet('kareer_cookie_consent', 'accepted');
-        banner.classList.remove('visible');
-        setTimeout(() => banner.remove(), 400);
-    });
-
-    document.getElementById('cookieDecline').addEventListener('click', () => {
-        safeSet('kareer_cookie_consent', 'declined');
-        banner.classList.remove('visible');
-        setTimeout(() => banner.remove(), 400);
-    });
+// A referral link (kareer.pro/?ref=CODE) is remembered for 30 days and prefilled at checkout.
+(function rememberReferral() {
+    try {
+        const code = (new URLSearchParams(window.location.search).get('ref') || '').trim().toUpperCase();
+        if (/^[A-Z0-9]{4,20}$/.test(code)) localStorage.setItem('kareer_ref', JSON.stringify({ code: code, at: Date.now() }));
+    } catch (e) {}
 })();
-
-// ===== Urgency Countdown =====
-(function() {
-    const el = document.getElementById('urgencyCountdown');
-    if (!el) return;
-
-    // Store deadline in sessionStorage so it persists on reload within same tab session
-    // but resets on new sessions (realistic urgency)
-    const KEY = 'kareer_urgency_end';
-    let end = parseInt(safeGet(KEY) || '0');
-    const now = Date.now();
-
-    if (!end || end < now) {
-        // Set deadline to end of current day (midnight)
-        const tomorrow = new Date();
-        tomorrow.setHours(23, 59, 59, 999);
-        end = tomorrow.getTime();
-        safeSet(KEY, String(end));
-    }
-
-    function pad(n) { return String(n).padStart(2, '0'); }
-
-    function tick() {
-        const remaining = Math.max(0, end - Date.now());
-        const h = Math.floor(remaining / 3600000);
-        const m = Math.floor((remaining % 3600000) / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-        el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
-        if (remaining > 0) requestAnimationFrame(tick);
-    }
-    tick();
-})();
-

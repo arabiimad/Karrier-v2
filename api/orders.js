@@ -1,6 +1,8 @@
 require('./_env');
 const { verifyAuth } = require('./_auth');
 const kvStore = require('./_kv');
+const { isPaid, isPaymentDue, QUEUES } = require('./_payment');
+const { ensureReference } = require('./_orders');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -13,26 +15,42 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { status, search, page = '1', limit = '50' } = req.query;
+    const { status, search, view, payment, page = '1', limit = '50' } = req.query;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
     const orders = await kvStore.getAllOrders(order => {
       if (status && order.status !== status) return false;
+      if (view && QUEUES[view] && !QUEUES[view](order)) return false;
+      if (payment === 'paid' && !isPaid(order)) return false;
+      if (payment === 'unpaid' && (isPaid(order) || order.status === 'refunded')) return false;
       if (search) {
         const q = search.toLowerCase();
         return (order.customerEmail || '').toLowerCase().includes(q)
           || (order.linkedinEmail || '').toLowerCase().includes(q)
           || (order.plan || '').toLowerCase().includes(q)
           || (order.audience || '').toLowerCase().includes(q)
-          || (order.sessionId || '').toLowerCase().includes(q);
+          || (order.sessionId || '').toLowerCase().includes(q)
+          || (order.reference || '').toLowerCase().replace('-', '').includes(q.replace('-', ''));
       }
       return true;
     });
 
     // Paginate
     const start = (pageNum - 1) * limitNum;
-    const paginated = orders.slice(start, start + limitNum).map(sanitizeOrder);
+    const pageOrders = orders.slice(start, start + limitNum);
+
+    // Older orders get their short KR- number the first time the dashboard lists them.
+    for (const order of pageOrders) {
+      if (order.reference) continue;
+      try {
+        await ensureReference(order);
+        await kvStore.set(`order:${order.sessionId}`, JSON.stringify(order));
+      } catch (e) {
+        console.error('Reference backfill failed:', order.sessionId, e.message);
+      }
+    }
+    const paginated = pageOrders.map(sanitizeOrder);
 
     res.status(200).json({
       orders: paginated,
@@ -56,6 +74,8 @@ function sanitizeOrder(order) {
   copy.credentialsExpiresAt = order.credentials && order.credentials.expiresAt ? order.credentials.expiresAt : null;
   copy.credentialLinkSentAt = order.credentialLinkSentAt || (order.credentialLink && order.credentialLink.sentAt) || null;
   copy.credentialLinkExpiresAt = order.credentialLink && order.credentialLink.expiresAt ? order.credentialLink.expiresAt : null;
+  copy.isPaid = isPaid(order);
+  copy.paymentDue = isPaymentDue(order);
   delete copy.linkedinPassword;
   delete copy.credentials;
   if (copy.credentialLink) {

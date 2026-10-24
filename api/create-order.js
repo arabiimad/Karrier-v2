@@ -2,17 +2,12 @@ require('./_env');
 const kvStore = require('./_kv');
 const rateLimit = require('./_rate-limit');
 const { getPlan } = require('./_plans');
-const {
-  buildEmailHtml,
-  detailTable,
-  emailButton,
-  escapeHtml,
-  formatAudience,
-  formatCurrency,
-  formatPlan,
-  getSiteUrl,
-  stepsBox
-} = require('./_email');
+const crypto = require('crypto');
+const { sendEmail } = require('./_email');
+const customerEmails = require('./_customer-emails');
+const { alertTeam, newReference } = require('./_orders');
+const { REWARD, getReferral, isActive } = require('./_referrals');
+const ambassadors = require('./_ambassadors');
 const checkRate = rateLimit({ windowMs: 60000, max: 15 });
 
 module.exports = async (req, res) => {
@@ -26,7 +21,6 @@ module.exports = async (req, res) => {
 
   try {
     const {
-      orderId,
       planId,
       linkedinEmail,
       customerEmail,
@@ -35,8 +29,12 @@ module.exports = async (req, res) => {
       promoCode,
     } = req.body;
 
-    if (!orderId || !planId || !linkedinEmail) {
+    if (!planId || !linkedinEmail) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(String(linkedinEmail).trim()) || (customerEmail && !emailPattern.test(String(customerEmail).trim()))) {
+      return res.status(400).json({ error: 'Invalid email address' });
     }
 
     const planInfo = getPlan(planId);
@@ -44,17 +42,23 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid plan' });
     }
 
-    const sessionId = orderId || `kareer_${planId}_${Date.now()}`;
+    // Ids are made here, never taken from the browser, so an order cannot be overwritten.
+    const sessionId = `kareer_${planId}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const reference = await newReference();
     let amount = planInfo.amount;
     const discounts = [];
     let normalizedPromoCode = null;
     let normalizedReferralCode = null;
+    let ambassador = null;
 
+    // One field for both: a customer's referral code (REF...) or an ambassador's own code.
     if (referralCode) {
-      const referralResult = await validateReferralCode(referralCode, customerEmail || linkedinEmail);
-      amount = Math.max(0, amount - 10);
-      normalizedReferralCode = referralResult.code;
-      discounts.push({ type: 'referral', code: referralResult.code, amount: 10 });
+      const shared = await validateSharedCode(referralCode, [customerEmail, linkedinEmail]);
+      const discount = Math.min(shared.discount, amount);
+      amount -= discount;
+      if (shared.kind === 'ambassador') ambassador = shared.account;
+      else normalizedReferralCode = shared.code;
+      discounts.push({ type: shared.kind, code: shared.code, amount: discount });
     }
 
     if (promoCode) {
@@ -71,6 +75,7 @@ module.exports = async (req, res) => {
 
     const order = {
       sessionId,
+      reference,
       plan: planId,
       planLabel: planInfo.planLabel,
       audience: planInfo.audience,
@@ -80,18 +85,29 @@ module.exports = async (req, res) => {
       discounts,
       promoCode: normalizedPromoCode,
       usedReferralCode: normalizedReferralCode,
-      linkedinEmail,
-      customerEmail: customerEmail || linkedinEmail,
-      language,
+      // The reward is fixed when the order is placed, even if the team changes it later.
+      usedAmbassadorCode: ambassador ? ambassador.code : null,
+      ambassadorEmail: ambassador ? ambassador.email : null,
+      ambassadorReward: ambassador ? Number(ambassador.reward || 0) : null,
+      linkedinEmail: String(linkedinEmail).trim(),
+      customerEmail: String(customerEmail || linkedinEmail).trim(),
+      language: ['fr', 'en', 'es', 'de'].includes(language) ? language : 'fr',
       status: 'pending_payment',
       source: 'checkout-whatsapp',
+      paymentFlow: 'after_activation',
       hasCredentials: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    // Fully covered by a code (for example a referral balance): nothing will be due.
+    if (order.amount === 0) {
+      order.paid = true;
+      order.paidAt = order.createdAt;
+      order.paymentMethod = 'Code de réduction';
+    }
 
-    // Save order to KV
     await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+    await kvStore.set(`order-ref:${reference}`, sessionId);
 
     // Update index
     const indexData = await kvStore.get('orders:index');
@@ -101,18 +117,23 @@ module.exports = async (req, res) => {
       await kvStore.set('orders:index', JSON.stringify(allIds));
     }
 
-    console.log(`[Order] Created: ${sessionId} - ${planId} ${order.amount}${order.currency} (${linkedinEmail})`);
+    console.log(`[Order] Created: ${reference} ${sessionId} - ${planId} ${order.amount}${order.currency}`);
 
-    // Send emails in background (don't block response)
-    sendWelcomeEmail(order).catch(e => console.error('Welcome email error:', e.message));
-    sendAdminNotification(order).catch(e => console.error('Admin notif error:', e.message));
+    // Wait for the emails: a serverless function can be frozen as soon as it answers.
+    const confirmation = customerEmails.orderReceived(order);
+    const [customerMail] = await Promise.allSettled([
+      sendEmail({ to: order.customerEmail, ...confirmation }),
+      alertTeam('new_order', order)
+    ]);
 
     res.status(200).json({
       success: true,
       orderId: sessionId,
+      reference,
       amount: order.amount,
       currency: order.currency,
-      status: order.status
+      status: order.status,
+      emailSent: customerMail.status === 'fulfilled' && customerMail.value.sent
     });
 
   } catch (error) {
@@ -187,185 +208,32 @@ async function applyPromoCode({ code, plan, orderId, amount }) {
   return { code: promoCode, discount };
 }
 
-async function validateReferralCode(code, customerEmail) {
-  const referralCode = String(code || '').toUpperCase().trim();
-  const referralData = await kvStore.get(`referral:${referralCode}`);
-  if (!referralData) {
-    const error = new Error('Invalid referral code');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const referral = typeof referralData === 'string' ? JSON.parse(referralData) : referralData;
-  const email = String(customerEmail || '').toLowerCase();
-  if (referral.referrerEmail && referral.referrerEmail.toLowerCase() === email) {
-    const error = new Error('Self-referral is not allowed');
-    error.statusCode = 400;
-    throw error;
-  }
-  const alreadyUsed = (referral.referrals || []).some(r => String(r.email || '').toLowerCase() === email);
-  if (alreadyUsed) {
-    const error = new Error('Referral code already used by this email');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return { code: referralCode };
+function codeError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
 }
 
-async function sendWelcomeEmail(order) {
-  if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] RESEND_API_KEY not configured');
-    return;
+async function validateSharedCode(code, buyerEmails) {
+  const normalized = ambassadors.normalizeCode(code);
+  const emails = buyerEmails.filter(Boolean).map(e => String(e).trim().toLowerCase());
+
+  const referral = await getReferral(normalized);
+  // Codes refused or not yet accepted do not give the discount.
+  if (referral && typeof referral === 'object' && isActive(referral)) {
+    if (referral.referrerEmail && emails.includes(referral.referrerEmail.toLowerCase())) {
+      throw codeError('Self-referral is not allowed');
+    }
+    const alreadyUsed = (referral.referrals || []).some(r => emails.includes(String(r.email || '').toLowerCase()));
+    if (alreadyUsed) throw codeError('Referral code already used by this email');
+    return { kind: 'referral', code: normalized, discount: REWARD };
   }
-  if (!order.customerEmail) {
-    console.log('[Email] No customer email in order:', order.sessionId);
-    return;
+
+  const account = await ambassadors.getAmbassadorByCode(normalized);
+  if (ambassadors.isActive(account) && account.code === normalized) {
+    if (emails.includes(account.email)) throw codeError('An ambassador cannot use their own code');
+    return { kind: 'ambassador', code: normalized, discount: Number(account.discount || 0), account };
   }
 
-  console.log(`[Email] Sending welcome email to ${order.customerEmail} (${order.language})`);
-
-  try {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const lang = order.language || 'fr';
-    const siteUrl = getSiteUrl();
-    
-    console.log('[Email] Resend initialized, preparing email content');
-
-    const t = lang === 'fr' ? {
-      subject: 'Commande reçue — Kareer',
-      title: 'Commande enregistrée',
-      preheader: 'Votre commande est enregistrée. Le paiement se fait maintenant via WhatsApp.',
-      body: 'Votre commande est bien enregistrée. Payez via WhatsApp ; après validation du paiement, vous recevrez un lien sécurisé pour transmettre votre mot de passe LinkedIn.',
-      stepsTitle: 'Prochaines étapes',
-      steps: [
-        'Vous finalisez le paiement avec notre équipe sur WhatsApp.',
-        'Nous validons le paiement et vous envoyons un lien sécurisé.',
-        'Vous transmettez vos identifiants, puis nous lançons l’activation.'
-      ],
-      delay: 'Délai estimé : 24 à 48 heures après réception des identifiants.',
-      amount: 'Montant',
-      order: 'Commande',
-      contact: 'Procéder au paiement sur WhatsApp',
-      footer: 'Vous recevez cet email car vous avez commencé une commande sur kareer.pro.'
-    } : lang === 'es' ? {
-      subject: 'Pedido recibido — Kareer',
-      title: 'Pedido registrado',
-      preheader: 'Tu pedido está registrado. El pago se finaliza por WhatsApp.',
-      body: 'Tu pedido está registrado. Paga por WhatsApp; después de la validación recibirás un enlace seguro para enviar tu contraseña de LinkedIn.',
-      stepsTitle: 'Próximos pasos',
-      steps: [
-        'Finalizas el pago con nuestro equipo por WhatsApp.',
-        'Validamos el pago y enviamos el enlace seguro.',
-        'Envías tus credenciales y empezamos la activación.'
-      ],
-      delay: 'Tiempo estimado: 24 a 48 horas después de recibir tus credenciales.',
-      amount: 'Monto',
-      order: 'Pedido',
-      contact: 'Pagar por WhatsApp',
-      footer: 'Recibes este email porque has iniciado un pedido en kareer.pro.'
-    } : lang === 'de' ? {
-      subject: 'Bestellung erhalten — Kareer',
-      title: 'Bestellung registriert',
-      preheader: 'Ihre Bestellung ist registriert. Die Zahlung erfolgt über WhatsApp.',
-      body: 'Ihre Bestellung wurde registriert. Zahlen Sie über WhatsApp. Nach der Bestätigung erhalten Sie einen sicheren Link für Ihr LinkedIn-Passwort.',
-      stepsTitle: 'Nächste Schritte',
-      steps: [
-        'Sie schließen die Zahlung mit unserem Team über WhatsApp ab.',
-        'Wir bestätigen Ihre Zahlung und senden den sicheren Link.',
-        'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.'
-      ],
-      delay: 'Geschätzte Zeit: 24 bis 48 Stunden nach Erhalt der Zugangsdaten.',
-      amount: 'Betrag',
-      order: 'Bestellung',
-      contact: 'Über WhatsApp bezahlen',
-      footer: 'Sie erhalten diese E-Mail, weil Sie eine Bestellung auf kareer.pro gestartet haben.'
-    } : {
-      subject: 'Order received — Kareer',
-      title: 'Order registered',
-      preheader: 'Your order is registered. Payment is completed through WhatsApp.',
-      body: 'Your order is registered. Pay through WhatsApp; after validation you will receive a secure link to submit your LinkedIn password.',
-      stepsTitle: 'Next steps',
-      steps: [
-        'You complete payment with our team on WhatsApp.',
-        'We validate your payment and send the secure link.',
-        'You submit your credentials, then we start activation.'
-      ],
-      delay: 'Estimated time: 24 to 48 hours after receiving your credentials.',
-      amount: 'Amount',
-      order: 'Order',
-      contact: 'Pay on WhatsApp',
-      footer: 'You are receiving this email because you started an order on kareer.pro.'
-    };
-
-    const content = `
-      <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(t.body)}</p>
-      ${detailTable([
-        { label: 'Plan', value: order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, lang)}` : formatPlan(order.plan, order.audience, lang) },
-        { label: t.amount, value: formatCurrency(order.amount, order.currency || 'EUR', lang) },
-        { label: t.order, value: order.sessionId }
-      ])}
-      ${stepsBox(t.stepsTitle, t.steps, t.delay)}
-      ${emailButton(t.contact, 'https://wa.me/212651064637', { color: '#22C55E' })}
-    `;
-
-    console.log('[Email] Calling resend.emails.send...');
-    const emailResult = await resend.emails.send({
-      from: 'Kareer <notifications@kareer.pro>',
-      to: order.customerEmail,
-      subject: t.subject,
-      html: buildEmailHtml({
-        siteUrl,
-        title: t.title,
-        preheader: t.preheader,
-        content,
-        footer: t.footer,
-        lang
-      }),
-      text: `${t.title}\n\n${t.body}\n\nPlan: ${formatPlan(order.plan, order.audience, lang)}\n${t.amount}: ${formatCurrency(order.amount, order.currency || 'EUR', lang)}\n${t.order}: ${order.sessionId}\n\n${t.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}\n\n${t.contact}: https://wa.me/212651064637`
-    });
-    
-    console.log(`[Email] Welcome email sent successfully to ${order.customerEmail}`, emailResult);
-  } catch (error) {
-    console.error('[Email] Error sending welcome email:', error.message);
-    console.error('[Email] Full error:', error);
-  }
-}
-
-async function sendAdminNotification(order) {
-  if (!process.env.RESEND_API_KEY) return;
-
-  const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const adminEmail = process.env.ADMIN_EMAIL || 'arabiimad03@gmail.com';
-  const siteUrl = getSiteUrl();
-  const plan = order.planLabel ? `${order.planLabel} · ${formatAudience(order.audience, 'fr')}` : formatPlan(order.plan, order.audience, 'fr');
-  const content = `
-    <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">Une nouvelle commande WhatsApp vient d’être créée.</p>
-    ${detailTable([
-      { label: 'Plan', value: plan },
-      { label: 'Montant', value: formatCurrency(order.amount, order.currency || 'EUR', 'fr') },
-      { label: 'Email client', value: order.customerEmail },
-      { label: 'Email LinkedIn', value: order.linkedinEmail },
-      { label: 'Commande', value: order.sessionId },
-      { label: 'Date', value: new Date(order.createdAt).toLocaleString('fr-FR') }
-    ])}
-    ${emailButton('Ouvrir le dashboard', `${siteUrl}/admin`)}
-  `;
-
-  await resend.emails.send({
-    from: 'Kareer <notifications@kareer.pro>',
-    to: adminEmail,
-    subject: `Nouvelle commande — ${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
-    html: buildEmailHtml({
-      siteUrl,
-      title: 'Nouvelle commande WhatsApp',
-      preheader: `${plan} — ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}`,
-      content,
-      footer: 'Notification interne Kareer.',
-      lang: 'fr'
-    }),
-    text: `Nouvelle commande WhatsApp\n\nPlan: ${plan}\nMontant: ${formatCurrency(order.amount, order.currency || 'EUR', 'fr')}\nEmail client: ${order.customerEmail}\nEmail LinkedIn: ${order.linkedinEmail}\nCommande: ${order.sessionId}\nAdmin: ${siteUrl}/admin`
-  });
+  throw codeError('Invalid referral code');
 }
