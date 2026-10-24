@@ -39,6 +39,12 @@ module.exports = async (req, res) => {
       if (action === 'mark_paid') {
         return await markPaid(session_id, req.body, res);
       }
+      if (action === 'add_note') {
+        return await addNote(session_id, req.body, res);
+      }
+      if (action === 'set_student_verified') {
+        return await setStudentVerified(session_id, req.body, res);
+      }
       return res.status(400).json({ error: 'Invalid action' });
     } catch (error) {
       console.error('Order action error:', error.message);
@@ -442,6 +448,44 @@ async function markPaid(sessionId, body, res) {
     timestamp: now
   });
 
+  return res.status(200).json({ success: true, order: sanitizeOrder(order) });
+}
+
+async function loadOrder(sessionId) {
+  if (!sessionId) return null;
+  const data = await kvStore.get(`order:${sessionId}`);
+  if (!data) return null;
+  return typeof data === 'string' ? JSON.parse(data) : data;
+}
+
+async function addNote(sessionId, body, res) {
+  const order = await loadOrder(sessionId);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  const text = String(body.text || '').trim().slice(0, 1000);
+  if (!text) return res.status(400).json({ error: 'Empty note' });
+
+  const now = new Date().toISOString();
+  if (!Array.isArray(order.notes)) order.notes = [];
+  order.notes.push({ text, date: now, by: 'admin' });
+  order.updatedAt = now;
+  await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+  return res.status(200).json({ success: true, order: sanitizeOrder(order) });
+}
+
+async function setStudentVerified(sessionId, body, res) {
+  const order = await loadOrder(sessionId);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+
+  const now = new Date().toISOString();
+  order.studentVerified = body.verified !== false;
+  order.studentVerifiedAt = order.studentVerified ? now : null;
+  order.updatedAt = now;
+  await kvStore.set(`order:${sessionId}`, JSON.stringify(order));
+  await logAction(kvStore, {
+    action: order.studentVerified ? 'student_verified' : 'student_unverified',
+    sessionId,
+    timestamp: now
+  });
   return res.status(200).json({ success: true, order: sanitizeOrder(order) });
 }
 

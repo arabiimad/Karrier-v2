@@ -30,7 +30,12 @@ module.exports = async (req, res) => {
       let doneCount = 0;
       let todayOrders = 0;
       let todayRevenue = 0;
-      const queues = { to_link: 0, waiting_credentials: 0, to_activate: 0, to_collect: 0 };
+      const queues = { to_link: 0, waiting_credentials: 0, to_activate: 0, to_collect: 0, student_check: 0 };
+      // Time from credentials received to activation, last 30 days.
+      const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      let activationMinutes = 0;
+      let activationSamples = 0;
+      let lateCount = 0;
 
       for (const order of allOrders) {
         if (countsAsRevenue(order)) {
@@ -43,6 +48,14 @@ module.exports = async (req, res) => {
           dueCount++;
         }
         Object.keys(queues).forEach(name => { if (QUEUES[name](order)) queues[name]++; });
+
+        const credsAt = order.credentialsSubmittedAt ? Date.parse(order.credentialsSubmittedAt) : NaN;
+        const activatedAt = order.activatedAt ? Date.parse(order.activatedAt) : NaN;
+        if (activatedAt >= credsAt && activatedAt >= since) {
+          activationMinutes += (activatedAt - credsAt) / 60000;
+          activationSamples++;
+        }
+        if (QUEUES.to_activate(order) && Date.now() - credsAt > 30 * 60000) lateCount++;
 
         if (['pending', 'pending_payment', 'awaiting_credentials'].includes(order.status)) pendingCount++;
         else if (order.status === 'activating') activatingCount++;
@@ -63,7 +76,10 @@ module.exports = async (req, res) => {
         doneCount,
         todayOrders,
         todayRevenue,
-        queues
+        queues,
+        avgActivationMinutes: activationSamples ? Math.round(activationMinutes / activationSamples) : null,
+        activationSamples,
+        lateCount
       });
     }
 
