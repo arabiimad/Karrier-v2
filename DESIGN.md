@@ -85,7 +85,10 @@ These apply to every language.
 - No emoji in interface copy.
 - Only real numbers. No customer counters, star ratings or testimonials
   unless they come from real, verifiable reviews. No countdowns.
-- Payment is on WhatsApp. Never say "paiement par carte sur le site".
+- Payment is on WhatsApp and comes after activation. Never present it as a
+  step before the secure link, and never say "paiement par carte sur le site".
+- The student price is for students and recent graduates; always say a proof
+  may be requested.
 - Always keep the line that Kareer is not affiliated with LinkedIn.
 
 ## Prices

@@ -67,6 +67,7 @@
         .price-row.total .label { color: var(--ink); font-weight: 600; font-family: var(--sans); font-size: 16px; }
         .price-row.total .value { font-size: 24px; font-weight: 600; }
         .price-savings { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; padding: 1px 4px; background: linear-gradient(transparent 12%, var(--mark) 12%, var(--mark) 88%, transparent 88%); }
+        .proof-note { margin-top: 10px; font-family: var(--sans); font-size: 13px; color: var(--ink-2); }
         .features-included { padding: 18px 24px 4px; }
         .feat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
         .feat-item { font-size: 14px; color: var(--ink-2); display: flex; gap: 8px; }
@@ -130,14 +131,14 @@
     <div class="step-indicator">
         <div class="step active"><span class="step-num">1</span> Votre compte</div>
         <div class="step-line"></div>
-        <div class="step"><span class="step-num">2</span> Paiement WhatsApp</div>
+        <div class="step"><span class="step-num">2</span> Activation</div>
         <div class="step-line"></div>
-        <div class="step"><span class="step-num">3</span> Activation</div>
+        <div class="step"><span class="step-num">3</span> Paiement</div>
     </div>
 
     <div class="secure-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Lien securise apres paiement
+        Rien à payer maintenant : vous réglez sur WhatsApp une fois Premium actif
     </div>
 
     <div class="checkout-card">
@@ -166,7 +167,7 @@
                 <span class="value" id="kareerPrice" style="color:var(--primary-light)">100,00€</span>
             </div>
             <div class="price-row total">
-                <span class="label">Total à payer</span>
+                <span class="label">À payer après activation</span>
                 <span class="value" id="totalPrice">100,00€</span>
             </div>
             <div class="price-savings" id="savingsBadge">↓ Vous économisez 259,88€ (-72%)</div>
@@ -194,7 +195,7 @@
             <div class="form-group">
                 <label class="form-label" for="contactEmail">Email de contact (optionnel)</label>
                 <input type="email" id="contactEmail" class="form-input" placeholder="contact@email.com" autocomplete="email">
-                <div class="form-hint">Pour recevoir la confirmation et le lien securise apres paiement.</div>
+                <div class="form-hint">Pour recevoir la confirmation et le lien sécurisé.</div>
             </div>
 
             <div class="form-group">
@@ -234,7 +235,7 @@
             </div>
             <div class="trust-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                Remboursé 30j
+                Rien à payer si l'activation échoue
             </div>
             <div class="trust-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9 12l2 2 4-4"/></svg>
@@ -294,20 +295,21 @@ const WA_NUMBER = '212651064637';
 const checkoutTranslations = {
   fr: {
     backToOffers: 'Retour aux offres',
-    step1: 'Votre compte', step2: 'Paiement WhatsApp', step3: 'Activation',
-    secureData: 'Pas de carte ici : le paiement se fait sur WhatsApp',
+    step1: 'Votre compte', step2: 'Activation', step3: 'Paiement',
+    studentProof: 'Tarif étudiant ou jeune diplômé : un justificatif peut vous être demandé.',
+    secureData: 'Rien à payer maintenant : vous réglez sur WhatsApp une fois Premium actif',
     orderSummary: 'Récapitulatif de commande',
     subscription1y: 'Abonnement 1 an',
     officialPrice: 'Prix officiel LinkedIn',
     yourPrice: 'Votre tarif Kareer',
-    totalToPay: 'Total à payer',
+    totalToPay: 'À payer après activation',
     youSave: 'Vous économisez',
     includedInPlan: 'Inclus dans votre plan',
     emailLinkedin: 'Email LinkedIn à activer',
     emailPlaceholder: 'votre@email.com',
     emailHint: 'L\'email de votre compte LinkedIn sur lequel activer le Premium',
     contactEmail: 'Email de contact (optionnel)',
-    contactHint: 'Pour recevoir la confirmation et le lien sécurisé après le paiement.',
+    contactHint: 'Pour recevoir la confirmation et le lien sécurisé.',
     referralCode: 'Code de parrainage (optionnel)',
     referralHint: 'Si quelqu\'un vous a parrainé, son code vous donne 10 € de réduction.',
     promoCode: 'Code promo (optionnel)',
@@ -315,10 +317,10 @@ const checkoutTranslations = {
     applyBtn: 'Appliquer',
     submitBtn: 'Continuer sur WhatsApp',
     orderSaved: 'Commande enregistrée.',
-    redirectMsg: 'WhatsApp va s\'ouvrir pour le paiement. Une fois le paiement validé, vous recevrez un lien sécurisé pour transmettre vos accès.',
+    redirectMsg: 'WhatsApp va s\'ouvrir avec votre commande. On vous envoie ensuite un lien sécurisé pour transmettre vos accès. Vous payez une fois Premium actif.',
     clickHere: 'cliquez ici',
     sslEncrypted: 'Aucune carte demandée',
-    refund30d: 'Remboursé si échec sous 30 jours',
+    refund30d: 'Rien à payer si l\'activation échoue',
     activation24h: 'Actif sous 24 à 48 h',
     footerTerms: 'En commandant, vous acceptez les',
     footerPrivacy: 'politique de confidentialité',
@@ -326,20 +328,21 @@ const checkoutTranslations = {
   },
   en: {
     backToOffers: 'Back to offers',
-    step1: 'Your account', step2: 'WhatsApp Payment', step3: 'Activation',
-    secureData: 'No card here: payment happens on WhatsApp',
+    step1: 'Your account', step2: 'Activation', step3: 'Payment',
+    studentProof: 'Student or recent graduate price: we may ask for proof.',
+    secureData: 'Nothing to pay now: you pay on WhatsApp once Premium is live',
     orderSummary: 'Order summary',
     subscription1y: '1-year subscription',
     officialPrice: 'Official LinkedIn price',
     yourPrice: 'Your Kareer price',
-    totalToPay: 'Total to pay',
+    totalToPay: 'Due after activation',
     youSave: 'You save',
     includedInPlan: 'Included in your plan',
     emailLinkedin: 'LinkedIn email to activate',
     emailPlaceholder: 'your@email.com',
     emailHint: 'The email of your LinkedIn account to activate Premium on',
     contactEmail: 'Contact email (optional)',
-    contactHint: 'To receive the confirmation and the secure link after payment.',
+    contactHint: 'To receive the confirmation and the secure link.',
     referralCode: 'Referral code (optional)',
     referralHint: 'If someone referred you, their code takes €10 off.',
     promoCode: 'Promo code (optional)',
@@ -347,10 +350,10 @@ const checkoutTranslations = {
     applyBtn: 'Apply',
     submitBtn: 'Continue on WhatsApp',
     orderSaved: 'Order saved.',
-    redirectMsg: 'WhatsApp will open for payment. Once payment is confirmed, you will get a secure link to send your login details.',
+    redirectMsg: 'WhatsApp will open with your order. We then send you a secure link to submit your login details. You pay once Premium is live.',
     clickHere: 'click here',
     sslEncrypted: 'No card required',
-    refund30d: 'Refunded if it fails within 30 days',
+    refund30d: 'Nothing to pay if activation fails',
     activation24h: 'Live within 24 to 48 hours',
     footerTerms: 'By ordering, you accept the',
     footerPrivacy: 'privacy policy',
@@ -358,20 +361,21 @@ const checkoutTranslations = {
   },
   es: {
     backToOffers: 'Volver a las ofertas',
-    step1: 'Tu cuenta', step2: 'Pago WhatsApp', step3: 'Activación',
-    secureData: 'Aquí no se pide tarjeta: el pago es por WhatsApp',
+    step1: 'Tu cuenta', step2: 'Activación', step3: 'Pago',
+    studentProof: 'Precio de estudiante o recién titulado: podemos pedirte un justificante.',
+    secureData: 'Nada que pagar ahora: pagas por WhatsApp cuando Premium esté activo',
     orderSummary: 'Resumen del pedido',
     subscription1y: 'Suscripción 1 año',
     officialPrice: 'Precio oficial LinkedIn',
     yourPrice: 'Tu precio Kareer',
-    totalToPay: 'Total a pagar',
+    totalToPay: 'A pagar tras la activación',
     youSave: 'Ahorras',
     includedInPlan: 'Incluido en tu plan',
     emailLinkedin: 'Email LinkedIn a activar',
     emailPlaceholder: 'tu@email.com',
     emailHint: 'El email de tu cuenta LinkedIn para activar Premium',
     contactEmail: 'Email de contacto (opcional)',
-    contactHint: 'Para recibir la confirmación y el enlace seguro después del pago.',
+    contactHint: 'Para recibir la confirmación y el enlace seguro.',
     referralCode: 'Código de referido (opcional)',
     referralHint: 'Si alguien te recomendó, su código te descuenta 10 €.',
     promoCode: 'Código promocional (opcional)',
@@ -379,10 +383,10 @@ const checkoutTranslations = {
     applyBtn: 'Aplicar',
     submitBtn: 'Continuar en WhatsApp',
     orderSaved: 'Pedido guardado.',
-    redirectMsg: 'WhatsApp se abrirá para el pago. Cuando se confirme, recibirás un enlace seguro para enviar tus datos de acceso.',
+    redirectMsg: 'WhatsApp se abrirá con tu pedido. Después te enviamos un enlace seguro para enviar tus datos de acceso. Pagas cuando Premium esté activo.',
     clickHere: 'haz clic aquí',
     sslEncrypted: 'Sin tarjeta',
-    refund30d: 'Reembolso si falla en 30 días',
+    refund30d: 'Nada que pagar si la activación falla',
     activation24h: 'Activo en 24 a 48 horas',
     footerTerms: 'Al ordenar, aceptas los',
     footerPrivacy: 'política de privacidad',
@@ -390,20 +394,21 @@ const checkoutTranslations = {
   },
   de: {
     backToOffers: 'Zurück zu Angeboten',
-    step1: 'Ihr Konto', step2: 'WhatsApp Zahlung', step3: 'Aktivierung',
-    secureData: 'Hier keine Karte: Bezahlt wird per WhatsApp',
+    step1: 'Ihr Konto', step2: 'Aktivierung', step3: 'Zahlung',
+    studentProof: 'Studenten- oder Absolventenpreis: Ein Nachweis kann verlangt werden.',
+    secureData: 'Jetzt nichts zahlen: Sie zahlen per WhatsApp, sobald Premium aktiv ist',
     orderSummary: 'Bestellübersicht',
     subscription1y: '1-Jahres-Abonnement',
     officialPrice: 'Offizieller LinkedIn-Preis',
     yourPrice: 'Ihr Kareer-Preis',
-    totalToPay: 'Zu zahlen',
+    totalToPay: 'Fällig nach der Aktivierung',
     youSave: 'Sie sparen',
     includedInPlan: 'In Ihrem Plan enthalten',
     emailLinkedin: 'LinkedIn-E-Mail zu aktivieren',
     emailPlaceholder: 'ihre@email.com',
     emailHint: 'Die E-Mail Ihres LinkedIn-Kontos, auf dem Premium aktiviert werden soll',
     contactEmail: 'Kontakt-E-Mail (optional)',
-    contactHint: 'Für die Bestätigung und den sicheren Link nach der Zahlung.',
+    contactHint: 'Für die Bestätigung und den sicheren Link.',
     referralCode: 'Empfehlungscode (optional)',
     referralHint: 'Wenn Sie jemand empfohlen hat, bringt dessen Code 10 € Rabatt.',
     promoCode: 'Aktionscode (optional)',
@@ -411,10 +416,10 @@ const checkoutTranslations = {
     applyBtn: 'Anwenden',
     submitBtn: 'Weiter zu WhatsApp',
     orderSaved: 'Bestellung gespeichert.',
-    redirectMsg: 'WhatsApp öffnet sich für die Zahlung. Nach der Bestätigung erhalten Sie einen sicheren Link für Ihre Zugangsdaten.',
+    redirectMsg: 'WhatsApp öffnet sich mit Ihrer Bestellung. Danach schicken wir Ihnen einen sicheren Link für Ihre Zugangsdaten. Sie zahlen, sobald Premium aktiv ist.',
     clickHere: 'hier klicken',
     sslEncrypted: 'Keine Karte nötig',
-    refund30d: 'Erstattung, falls es in 30 Tagen nicht klappt',
+    refund30d: 'Nichts zu zahlen, wenn die Aktivierung scheitert',
     activation24h: 'Aktiv in 24 bis 48 Stunden',
     footerTerms: 'Mit der Bestellung akzeptieren Sie die',
     footerPrivacy: 'Datenschutzrichtlinie',
@@ -479,6 +484,13 @@ document.getElementById('totalPrice').textContent = plan.price.toFixed(2).replac
 const savings = plan.official - plan.price;
 const pct = Math.round((savings / plan.official) * 100);
 document.getElementById('savingsBadge').textContent = `${t.youSave} ${savings.toFixed(2).replace('.', ',')}€ (-${pct}%)`;
+
+if (planId && planId.endsWith('-student')) {
+    const proof = document.createElement('p');
+    proof.className = 'proof-note';
+    proof.textContent = t.studentProof;
+    document.querySelector('.price-block').appendChild(proof);
+}
 
 const featList = document.getElementById('featList');
 const features = planFeatures[userLang] ? planFeatures[userLang][plan.featureKey] : planFeatures.fr[plan.featureKey];

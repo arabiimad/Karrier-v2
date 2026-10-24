@@ -137,16 +137,16 @@ async function sendReminder(sessionId) {
     const statusMessages = {
       fr: {
         pending: 'Votre commande est en attente de traitement.',
-        pending_payment: 'Votre paiement est en attente de validation.',
-        awaiting_credentials: 'Votre paiement est validé. Nous attendons vos identifiants via le lien sécurisé.',
+        pending_payment: 'Votre commande est reçue. Vous allez recevoir un lien sécurisé pour transmettre vos accès.',
+        awaiting_credentials: 'Nous attendons vos identifiants via le lien sécurisé. Le paiement se fait une fois Premium actif.',
         activating: 'Votre compte LinkedIn est en cours d\'activation.',
         done: 'Votre compte LinkedIn Premium est activé !',
         refunded: 'Votre commande a été remboursée.'
       },
       en: {
         pending: 'Your order is pending processing.',
-        pending_payment: 'Your payment is waiting for validation.',
-        awaiting_credentials: 'Your payment is confirmed. We are waiting for your credentials through the secure link.',
+        pending_payment: 'Your order is received. You will get a secure link to submit your login details.',
+        awaiting_credentials: 'We are waiting for your credentials through the secure link. Payment comes once Premium is live.',
         activating: 'Your LinkedIn account is being activated.',
         done: 'Your LinkedIn Premium account is activated!',
         refunded: 'Your order has been refunded.'

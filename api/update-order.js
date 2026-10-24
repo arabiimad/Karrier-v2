@@ -296,18 +296,18 @@ async function sendCredentialLinkEmail(order, link, expiresAt) {
     const subject = isFr
       ? 'Lien sécurisé pour votre activation Kareer'
       : 'Secure link for your Kareer activation';
-    const title = isFr ? 'Paiement validé' : 'Payment confirmed';
+    const title = isFr ? 'Transmettez vos accès' : 'Send your login details';
     const intro = isFr
-      ? 'Votre paiement est validé. Pour démarrer l’activation, transmettez votre mot de passe LinkedIn via notre page sécurisée.'
-      : 'Your payment is confirmed. To start activation, submit your LinkedIn password through our secure page.';
+      ? 'Pour démarrer l’activation, transmettez votre mot de passe LinkedIn via notre page sécurisée. Vous payez une fois Premium actif.'
+      : 'To start activation, submit your LinkedIn password through our secure page. You pay once Premium is live.';
     const securityNote = isFr
       ? 'Votre mot de passe est chiffré côté serveur, accessible uniquement ponctuellement par l’équipe d’activation, puis supprimé après activation.'
       : 'Your password is encrypted server-side, only available temporarily to the activation team, then deleted after activation.';
     const buttonLabel = isFr ? 'Transmettre mes identifiants' : 'Submit my credentials';
     const fallbackLabel = isFr ? 'Si le bouton ne fonctionne pas, copiez ce lien :' : 'If the button does not work, copy this link:';
     const preheader = isFr
-      ? 'Votre paiement est validé. Utilisez ce lien sécurisé pour transmettre vos identifiants LinkedIn.'
-      : 'Your payment is confirmed. Use this secure link to submit your LinkedIn credentials.';
+      ? 'Utilisez ce lien sécurisé pour transmettre vos identifiants LinkedIn. Vous payez une fois Premium actif.'
+      : 'Use this secure link to submit your LinkedIn credentials. You pay once Premium is live.';
     const content = `
       <p style="margin:0 0 18px;color:#1f2937;font-size:16px;line-height:1.6">${escapeHtml(intro)}</p>
       ${detailTable([
@@ -332,8 +332,8 @@ async function sendCredentialLinkEmail(order, link, expiresAt) {
         preheader,
         content,
         footer: isFr
-          ? 'Lien sécurisé envoyé après validation manuelle du paiement.'
-          : 'Secure link sent after manual payment confirmation.',
+          ? 'Lien sécurisé envoyé par l’équipe Kareer.'
+          : 'Secure link sent by the Kareer team.',
         lang
       }),
       text: `${title}\n\n${intro}\n\n${isFr ? 'Commande' : 'Order'}: ${order.sessionId}\n${isFr ? 'Compte LinkedIn' : 'LinkedIn account'}: ${order.linkedinEmail || '-'}\n${isFr ? 'Expiration du lien' : 'Link expires'}: ${expiresLabel}\n\n${buttonLabel}: ${link}\n\n${securityNote}`
@@ -450,42 +450,42 @@ async function sendStatusEmail(order, fromStatus, toStatus) {
 
     const messages = {
       fr: {
-        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu votre paiement et votre compte LinkedIn Premium est en cours d\'activation. Vous recevrez une confirmation dès que ce sera terminé.' },
-        done: { subject: 'Votre compte LinkedIn Premium est activé !', title: 'C\'est fait !', body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant profiter de toutes les fonctionnalités Premium sur LinkedIn.' },
+        activating: { subject: 'Votre compte est en cours d\'activation', title: 'Activation en cours !', body: 'Nous avons bien reçu vos accès et votre LinkedIn Premium est en cours d\'activation. Vous recevrez une confirmation dès que ce sera terminé. Le paiement se fait ensuite sur WhatsApp.' },
+        done: { subject: 'Votre compte LinkedIn Premium est activé !', title: 'C\'est fait !', body: 'Votre compte LinkedIn Premium a été activé avec succès. Vous pouvez dès maintenant profiter de toutes les fonctionnalités Premium sur LinkedIn. Si ce n\'est pas déjà fait, le règlement se fait sur WhatsApp avec notre équipe.' },
         refunded: { subject: 'Votre remboursement a été effectué', title: 'Remboursement confirmé', body: 'Votre commande a été remboursée. Le montant sera crédité sur votre compte dans 5-10 jours ouvrés.' },
-        pending: { subject: 'Paiement en cours de vérification', title: 'Paiement en attente', body: 'Nous avons bien reçu votre demande de paiement. Notre équipe est en train de vérifier votre paiement. Vous recevrez une confirmation dès que ce sera validé.' }
+        pending: { subject: 'Commande reçue', title: 'Commande reçue', body: 'Nous avons bien reçu votre commande. Vous allez recevoir un lien sécurisé pour transmettre vos accès LinkedIn. Le paiement se fait une fois Premium actif.' }
       },
       en: {
-        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your payment and your LinkedIn Premium account is being activated. You will receive a confirmation once it\'s done.' },
-        done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn.' },
+        activating: { subject: 'Your account is being activated', title: 'Activation in progress!', body: 'We have received your login details and your LinkedIn Premium is being activated. You will receive a confirmation once it\'s done. Payment comes after, on WhatsApp.' },
+        done: { subject: 'Your LinkedIn Premium account is activated!', title: 'All done!', body: 'Your LinkedIn Premium account has been successfully activated. You can now enjoy all Premium features on LinkedIn. If you haven\'t paid yet, payment is done on WhatsApp with our team.' },
         refunded: { subject: 'Your refund has been processed', title: 'Refund confirmed', body: 'Your order has been refunded. The amount will be credited to your account within 5-10 business days.' },
-        pending: { subject: 'Payment verification in progress', title: 'Payment pending', body: 'We have received your payment request. Our team is verifying your payment. You will receive a confirmation once it\'s validated.' }
+        pending: { subject: 'Order received', title: 'Order received', body: 'We have received your order. You will get a secure link to submit your LinkedIn login details. Payment comes once Premium is live.' }
       },
       es: {
-        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tu pago y tu cuenta LinkedIn Premium está siendo activada. Recibirás una confirmación cuando esté lista.' },
-        done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn.' },
+        activating: { subject: 'Tu cuenta está siendo activada', title: '¡Activación en curso!', body: 'Hemos recibido tus datos de acceso y tu LinkedIn Premium está siendo activado. Recibirás una confirmación cuando esté listo. El pago se hace después, por WhatsApp.' },
+        done: { subject: '¡Tu cuenta LinkedIn Premium está activada!', title: '¡Listo!', body: 'Tu cuenta LinkedIn Premium ha sido activada con éxito. Ya puedes disfrutar de todas las funciones Premium en LinkedIn. Si aún no has pagado, el pago se hace por WhatsApp con nuestro equipo.' },
         refunded: { subject: 'Tu reembolso ha sido procesado', title: 'Reembolso confirmado', body: 'Tu pedido ha sido reembolsado. El monto será acreditado en tu cuenta en 5-10 días hábiles.' },
-        pending: { subject: 'Verificación de pago en curso', title: 'Pago pendiente', body: 'Hemos recibido tu solicitud de pago. Nuestro equipo está verificando tu pago. Recibirás una confirmación una vez validado.' }
+        pending: { subject: 'Pedido recibido', title: 'Pedido recibido', body: 'Hemos recibido tu pedido. Recibirás un enlace seguro para enviar tus datos de acceso de LinkedIn. El pago se hace cuando Premium esté activo.' }
       },
       de: {
-        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zahlung erhalten und Ihr LinkedIn Premium-Konto wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist.' },
-        done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen.' },
+        activating: { subject: 'Ihr Konto wird aktiviert', title: 'Aktivierung läuft!', body: 'Wir haben Ihre Zugangsdaten erhalten und Ihr LinkedIn Premium wird aktiviert. Sie erhalten eine Bestätigung, sobald es fertig ist. Bezahlt wird danach per WhatsApp.' },
+        done: { subject: 'Ihr LinkedIn Premium-Konto ist aktiviert!', title: 'Fertig!', body: 'Ihr LinkedIn Premium-Konto wurde erfolgreich aktiviert. Sie können jetzt alle Premium-Funktionen auf LinkedIn nutzen. Falls noch nicht geschehen, erfolgt die Zahlung per WhatsApp mit unserem Team.' },
         refunded: { subject: 'Ihre Rückerstattung wurde bearbeitet', title: 'Rückerstattung bestätigt', body: 'Ihre Bestellung wurde erstattet. Der Betrag wird innerhalb von 5-10 Werktagen auf Ihrem Konto gutgeschrieben.' },
-        pending: { subject: 'Zahlungsüberprüfung läuft', title: 'Zahlung ausstehend', body: 'Wir haben Ihre Zahlungsanfrage erhalten. Unser Team überprüft Ihre Zahlung. Sie erhalten eine Bestätigung, sobald sie validiert ist.' }
+        pending: { subject: 'Bestellung erhalten', title: 'Bestellung erhalten', body: 'Wir haben Ihre Bestellung erhalten. Sie bekommen einen sicheren Link für Ihre LinkedIn-Zugangsdaten. Bezahlt wird, sobald Premium aktiv ist.' }
       }
     };
 
     messages.fr.pending_payment = messages.fr.pending;
     messages.fr.awaiting_credentials = {
-      subject: 'Paiement validé — identifiants demandés',
-      title: 'Paiement validé',
-      body: 'Votre paiement est validé. Vous allez recevoir un lien sécurisé pour transmettre votre mot de passe LinkedIn.'
+      subject: 'Lien sécurisé pour vos accès LinkedIn',
+      title: 'Transmettez vos accès',
+      body: 'Vous allez recevoir un lien sécurisé pour transmettre votre mot de passe LinkedIn. Le paiement se fait une fois Premium actif.'
     };
     messages.en.pending_payment = messages.en.pending;
     messages.en.awaiting_credentials = {
-      subject: 'Payment confirmed - credentials requested',
-      title: 'Payment confirmed',
-      body: 'Your payment is confirmed. You will receive a secure link to submit your LinkedIn password.'
+      subject: 'Secure link for your LinkedIn login',
+      title: 'Send your login details',
+      body: 'You will receive a secure link to submit your LinkedIn password. Payment comes once Premium is live.'
     };
     messages.es.pending_payment = messages.es.pending;
     messages.es.awaiting_credentials = messages.en.awaiting_credentials;

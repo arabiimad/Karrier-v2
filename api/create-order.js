@@ -236,66 +236,66 @@ async function sendWelcomeEmail(order) {
     const t = lang === 'fr' ? {
       subject: 'Commande reçue — Kareer',
       title: 'Commande enregistrée',
-      preheader: 'Votre commande est enregistrée. Le paiement se fait maintenant via WhatsApp.',
-      body: 'Votre commande est bien enregistrée. Payez via WhatsApp ; après validation du paiement, vous recevrez un lien sécurisé pour transmettre votre mot de passe LinkedIn.',
+      preheader: 'Votre commande est enregistrée. Vous payez une fois Premium actif.',
+      body: 'Votre commande est bien enregistrée. Nous vous envoyons un lien sécurisé pour transmettre votre mot de passe LinkedIn. Vous payez sur WhatsApp une fois Premium actif.',
       stepsTitle: 'Prochaines étapes',
       steps: [
-        'Vous finalisez le paiement avec notre équipe sur WhatsApp.',
-        'Nous validons le paiement et vous envoyons un lien sécurisé.',
-        'Vous transmettez vos identifiants, puis nous lançons l’activation.'
+        'Nous confirmons votre commande sur WhatsApp et vous envoyons un lien sécurisé.',
+        'Vous transmettez vos identifiants, puis nous lançons l’activation.',
+        'Une fois Premium actif, vous réglez sur WhatsApp.'
       ],
       delay: 'Délai estimé : 24 à 48 heures après réception des identifiants.',
       amount: 'Montant',
       order: 'Commande',
-      contact: 'Procéder au paiement sur WhatsApp',
+      contact: 'Écrire sur WhatsApp',
       footer: 'Vous recevez cet email car vous avez commencé une commande sur kareer.pro.'
     } : lang === 'es' ? {
       subject: 'Pedido recibido — Kareer',
       title: 'Pedido registrado',
-      preheader: 'Tu pedido está registrado. El pago se finaliza por WhatsApp.',
-      body: 'Tu pedido está registrado. Paga por WhatsApp; después de la validación recibirás un enlace seguro para enviar tu contraseña de LinkedIn.',
+      preheader: 'Tu pedido está registrado. Pagas cuando Premium esté activo.',
+      body: 'Tu pedido está registrado. Te enviamos un enlace seguro para enviar tu contraseña de LinkedIn. Pagas por WhatsApp cuando Premium esté activo.',
       stepsTitle: 'Próximos pasos',
       steps: [
-        'Finalizas el pago con nuestro equipo por WhatsApp.',
-        'Validamos el pago y enviamos el enlace seguro.',
-        'Envías tus credenciales y empezamos la activación.'
+        'Confirmamos tu pedido por WhatsApp y te enviamos un enlace seguro.',
+        'Envías tus credenciales y empezamos la activación.',
+        'Cuando Premium esté activo, pagas por WhatsApp.'
       ],
       delay: 'Tiempo estimado: 24 a 48 horas después de recibir tus credenciales.',
       amount: 'Monto',
       order: 'Pedido',
-      contact: 'Pagar por WhatsApp',
+      contact: 'Escribir por WhatsApp',
       footer: 'Recibes este email porque has iniciado un pedido en kareer.pro.'
     } : lang === 'de' ? {
       subject: 'Bestellung erhalten — Kareer',
       title: 'Bestellung registriert',
-      preheader: 'Ihre Bestellung ist registriert. Die Zahlung erfolgt über WhatsApp.',
-      body: 'Ihre Bestellung wurde registriert. Zahlen Sie über WhatsApp. Nach der Bestätigung erhalten Sie einen sicheren Link für Ihr LinkedIn-Passwort.',
+      preheader: 'Ihre Bestellung ist registriert. Sie zahlen, sobald Premium aktiv ist.',
+      body: 'Ihre Bestellung wurde registriert. Wir senden Ihnen einen sicheren Link für Ihr LinkedIn-Passwort. Sie zahlen per WhatsApp, sobald Premium aktiv ist.',
       stepsTitle: 'Nächste Schritte',
       steps: [
-        'Sie schließen die Zahlung mit unserem Team über WhatsApp ab.',
-        'Wir bestätigen Ihre Zahlung und senden den sicheren Link.',
-        'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.'
+        'Wir bestätigen Ihre Bestellung per WhatsApp und senden Ihnen einen sicheren Link.',
+        'Sie senden Ihre Zugangsdaten, dann starten wir die Aktivierung.',
+        'Sobald Premium aktiv ist, zahlen Sie per WhatsApp.'
       ],
       delay: 'Geschätzte Zeit: 24 bis 48 Stunden nach Erhalt der Zugangsdaten.',
       amount: 'Betrag',
       order: 'Bestellung',
-      contact: 'Über WhatsApp bezahlen',
+      contact: 'Per WhatsApp schreiben',
       footer: 'Sie erhalten diese E-Mail, weil Sie eine Bestellung auf kareer.pro gestartet haben.'
     } : {
       subject: 'Order received — Kareer',
       title: 'Order registered',
-      preheader: 'Your order is registered. Payment is completed through WhatsApp.',
-      body: 'Your order is registered. Pay through WhatsApp; after validation you will receive a secure link to submit your LinkedIn password.',
+      preheader: 'Your order is registered. You pay once Premium is live.',
+      body: 'Your order is registered. We will send you a secure link to submit your LinkedIn password. You pay on WhatsApp once Premium is live.',
       stepsTitle: 'Next steps',
       steps: [
-        'You complete payment with our team on WhatsApp.',
-        'We validate your payment and send the secure link.',
-        'You submit your credentials, then we start activation.'
+        'We confirm your order on WhatsApp and send you a secure link.',
+        'You submit your credentials, then we start activation.',
+        'Once Premium is live, you pay on WhatsApp.'
       ],
       delay: 'Estimated time: 24 to 48 hours after receiving your credentials.',
       amount: 'Amount',
       order: 'Order',
-      contact: 'Pay on WhatsApp',
+      contact: 'Message us on WhatsApp',
       footer: 'You are receiving this email because you started an order on kareer.pro.'
     };
 
